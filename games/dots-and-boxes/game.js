@@ -65,6 +65,7 @@ function* allEdges() {
 }
 
 function render(animateLast) {
+  persist();
   const W = M * 2 + st.C * S, H = M * 2 + st.R * S;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   let out = '';
@@ -222,6 +223,11 @@ function restart() {
 
 // ---------- online ----------
 // Host is authoritative: on (re)connect it sends the whole state; moves carry a counter to catch desyncs.
+// The host also keeps the game in sessionStorage, so reloading the host's tab doesn't wipe the match.
+const roomKey = (s) => `mg-dab-room-${s.code}`;
+function persist() {
+  if (online() && session().host) sessionStorage.setItem(roomKey(session()), JSON.stringify({ st, over }));
+}
 function sendState() {
   const s = session();
   s.send('state', { st, over, names: cfg.names });
@@ -249,7 +255,12 @@ function onSession(s) {
   });
   s.on('resync', () => s.host && sendState());
   s.on('new', (d) => { if (s.host) return; cfg.size = d.size; $('#size').value = d.size; newGame(d.size); });
-  if (s.host) newGame();
+  const saved = s.host && JSON.parse(sessionStorage.getItem(roomKey(s)) || 'null');
+  if (saved) {
+    st = saved.st; over = saved.over; history = []; shapes = {}; streak = 0;
+    cfg.size = st.R; $('#size').value = st.R;
+    over ? finish() : render(false);
+  } else if (s.host) newGame();
   else render(false);
 }
 

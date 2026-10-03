@@ -42,6 +42,7 @@
 
 ## Online protocol convention
 - Host is authoritative: on `peer-join` the host sends full `state`; guest replaces its state.
+- Reconnects must just work (net.js heartbeats detect dead peers in ~7 s; a guest's seat survives reloads/new tabs): guest reload, guest reopening the link in a new tab, host reload. The host persists the match in `sessionStorage` (key per room code) and restores it in `onSession` instead of starting a new game — see `persist()` in dots-and-boxes.
 - Moves: `move` with a move counter; on mismatch guest sends `resync`, host re-sends `state`.
 - `name` for player names. Restart (`new`) and settings changes are host-only; the guest's restart button is disabled and the result card says who starts the next game. Undo and vs-computer are disabled online.
 - Games with hidden information: host keeps secrets and only sends each side what it may see (`send(..., {to: seat})`).

@@ -35,8 +35,8 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
   const room = joinRoom({ appId: APP_ID }, `${slug}:${code}`);
   const action = room.makeAction('msg');
   const handlers = {};
-  let status = 'waiting', seat = host ? 0 : 1, hostPeer = null;
-  const guests = new Map(); // host side: seat → { peerId, clientId, connected }
+  let status = 'waiting', seat = host ? 0 : 1, hostPeer = null, hostSeen = 0, fullSince = 0, closed = false;
+  const guests = new Map(); // host side: seat → { peerId, clientId, connected, seen }
 
   const emit = (type, payload, meta) => (handlers[type] || []).forEach((fn) => fn(payload, meta));
   const setStatus = (st) => { if (st !== status) { status = st; emit('status', st); } };
@@ -44,20 +44,40 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
   const seatOfPeer = (id) => { for (const [k, g] of guests) if (g.connected && g.peerId === id) return k; return -1; };
   const hostStatus = () => setStatus([...guests.values()].some((g) => g.connected) ? 'connected' : guests.size ? 'lost' : 'waiting');
 
+  function dropGuest(k) {
+    const g = guests.get(k);
+    if (!g?.connected) return;
+    g.connected = false; // the seat stays reserved for this clientId
+    hostStatus();
+    emit('peer-leave', { seat: k });
+    emit('roster');
+  }
+  function dropHost() {
+    if (!hostPeer) return;
+    hostPeer = null;
+    setStatus('lost');
+    emit('peer-leave', { seat: 0 });
+  }
+
+  // Heartbeat: WebRTC only notices a vanished peer (reload, closed tab, phone asleep) after ~10-30 s,
+  // and until then its seat looks taken. Every side pings every 2 s; 7 s of silence = gone.
+  const HB = 2000, DEAD = 7000;
+  const beat = setInterval(() => {
+    if (closed) return;
+    const now = Date.now();
+    if (host) {
+      for (const [k, g] of guests) if (g.connected && now - g.seen > DEAD) dropGuest(k);
+      if ([...guests.values()].some((g) => g.connected)) send('_hb');
+    } else if (hostPeer) {
+      if (now - hostSeen > DEAD) dropHost();
+      else sys('_hb', hostPeer);
+    }
+  }, HB);
+
   room.onPeerJoin = (id) => { if (!host) sys('_hello', id, { clientId }); };
   room.onPeerLeave = (id) => {
-    if (host) {
-      const k = seatOfPeer(id);
-      if (k < 0) return;
-      guests.get(k).connected = false; // seat stays reserved for this clientId
-      hostStatus();
-      emit('peer-leave', { seat: k });
-      emit('roster');
-    } else if (id === hostPeer) {
-      hostPeer = null;
-      setStatus('lost');
-      emit('peer-leave', { seat: 0 });
-    }
+    if (host) { const k = seatOfPeer(id); if (k >= 0) dropGuest(k); }
+    else if (id === hostPeer) dropHost();
   };
   action.onMessage = (msg, { peerId }) => {
     switch (msg.type) {
@@ -71,7 +91,7 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
           if (k === undefined) k = [...guests].find(([, g]) => !g.connected)?.[0];
         }
         if (k === undefined) return sys('_full', peerId);
-        guests.set(k, { peerId, clientId: cid, connected: true });
+        guests.set(k, { peerId, clientId: cid, connected: true, seen: Date.now() });
         sys('_welcome', peerId, { seat: k, maxPlayers });
         hostStatus();
         emit('peer-join', { seat: k });
@@ -79,19 +99,43 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
         return;
       }
       case '_welcome':
-        if (host || hostPeer) return;
+        // Also accept a *new* host peer: the host may have reloaded before we noticed the old one was gone.
+        if (host || peerId === hostPeer) return;
         hostPeer = peerId;
+        hostSeen = Date.now();
+        fullSince = 0;
         seat = msg.payload?.seat ?? 1;
         maxPlayers = msg.payload?.maxPlayers ?? maxPlayers;
+        status = 'waiting'; // force a status event even if we were already 'connected'
         setStatus('connected');
         emit('peer-join', { seat: 0 });
         return;
-      case '_full': if (!host && !hostPeer) { status = 'full'; emit('full'); } return;
+      case '_full':
+        if (host || hostPeer) return;
+        // The seat may belong to our own previous tab that the host hasn't timed out yet: keep knocking for a while.
+        fullSince ||= Date.now();
+        if (Date.now() - fullSince < 15000) { setTimeout(() => { if (!closed && !hostPeer) sys('_hello', peerId, { clientId }); }, HB); return; }
+        status = 'full';
+        emit('full');
+        return;
+      case '_hb':
+        if (host) { const k = seatOfPeer(peerId); if (k > 0) guests.get(k).seen = Date.now(); }
+        else if (peerId === hostPeer) hostSeen = Date.now();
+        return;
       default:
-        if (host) { const k = seatOfPeer(peerId); if (k > 0) emit(msg.type, msg.payload, { seat: k }); }
-        else if (peerId === hostPeer) emit(msg.type, msg.payload, { seat: 0 });
+        if (host) {
+          const k = seatOfPeer(peerId);
+          if (k > 0) { guests.get(k).seen = Date.now(); emit(msg.type, msg.payload, { seat: k }); }
+        } else if (peerId === hostPeer) { hostSeen = Date.now(); emit(msg.type, msg.payload, { seat: 0 }); }
     }
   };
+
+  // Host: broadcast to every guest, or {to: seat}. Guest: always to the host.
+  function send(type, payload, { to } = {}) {
+    if (!host) { if (hostPeer) action.send({ type, payload }, { target: hostPeer }); return; }
+    const targets = [...guests].filter(([k, g]) => g.connected && (to === undefined || k === to)).map(([, g]) => g.peerId);
+    if (targets.length) action.send({ type, payload }, { target: targets });
+  }
 
   return {
     slug, code, host,
@@ -107,14 +151,9 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
     // Host only: change how many seats the room offers (e.g. the game's player-count setting).
     setMaxPlayers(n) { if (host) { maxPlayers = n; emit('roster'); } },
     link: () => `${location.origin}${location.pathname}?room=${code}`,
-    // Host: broadcast to every guest, or {to: seat}. Guest: always to the host.
-    send(type, payload, { to } = {}) {
-      if (!host) { if (hostPeer) action.send({ type, payload }, { target: hostPeer }); return; }
-      const targets = [...guests].filter(([k, g]) => g.connected && (to === undefined || k === to)).map(([, g]) => g.peerId);
-      if (targets.length) action.send({ type, payload }, { target: targets });
-    },
+    send,
     on(type, fn) { (handlers[type] ||= []).push(fn); return this; },
-    async leave() { await room.leave(); },
+    async leave() { closed = true; clearInterval(beat); await room.leave(); },
   };
 }
 
