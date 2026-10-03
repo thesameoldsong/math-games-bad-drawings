@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>net.js test bench</title>
+  <link rel="stylesheet" href="../shared/style.css">
+</head>
+<body class="game">
+  <!-- Test bench for shared/net.js multi-seat rooms (not linked from the site). ?seats=N -->
+  <div class="page">
+    <button class="tool" data-icon="online" data-label="net.btn" id="online"></button>
+    <pre id="log"></pre>
+  </div>
+  <script type="module">
+    import { applyI18n } from '../shared/i18n.js';
+    import { mountTools, mountSheets } from '../shared/ui.js';
+    import { mountOnline } from '../shared/net.js';
+    const seats = +(new URLSearchParams(location.search).get('seats') || 4);
+    const log = [];
+    window.netLog = log;
+    mountTools(); mountSheets(); applyI18n();
+    window.net = mountOnline({
+      slug: 'net-test', button: document.querySelector('#online'), maxPlayers: seats,
+      onSession(s) {
+        window.sess = s;
+        s.on('peer-join', (d) => log.push(['join', d.seat]));
+        s.on('peer-leave', (d) => log.push(['leave', d.seat]));
+        s.on('ping', (p, m) => log.push(['ping', p, m.seat]));
+        s.on('secret', (p, m) => log.push(['secret', p, m.seat]));
+      },
+    });
+  </script>
+</body>
+</html>

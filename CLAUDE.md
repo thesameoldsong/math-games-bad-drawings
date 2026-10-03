@@ -16,7 +16,7 @@
 - `shared/sketch.js` — `line`, `circle`, `scribble`, `figureSVG({color, mood, pose, face, seed})`, `PALETTE`, `injectDefs()` (crayon/marker SVG filters; call once per page).
 - `shared/i18n.js` — `addStrings(lang, {...})`, `t(key, vars)` (array value → random pick), `plural(n, key)`, `getLang()`, `applyI18n()`, `data-i18n` / `data-i18n-html` / `data-i18n-placeholder`, `mg:lang` event. RU + EN required for every string. Shared UI labels: `ui.*`.
 - `shared/ui.js` — `icon(name)`, `mountTools()` (fills `.tool[data-icon][data-label]`), `mountSheets()` (`[data-sheet=x]` opens `dialog#sheet-x`), `showOnce('how', slug)`.
-- `shared/net.js` — `mountOnline({slug, button, onSession, onEnd})`; session: `seat` (host 0 / guest 1), `host`, `connected`, `send(type, payload)`, `on(type, fn)`; events `status`, `peer-join`, `peer-leave`.
+- `shared/net.js` — `mountOnline({slug, button, onSession, onEnd, maxPlayers})` (`maxPlayers`: number or `() => n`, default 2); session: `seat` (host 0, guests 1..n-1, stable across reloads), `host`, `connected`, `maxPlayers`, `seats()` (seats with a live device), `send(type, payload, {to})` (host: broadcast or one seat; guest: to host), `on(type, (payload, {seat}) => …)`; events `status`, `peer-join {seat}`, `peer-leave {seat}`, `roster`. Test bench: `tools/net-test.html?seats=N`.
 - `shared/games.js` — registry of the book's featured + short games (54); the orchestrator maintains `NOT_READY` (game agents don't edit it).
 - `games/<slug>/` — one folder per game: `index.html`, `strings.js`, `engine.js` (pure logic + AI, no DOM, `export const X = {...}`), `game.js` (UI, module entry), `style.css` (board-only styles).
   **`games/dots-and-boxes/` is the reference implementation — copy its page structure, toolbar, dialogs and online wiring.**
@@ -44,7 +44,8 @@
 - Host is authoritative: on `peer-join` the host sends full `state`; guest replaces its state.
 - Moves: `move` with a move counter; on mismatch guest sends `resync`, host re-sends `state`.
 - `name` for player names. Restart (`new`) and settings changes are host-only; the guest's restart button is disabled and the result card says who starts the next game. Undo and vs-computer are disabled online.
-- Games with hidden information: host keeps secrets and only sends each side what it may see.
+- Games with hidden information: host keeps secrets and only sends each side what it may see (`send(..., {to: seat})`).
+- 3+ player games: pass `maxPlayers: () => <player count setting>`; the host's dialog shows the seats filling up and closes on "let's play". Seats without a device are played by the computer (if the game has AI) and the host may start any time; a guest who joins later takes over a computer seat at the next safe point (or next game). Guests relay their moves to the host; the host validates and broadcasts.
 
 ## Content rules
 - Never copy text or images from the book PDF. Rules, tips, history are written in our own words; drawings are our own SVG.

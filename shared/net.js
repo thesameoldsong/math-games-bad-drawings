@@ -1,11 +1,12 @@
-// Two-device play over WebRTC (Trystero, Nostr relays for signaling — no server of our own).
+// Multi-device play over WebRTC (Trystero, Nostr relays for signaling — no server of our own).
 //
-// Host creates a room → shares link/QR/code → guest joins. Host is seat 0, guest seat 1.
-// Games exchange their own messages via session.send(type, payload) / session.on(type, fn).
-// Convention: host is authoritative — on 'peer-join' the host sends the full game state.
+// Host creates a room → shares link/QR/code → guests join. Host is seat 0; guests get seats 1..maxPlayers-1
+// (a guest who reloads gets the same seat back). Star topology: guests only talk to the host.
+// Games exchange their own messages via session.send(type, payload, {to}) / session.on(type, (payload, {seat}) => …).
+// Convention: host is authoritative — on 'peer-join' the host sends the (per-seat redacted) game state.
 //
 //   import { mountOnline } from '../../shared/net.js';
-//   mountOnline({ slug: 'dots-and-boxes', button: el, onSession(session) { ... } });
+//   mountOnline({ slug: 'pig', button: el, maxPlayers: () => cfg.players, onSession(session) { ... } });
 import { joinRoom } from '../vendor/trystero.js';
 import qrcode from '../vendor/qrcode.js';
 import { t, addStrings, applyI18n } from './i18n.js';
@@ -26,49 +27,92 @@ const cleanCode = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice
 const clientId = sessionStorage.getItem('mg-client-id') || Math.random().toString(36).slice(2, 12);
 sessionStorage.setItem('mg-client-id', clientId);
 
-// Low-level session. Events: 'status' (waiting|connected|lost), 'peer-join', 'peer-leave', 'full', plus game message types.
-// Handshake: guest → '_hello' {clientId}; host → '_welcome' (seat taken) or '_full' (room already has two players).
-export function createSession({ slug, code, host }) {
+// Low-level session.
+// Events: 'status' (waiting|connected|lost), 'peer-join' {seat}, 'peer-leave' {seat}, 'roster', 'full',
+// plus game message types: handler(payload, {seat}) where seat is the sender (guests only ever hear the host: seat 0).
+// Handshake: guest → '_hello' {clientId}; host → '_welcome' {seat, maxPlayers} or '_full' (no free seat).
+export function createSession({ slug, code, host, maxPlayers = 2 }) {
   const room = joinRoom({ appId: APP_ID }, `${slug}:${code}`);
   const action = room.makeAction('msg');
   const handlers = {};
-  let peer = null, peerClient = null, status = 'waiting';
+  let status = 'waiting', seat = host ? 0 : 1, hostPeer = null;
+  const guests = new Map(); // host side: seat → { peerId, clientId, connected }
 
-  const emit = (type, payload) => (handlers[type] || []).forEach((fn) => fn(payload));
-  const setStatus = (s) => { status = s; emit('status', s); };
+  const emit = (type, payload, meta) => (handlers[type] || []).forEach((fn) => fn(payload, meta));
+  const setStatus = (st) => { if (st !== status) { status = st; emit('status', st); } };
   const sys = (type, target, payload) => action.send({ type, payload }, { target });
-  const accept = (id) => { peer = id; setStatus('connected'); emit('peer-join'); };
+  const seatOfPeer = (id) => { for (const [k, g] of guests) if (g.connected && g.peerId === id) return k; return -1; };
+  const hostStatus = () => setStatus([...guests.values()].some((g) => g.connected) ? 'connected' : guests.size ? 'lost' : 'waiting');
 
   room.onPeerJoin = (id) => { if (!host) sys('_hello', id, { clientId }); };
   room.onPeerLeave = (id) => {
-    if (id !== peer) return;
-    peer = null;
-    setStatus('lost');
-    emit('peer-leave');
+    if (host) {
+      const k = seatOfPeer(id);
+      if (k < 0) return;
+      guests.get(k).connected = false; // seat stays reserved for this clientId
+      hostStatus();
+      emit('peer-leave', { seat: k });
+      emit('roster');
+    } else if (id === hostPeer) {
+      hostPeer = null;
+      setStatus('lost');
+      emit('peer-leave', { seat: 0 });
+    }
   };
   action.onMessage = (msg, { peerId }) => {
     switch (msg.type) {
       case '_hello': {
         if (!host) return; // guests ignore each other
-        const same = peerId === peer || msg.payload?.clientId === peerClient;
-        if (peer && !same) return sys('_full', peerId);
-        peerClient = msg.payload?.clientId;
-        sys('_welcome', peerId);
-        return accept(peerId);
+        const cid = msg.payload?.clientId;
+        let k = [...guests].find(([, g]) => g.clientId === cid)?.[0];
+        if (k === undefined) {
+          for (let i = 1; i < maxPlayers; i++) if (!guests.has(i)) { k = i; break; }
+          // a seat whose owner left can go to someone new once every seat is taken
+          if (k === undefined) k = [...guests].find(([, g]) => !g.connected)?.[0];
+        }
+        if (k === undefined) return sys('_full', peerId);
+        guests.set(k, { peerId, clientId: cid, connected: true });
+        sys('_welcome', peerId, { seat: k, maxPlayers });
+        hostStatus();
+        emit('peer-join', { seat: k });
+        emit('roster');
+        return;
       }
-      case '_welcome': if (!host && !peer) accept(peerId); return;
-      case '_full': if (!host && !peer) { status = 'full'; emit('full'); } return;
-      default: if (peerId === peer) emit(msg.type, msg.payload);
+      case '_welcome':
+        if (host || hostPeer) return;
+        hostPeer = peerId;
+        seat = msg.payload?.seat ?? 1;
+        maxPlayers = msg.payload?.maxPlayers ?? maxPlayers;
+        setStatus('connected');
+        emit('peer-join', { seat: 0 });
+        return;
+      case '_full': if (!host && !hostPeer) { status = 'full'; emit('full'); } return;
+      default:
+        if (host) { const k = seatOfPeer(peerId); if (k > 0) emit(msg.type, msg.payload, { seat: k }); }
+        else if (peerId === hostPeer) emit(msg.type, msg.payload, { seat: 0 });
     }
   };
 
   return {
     slug, code, host,
-    seat: host ? 0 : 1,
+    get seat() { return seat; },
+    get maxPlayers() { return maxPlayers; },
     get status() { return status; },
     get connected() { return status === 'connected'; },
+    // Seats with a live device (host included). For the host: who is actually at the table.
+    seats() {
+      if (!host) return hostPeer ? [0, seat] : [seat];
+      return [0, ...[...guests].filter(([, g]) => g.connected).map(([k]) => k)].sort((x, y) => x - y);
+    },
+    // Host only: change how many seats the room offers (e.g. the game's player-count setting).
+    setMaxPlayers(n) { if (host) { maxPlayers = n; emit('roster'); } },
     link: () => `${location.origin}${location.pathname}?room=${code}`,
-    send(type, payload) { if (peer) action.send({ type, payload }, { target: peer }); },
+    // Host: broadcast to every guest, or {to: seat}. Guest: always to the host.
+    send(type, payload, { to } = {}) {
+      if (!host) { if (hostPeer) action.send({ type, payload }, { target: hostPeer }); return; }
+      const targets = [...guests].filter(([k, g]) => g.connected && (to === undefined || k === to)).map(([, g]) => g.peerId);
+      if (targets.length) action.send({ type, payload }, { target: targets });
+    },
     on(type, fn) { (handlers[type] ||= []).push(fn); return this; },
     async leave() { await room.leave(); },
   };
@@ -79,7 +123,10 @@ const storeKey = (slug) => `mg-net-${slug}`;
 // Trystero needs WebCrypto, which browsers only expose on https:// (or localhost).
 export const onlineSupported = () => window.isSecureContext && !!globalThis.crypto?.subtle && 'RTCPeerConnection' in window;
 
-export function mountOnline({ slug, button, onSession, onEnd }) {
+// maxPlayers: number or () => number (read when a room is created; default 2).
+export function mountOnline({ slug, button, onSession, onEnd, maxPlayers = 2 }) {
+  const seatsWanted = () => (typeof maxPlayers === 'function' ? maxPlayers() : maxPlayers);
+  const multi = () => (session ? session.maxPlayers : seatsWanted()) > 2;
   injectDialog();
   const dlg = document.getElementById('mg-online');
   let session = null;
@@ -89,16 +136,18 @@ export function mountOnline({ slug, button, onSession, onEnd }) {
   function start(code, host) {
     end(true);
     if (!onlineSupported()) { renderDialog(); dlg.querySelector('.mg-on-error').textContent = t('net.insecure'); return; }
-    session = createSession({ slug, code, host });
+    session = createSession({ slug, code, host, maxPlayers: seatsWanted() });
     session.startedAt = Date.now();
     remember(session);
     const me = session; // ignore late events from a session we already left
-    session.on('status', () => { if (session !== me) return; renderDialog(); syncButton(); if (me.connected) dlg.close(); });
+    // With more than two seats the host keeps the dialog open to watch the table fill up.
+    session.on('status', () => { if (session !== me) return; renderDialog(); syncButton(); if (me.connected && !(me.host && multi())) dlg.close(); });
+    session.on('roster', () => { if (session === me && dlg.open) renderDialog(); });
     session.on('full', () => {
       if (session !== me) return;
       end();
       renderDialog();
-      dlg.querySelector('.mg-on-error').textContent = t('net.full', { code });
+      dlg.querySelector('.mg-on-error').textContent = t(multi() ? 'net.full.n' : 'net.full', { code });
       if (!dlg.open) dlg.showModal();
     });
     const url = new URL(location.href);
@@ -139,6 +188,19 @@ export function mountOnline({ slug, button, onSession, onEnd }) {
           <input type="text" name="code" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" data-i18n-placeholder="net.code.ph">
           <button class="btn" data-i18n="net.join"></button>
         </form>`;
+    } else if (session.host && multi()) {
+      body.innerHTML = `
+        <p data-i18n="net.share.n"></p>
+        <div class="mg-on-qr">${qrSvg(session.link())}</div>
+        <div class="mg-on-code">${session.code}</div>
+        <button class="btn" data-act="copy" data-i18n="net.copy"></button>
+        <ul class="mg-on-roster">${Array.from({ length: session.maxPlayers }, (_, k) => {
+          const on = session.seats().includes(k);
+          return `<li class="${on ? 'on' : ''}"><span class="seat">${k + 1}</span> ${t(k === 0 ? 'net.seat.you' : on ? 'net.seat.on' : 'net.seat.free')}</li>`;
+        }).join('')}</ul>
+        <p class="mg-on-hint" data-i18n="net.free.hint"></p>
+        <div class="actions"><button class="btn primary" data-act="close" data-i18n="net.play"></button>
+        <button class="btn" data-act="leave" data-i18n="net.leave"></button></div>`;
     } else if (!session.connected) {
       const qr = qrcode(0, 'M');
       qr.addData(session.link());
@@ -202,6 +264,13 @@ export function mountOnline({ slug, button, onSession, onEnd }) {
   return { get session() { return session; }, end };
 }
 
+function qrSvg(text) {
+  const qr = qrcode(0, 'M');
+  qr.addData(text);
+  qr.make();
+  return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+}
+
 function injectDialog() {
   if (document.getElementById('mg-online')) return;
   document.body.insertAdjacentHTML('beforeend', `
@@ -217,7 +286,7 @@ addStrings('ru', {
   'net.btn': 'по сети',
   'net.btn.wait': 'ждём…',
   'net.btn.on': 'онлайн',
-  'net.title': 'Играть на двух устройствах',
+  'net.title': 'Играть на разных устройствах',
   'net.intro': 'Каждый играет со своего телефона или компьютера. Создайте комнату и покажите код второму игроку.',
   'net.create': 'создать комнату',
   'net.or': '— или —',
@@ -234,6 +303,13 @@ addStrings('ru', {
   'net.full': 'В комнате {code} уже играют двое. Создайте свою комнату или введите другой код.',
   'net.badcode': 'Код — 5 букв и цифр.',
   'net.you': 'вы',
+  'net.share.n': 'Остальные игроки сканируют код или открывают ссылку. Можно начинать в любой момент.',
+  'net.seat.you': 'вы (создатель)',
+  'net.seat.on': 'подключился',
+  'net.seat.free': 'свободно',
+  'net.free.hint': 'За свободные места играет компьютер (если в этой игре он есть).',
+  'net.play': 'играем!',
+  'net.full.n': 'В комнате {code} нет свободных мест. Создайте свою комнату или введите другой код.',
   'net.insecure': 'Игра по сети работает только по https:// — откройте сайт по защищённому адресу.',
   'net.slow': 'Долго? Проверьте, что у обоих есть интернет и код совпадает. Иногда мобильный интернет не пропускает прямое соединение — попробуйте общий Wi-Fi.',
 });
@@ -241,7 +317,7 @@ addStrings('en', {
   'net.btn': 'online',
   'net.btn.wait': 'waiting…',
   'net.btn.on': 'connected',
-  'net.title': 'Play on two devices',
+  'net.title': 'Play on several devices',
   'net.intro': 'Each player uses their own phone or computer. Create a room and show the code to the other player.',
   'net.create': 'create a room',
   'net.or': '— or —',
@@ -258,6 +334,13 @@ addStrings('en', {
   'net.full': 'Room {code} already has two players. Create your own room or enter another code.',
   'net.badcode': 'The code is 5 letters/digits.',
   'net.you': 'you',
+  'net.share.n': 'Other players scan the code or open the link. You can start any time.',
+  'net.seat.you': 'you (host)',
+  'net.seat.on': 'joined',
+  'net.seat.free': 'free',
+  'net.free.hint': 'Free seats are played by the computer (if this game has one).',
+  'net.play': 'let’s play!',
+  'net.full.n': 'Room {code} has no free seats. Create your own room or enter another code.',
   'net.insecure': 'Online play needs https:// — open the site via a secure address.',
   'net.slow': 'Taking long? Check that both devices are online and the code matches. Some mobile networks block direct connections — try shared Wi-Fi.',
 });
