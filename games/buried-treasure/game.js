@@ -7,7 +7,7 @@ import './strings.js';
 
 const SLUG = 'buried-treasure';
 const COLORS = [PALETTE.blue, PALETTE.red];
-const GOLD = { main: '#f2b51b', dark: '#b07d00', fill: '#ffd95a' };
+const GOLD = { main: 'var(--bt-gold)', fill: 'var(--bt-gold-fill)' };
 const M = 6, HD = 36, CS = 40;          // margin, header strip, cell size
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
@@ -110,11 +110,11 @@ function header(c, x, y, s, v) {
     const col = COLORS[owner];
     const d = box(k, x - 15, y - 15, 30, 30, 1.6);
     o += `<path d="${d}" fill="${col.fill}" opacity=".6" filter="url(#mg-crayon)"/><path class="scrap" d="${d}" stroke="${col.main}"/>`;
-    color = col.dark;
+    color = col.text;
   } else if (s === 'gold') {
     const d = shapeFor(k + 'g', () => circle(x, y, 16, 16, 0.06));
     o += `<path d="${d}" fill="${GOLD.fill}" filter="url(#mg-crayon)"/><path class="ring" d="${d}" stroke="${GOLD.main}"/>`;
-  } else if (s === 'opp') color = '#a8a8a8';
+  } else if (s === 'opp') color = 'var(--bt-off)';
   o += txt(x, y + 1, c, { size: c.length > 1 ? 24 : 28, color });
   if (s === 'opp') o += `<path class="strike" d="${shapeFor(k + 's', () => line(x - 13, y + 11, x + 13, y - 11, 1.2))}" stroke="${COLORS[1 - v].main}"/>`;
   return o;
@@ -123,9 +123,9 @@ function header(c, x, y, s, v) {
 function chest(cx, cy) {
   return `<g class="chest">
     <path d="${shapeFor('glow', () => circle(cx, cy, 19, 19, 0.08))}" fill="${GOLD.fill}" filter="url(#mg-crayon)"/>
-    <path d="${shapeFor('lid', () => `M${cx - 12} ${cy - 1} Q${cx - 12} ${cy - 12} ${cx} ${cy - 12} Q${cx + 12} ${cy - 12} ${cx + 12} ${cy - 1} Z`)}" fill="#c47a2c" stroke="#6b3f12" stroke-width="2.2" stroke-linejoin="round"/>
-    <path d="${box('body', cx - 12, cy - 1, 24, 13, 0.6)}" fill="#a8621f" stroke="#6b3f12" stroke-width="2.2" stroke-linejoin="round"/>
-    <rect x="${cx - 3}" y="${cy - 4}" width="6" height="7" rx="1.5" fill="${GOLD.main}" stroke="#6b3f12" stroke-width="1.4"/>
+    <path d="${shapeFor('lid', () => `M${cx - 12} ${cy - 1} Q${cx - 12} ${cy - 12} ${cx} ${cy - 12} Q${cx + 12} ${cy - 12} ${cx + 12} ${cy - 1} Z`)}" fill="var(--bt-lid)" stroke="var(--bt-wood-ink)" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="${box('body', cx - 12, cy - 1, 24, 13, 0.6)}" fill="var(--bt-wood)" stroke="var(--bt-wood-ink)" stroke-width="2.2" stroke-linejoin="round"/>
+    <rect x="${cx - 3}" y="${cy - 4}" width="6" height="7" rx="1.5" fill="${GOLD.main}" stroke="var(--bt-wood-ink)" stroke-width="1.4"/>
   </g>`;
 }
 
@@ -145,7 +145,7 @@ function render() {
   let o = '';
 
   // paper under the map
-  o += `<rect x="${G}" y="${G}" width="${N() * CS}" height="${N() * CS}" fill="#fff"/>`;
+  o += `<rect x="${G}" y="${G}" width="${N() * CS}" height="${N() * CS}" fill="var(--card)"/>`;
 
   // shaded squares: no treasure possible there
   if (poss) {
@@ -154,7 +154,7 @@ function render() {
       if (poss.has(L[i] + Ns[j])) continue;
       sh += `<rect x="${colX(i)}" y="${rowY(j)}" width="${CS}" height="${CS}"/>`;
     }
-    o += `<g fill="${vc.fill}" opacity=".5" filter="url(#mg-crayon)">${sh}</g>`;
+    o += `<g class="shade" fill="${vc.fill}" filter="url(#mg-crayon)">${sh}</g>`;
   }
 
   // grid lines
@@ -195,9 +195,9 @@ function render() {
   // log panel
   const lines = lastLines();
   if (!lines.length) {
-    if (k) o += txt(W / 2, B + 34, t('bt.legend'), { size: 20, color: '#777', max: W - 16, weight: 600 });
+    if (k) o += txt(W / 2, B + 34, t('bt.legend'), { size: 20, color: 'var(--bt-legend)', max: W - 16, weight: 600 });
   } else lines.forEach((e, n) => {
-    o += txt(M + 2, B + 24 + n * 26, logLine(e), { size: 20, color: COLORS[e.p].dark, anchor: 'start', max: W - 2 * M - 4, weight: 600 });
+    o += txt(M + 2, B + 24 + n * 26, logLine(e), { size: 20, color: COLORS[e.p].text, anchor: 'start', max: W - 2 * M - 4, weight: 600 });
   });
 
   svg.innerHTML = o;
@@ -218,7 +218,7 @@ function renderCover() {
   b.style.borderColor = COLORS[cov].dark;
   const lines = lastLines();
   $('#cover-last').innerHTML = lines.length
-    ? `<div>${esc(t('bt.cover.last'))}</div>` + lines.map((e) => `<div style="color:${COLORS[e.p].dark}">${esc(logLine(e))}</div>`).join('')
+    ? `<div>${esc(t('bt.cover.last'))}</div>` + lines.map((e) => `<div style="color:${COLORS[e.p].text}">${esc(logLine(e))}</div>`).join('')
     : '';
 }
 

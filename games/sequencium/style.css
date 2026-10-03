@@ -11,9 +11,16 @@
 #board #preview { opacity: .38; pointer-events: none; }
 #board.busy { cursor: default; }
 .result-why { font-size: 26px; margin: 0 0 2px; color: var(--ink); }
-.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; line-height: 1.25; }
+.result-next { font-size: 20px; margin: 0 0 8px; color: var(--muted); }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0 0; line-height: 1.25; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes pop { from { opacity: 0; } 60% { opacity: 1; } }
 @keyframes pulse { 50% { opacity: .4; } }
 @keyframes fade { from { opacity: 0; } }
+/* dark theme: translucent marks sink into the slate, so lift them a bit */
+:root[data-theme=dark] #board .target { opacity: .85; }
+:root[data-theme=dark] #board #preview { opacity: .5; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) #board .target { opacity: .85; }
+  :root:not([data-theme=light]) #board #preview { opacity: .5; }
+}

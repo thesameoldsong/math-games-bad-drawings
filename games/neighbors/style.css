@@ -1,4 +1,19 @@
 /* Neighbors: board + layout tweaks for 1–4 player cards. */
+/* local colours: the fourth seat (orange) and the yellow die, with chalk-on-slate variants */
+:root {
+  --nb-orange: #f08c1e; --nb-orange-text: #b05c00; --nb-orange-fill: #f8c58a; --nb-orange-face: #b05c00;
+  --nb-die: #ffd76a; --nb-die-hi: #fff;
+}
+:root[data-theme=dark] {
+  --nb-orange: #ffa64d; --nb-orange-text: #ffc98f; --nb-orange-fill: #d9832e; --nb-orange-face: #6b3600;
+  --nb-die: #8f6a1a; --nb-die-hi: #b88a2e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --nb-orange: #ffa64d; --nb-orange-text: #ffc98f; --nb-orange-fill: #d9832e; --nb-orange-face: #6b3600;
+    --nb-die: #8f6a1a; --nb-die-hi: #b88a2e;
+  }
+}
 .arena .board-wrap { display: flex; justify-content: center; }
 /* The board shrinks on short screens so cards + board + status stay above the bottom toolbar. */
 #board {
@@ -10,14 +25,15 @@
 #board .ink-line { stroke: var(--dot); stroke-width: 2.4; }
 #board .grid { stroke: var(--dot); }
 #board .frame { stroke-width: 3.6; }
-#board .die-fill { fill: #ffd76a; }
+#board .die-fill { fill: var(--nb-die); }
+#board .die-hi { fill: var(--nb-die-hi); opacity: .55; }
 #board .die-num { font: 700 34px var(--hand); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
 #board .die-num.ten { font-size: 30px; }
 #board .card-corner { font: 700 14px var(--hand); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
 #board .die.rolling { animation: roll .55s cubic-bezier(.3, 1.4, .5, 1); transform-box: fill-box; transform-origin: center; }
 #board .die.done { opacity: .35; }
-#board .round-txt { font: 600 17px var(--hand); fill: #666; text-anchor: middle; }
-#board .best-lbl { font: 600 22px var(--hand); fill: #777; text-anchor: middle; }
+#board .round-txt { font: 600 17px var(--hand); fill: var(--muted); text-anchor: middle; }
+#board .best-lbl { font: 600 22px var(--hand); fill: color-mix(in srgb, var(--muted) 67%, var(--muted-2)); text-anchor: middle; }
 #board .best-num { font: 700 46px var(--hand); fill: var(--blue-dark); text-anchor: middle; }
 #board .deck-num { font: 700 16px var(--hand); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
 #board .pip { fill: none; stroke: var(--pencil); stroke-width: 1.2; }
@@ -45,12 +61,12 @@
 /* pass-the-device cover for secret boards on one screen */
 .cover { position: absolute; inset: 0; display: grid; place-items: center; background: var(--paper); z-index: 2; }
 .cover[hidden] { display: none; }
-.cover-title { font-size: 24px; color: #666; margin: 0; }
+.cover-title { font-size: 24px; color: var(--muted); margin: 0; }
 .result-sub { font: 700 24px/1.2 var(--hand); margin: 0 0 10px; }
 .result-sub:empty { display: none; }
 
-.bubble.green { color: #3aa655; }
-.bubble.orange { color: #f08c1e; }
+.bubble.green { color: var(--green); }
+.bubble.orange { color: var(--nb-orange); }
 
 /* one player: a single centred card */
 .arena.n1 { grid-template-areas: "p0 p0" "board board" "status status"; }
@@ -116,4 +132,4 @@
 
 /* online: a player whose device dropped out */
 .player.off .fig { opacity: .35; }
-.player.off .score { color: #999; }
+.player.off .score { color: var(--muted-2); }

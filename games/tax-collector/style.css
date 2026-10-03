@@ -1,3 +1,10 @@
+/* local colours: light values are the original ones; dark = chalk on slate */
+:root { --tc-dead: #b9b9bf; --tc-sub: #555; --tc-fill-op: .55; --tc-hint-fill: #ffe066; --tc-hint: #e0a800; }
+:root[data-theme=dark] { --tc-dead: #5d636d; --tc-sub: var(--muted); --tc-fill-op: .4; --tc-hint-fill: #ffd84a; --tc-hint: #f2c230; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --tc-dead: #5d636d; --tc-sub: var(--muted); --tc-fill-op: .4; --tc-hint-fill: #ffd84a; --tc-hint: #f2c230; }
+}
+
 #board {
   width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
   max-height: calc(100dvh - 270px); min-height: 240px;
@@ -7,13 +14,13 @@
 #board .num text {
   font: 700 36px var(--hand); text-anchor: middle; dominant-baseline: central; fill: var(--ink); pointer-events: none;
 }
-#board .num.dead text { fill: #b9b9bf; }
+#board .num.dead text { fill: var(--tc-dead); }
 #board .num.mine text { fill: var(--blue-dark); }
 #board .num.tax text { fill: var(--red-dark); }
 #board .num.focus text { fill: var(--blue-dark); }
 #board .num.taxing text { fill: var(--red-dark); }
 
-#board .fillc { fill: #7fd0ea; opacity: .55; }
+#board .fillc { fill: var(--blue-fill); opacity: var(--tc-fill-op); }
 #board .ring { fill: none; stroke: var(--blue); stroke-width: 3.6; stroke-linecap: round; }
 #board .ring.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: tc-draw .35s ease-out forwards; }
 #board .box { fill: none; stroke: var(--red); stroke-width: 3.4; stroke-linecap: round; }
@@ -21,7 +28,7 @@
 #board .ghost { stroke-dasharray: 5 6; opacity: .85; }
 #board .tie { fill: none; stroke: var(--red); stroke-width: 2; stroke-dasharray: 3 7; stroke-linecap: round; opacity: .55; }
 #board .hintc {
-  fill: #ffe066; fill-opacity: .35; stroke: #e0a800; stroke-width: 3; stroke-dasharray: 6 6;
+  fill: var(--tc-hint-fill); fill-opacity: .35; stroke: var(--tc-hint); stroke-width: 3; stroke-dasharray: 6 6;
   animation: tc-pulse .9s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center;
 }
 
@@ -30,7 +37,7 @@
 @keyframes tc-pulse { from { transform: scale(.92); } to { transform: scale(1.06); } }
 
 .result-score { font: 700 clamp(34px, 8vw, 46px)/1 var(--hand); margin: -4px 0 6px; }
-.result-sub { font-size: 22px; line-height: 1.15; color: #555; margin: 0 0 10px; max-width: 16em; margin-inline: auto; }
+.result-sub { font-size: 22px; line-height: 1.15; color: var(--tc-sub); margin: 0 0 10px; max-width: 16em; margin-inline: auto; }
 
 .how-pic svg { display: block; width: min(100%, 420px); margin: 0 auto 4px; }
 .how-pic text { font: 700 26px var(--hand); text-anchor: middle; dominant-baseline: central; }

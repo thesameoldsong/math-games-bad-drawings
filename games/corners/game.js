@@ -94,7 +94,7 @@ function render(animate) {
     const cls = fresh.has(i) && animate ? ' fresh' : '';
     out += `<g class="dot${cls}" style="transform-origin:${x}px ${y}px">`;
     if (st.shaded[i]) out += `<path d="${d}" fill="${col.main}" filter="url(#mg-crayon)"/>`;
-    out += `<path class="ring" d="${d}" stroke="${st.shaded[i] ? col.dark : col.main}"/></g>`;
+    out += `<path class="ring" d="${d}" stroke="${st.shaded[i] ? col.text : col.main}"/></g>`;
   }
 
   // the square being claimed: bold frame, pulsing corners, ghost dots where new ones will go

@@ -85,7 +85,7 @@ function render(animateLast) {
   for (let i = 0; i < Q3.CELLS; i++) {
     if (winSet.has(i)) out += cellFill(i, 'w', COLORS[st.winner].fill, 'win');
     else if (!over && i === st.last) out += cellFill(i, 'l', COLORS[st.b[i]].fill, 'last');
-    else if (!over && st.gravity && st.b[i] < 0 && !Q3.canPlay(st, i)) out += cellFill(i, 'g', '#e6e6e6', 'blocked');
+    else if (!over && st.gravity && st.b[i] < 0 && !Q3.canPlay(st, i)) out += cellFill(i, 'g', 'var(--q3-blocked)', 'blocked');
   }
 
   // grids
@@ -384,7 +384,7 @@ function howPic() {
     return `M${x + 30} ${y} L${x + 150} ${y} L${x + 120} ${y + 22} L${x} ${y + 22} Z`;
   };
   for (let k = 0; k < 4; k++) {
-    const fill = k === 0 ? PALETTE.blue.fill : k === 3 ? PALETTE.red.fill : '#fff';
+    const fill = k === 0 ? PALETTE.blue.fill : k === 3 ? PALETTE.red.fill : 'var(--card)';
     s += `<path d="${slab(k)}" fill="${fill}" fill-opacity=".45" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>`;
     s += `<text x="210" y="${30 + k * 26}" class="lbl">${k + 1}</text>`;
   }
@@ -394,7 +394,7 @@ function howPic() {
     const xx = x - k * 7;
     s += `<path d="M${xx - 6} ${y - 5}l12 10M${xx + 6} ${y - 5}l-12 10" stroke="${PALETTE.blue.main}" stroke-width="3.2" stroke-linecap="round"/>`;
   });
-  s += `<path d="M${pts[0][0] - 2} ${pts[0][1] - 10} L${pts[3][0] - 19} ${pts[3][1] + 10}" stroke="${PALETTE.blue.dark}" stroke-width="1.6" stroke-dasharray="4 4" fill="none"/>`;
+  s += `<path d="M${pts[0][0] - 2} ${pts[0][1] - 10} L${pts[3][0] - 19} ${pts[3][1] + 10}" stroke="${PALETTE.blue.text}" stroke-width="1.6" stroke-dasharray="4 4" fill="none"/>`;
   $('#how-pic').innerHTML = `<svg viewBox="0 0 240 124">${s}</svg>`;
 }
 

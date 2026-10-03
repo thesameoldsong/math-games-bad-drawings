@@ -87,7 +87,7 @@ function render(animateLast) {
     for (const k of cr) {
       const [ux, uy] = C.meet(st.n, l, st.lines[k.i]);
       const x = M + ux * L, y = M + uy * L;
-      out += `<circle class="hit${animateLast ? ' fresh' : ''}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${k.own ? 7 : 5}" stroke="${col.dark}"/>`;
+      out += `<circle class="hit${animateLast ? ' fresh' : ''}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${k.own ? 7 : 5}" stroke="${col.text}"/>`;
     }
     if (cr.length) out += gainLabel(l.a, l.b, cr.reduce((s, k) => s + k.pts, 0), l.p, animateLast ? ' fresh' : '');
   }
@@ -101,7 +101,7 @@ function render(animateLast) {
     if (u >= 0) cls += ' used';
     else if (sel === d) cls += ' sel';
     else if (targets) cls += targets(d) ? ' target' : ' off';
-    const fill = u >= 0 ? COLORS[u].dark : sel === d ? COLORS[st.turn].main : '';
+    const fill = u >= 0 ? COLORS[u].text : sel === d ? COLORS[st.turn].main : '';
     out += `<path class="${cls}" d="${shapeFor('d' + d, () => circle(x, y, 5, 5, 0.12))}"${fill ? ` fill="${fill}"` : ''}/>`;
     if (sel === d) out += `<circle class="ring" cx="${x}" cy="${y}" r="13" stroke="${COLORS[st.turn].main}"/>`;
   }
@@ -117,7 +117,7 @@ function gainLabel(a, b, pts, p, extra = '') {
   const sgn = (V / 2 - x) * nx + (V / 2 - y) * ny > 0 ? 1 : -1;
   x += nx * 18 * sgn; y += ny * 18 * sgn;
   x = Math.min(V - 22, Math.max(22, x)); y = Math.min(V - 14, Math.max(16, y));
-  return `<text class="gain${extra}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${COLORS[p].dark}">+${pts}</text>`;
+  return `<text class="gain${extra}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${COLORS[p].text}">+${pts}</text>`;
 }
 
 function showPreview(target, px, py) {

@@ -91,10 +91,10 @@ function box(k, x, y, w, h, amp = 1.2) {
     line(x + w, y + h, x, y + h, amp).replace('M', 'L') + ' ' + line(x, y + h, x, y, amp).replace('M', 'L'));
 }
 function button(k, act, x, y, w, h, label, { color = null, off = false, on = false, size = 22 } = {}) {
-  const fill = color ? color.main : on ? '#efeee8' : '#fff';
+  const fill = color ? color.main : on ? 'var(--bc-key-on)' : 'var(--card)';
   return `<g class="sbtn${off ? ' off' : ''}" data-act="${act}">
-    <path d="${box(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.dark : 'var(--ink)'}" stroke-width="2.4" stroke-linejoin="round"/>
-    ${txt(x + w / 2, y + h / 2 + 1, label, { size, color: color ? '#fff' : 'var(--ink)', max: w - 12 })}</g>`;
+    <path d="${box(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.text : 'var(--ink)'}" stroke-width="2.4" stroke-linejoin="round"/>
+    ${txt(x + w / 2, y + h / 2 + 1, label, { size, color: color ? 'var(--on-accent)' : 'var(--ink)', max: w - 12 })}</g>`;
 }
 // feedback marks: bullseye = target (ring + centre), close call = empty ring
 function bullIcon(x, y, r, k) {
@@ -113,7 +113,7 @@ function header(p) {
   for (let k = 0; k < L; k++) {
     const x = bx + k * (bw + gap);
     s += `<path class="tbox" d="${box(`tb${p}_${k}_${L}`, x, 27, bw, 25, 0.9)}" stroke="${COLORS[q].main}"/>`;
-    s += txt(x + bw / 2, 40, sec ? sec[k] : '?', { size: sec ? 23 : 19, color: sec ? COLORS[q].main : '#b5b5b5', cls: sec ? 'pop' : '' });
+    s += txt(x + bw / 2, 40, sec ? sec[k] : '?', { size: sec ? 23 : 19, color: sec ? COLORS[q].main : 'var(--bc-q)', cls: sec ? 'pop' : '' });
   }
   return s;
 }
@@ -127,17 +127,17 @@ function logColumn(p) {
   const n = shown.length + (skipped ? 1 : 0);
   const rh = Math.min(RH, LOGH / Math.max(1, n)), k = rh / RH;
   let y = LOG0 + rh / 2;
-  if (skipped) { s += txt(x0 + CW / 2, y, t('bc.more', { n: skipped }), { size: 15, color: '#999', weight: 600 }); y += rh; }
+  if (skipped) { s += txt(x0 + CW / 2, y, t('bc.more', { n: skipped }), { size: 15, color: 'var(--muted-2)', weight: 600 }); y += rh; }
   const DX = L > 4 ? 15 : 16, fs = Math.round(24 * Math.max(0.75, k));
   const ir = 5.6 * Math.max(0.75, k), IS = L > 4 ? 14 : 17;
   shown.forEach((e, j) => {
     const i = skipped + j;
     const isFresh = fresh && fresh[0] === p && fresh[1] === i;
-    let row = txt(x0 + 9, y, i + 1, { size: Math.round(15 * Math.max(0.8, k)), color: '#aaa', weight: 600 });
+    let row = txt(x0 + 9, y, i + 1, { size: Math.round(15 * Math.max(0.8, k)), color: 'var(--bc-num)', weight: 600 });
     for (let d = 0; d < L; d++) row += txt(x0 + 27 + d * DX, y, e.g[d], { size: fs, color: COLORS[p].main });
     const ix = x0 + 27 + (L - 1) * DX + 21;
     let marks = '';
-    if (e.b + e.c === 0) marks += txt(ix + 8, y, '—', { size: 20, color: '#aaa', weight: 600 });
+    if (e.b + e.c === 0) marks += txt(ix + 8, y, '—', { size: 20, color: 'var(--bc-num)', weight: 600 });
     for (let m = 0; m < e.b + e.c; m++) {
       const cx = +(ix + m * IS).toFixed(1), key = `ic${p}_${i}_${m}_${cx}_${y.toFixed(1)}_${ir.toFixed(1)}`;
       const icon = m < e.b ? bullIcon(cx, y, ir, key) : closeIcon(cx, y, ir, key);
@@ -155,21 +155,21 @@ function setupInfo() {
   const mine = st.secrets[p] !== null;
   let s = `<path class="paper" d="${box('setup-card', 22, LOG0 + 12, W - 44, 150, 1.6)}"/>`;
   if (online() && mine) {
-    s += txt(W / 2, LOG0 + 70, t('bc.setup.waiting'), { size: 22, color: '#777', max: W - 70 });
+    s += txt(W / 2, LOG0 + 70, t('bc.setup.waiting'), { size: 22, color: 'var(--bc-note)', max: W - 70 });
     return s;
   }
   s += txt(W / 2, LOG0 + 50, t('bc.setup.title'), { size: 30, color: COLORS[p].main, max: W - 70 });
-  s += txt(W / 2, LOG0 + 90, t(st.rep ? 'bc.setup.rep' : 'bc.setup.distinct', { d: plural(st.len, st.rep ? 'bc.digits' : 'bc.ddigits') }), { size: 20, color: '#666', weight: 600, max: W - 70 });
-  s += bullIcon(70, LOG0 + 128, 8, 'demo-b') + txt(84, LOG0 + 128, t('bc.lbl.bull'), { size: 19, anchor: 'start', weight: 600, color: '#555', max: 90 });
-  s += closeIcon(200, LOG0 + 128, 8, 'demo-c') + txt(214, LOG0 + 128, t('bc.lbl.close'), { size: 19, anchor: 'start', weight: 600, color: '#555', max: 90 });
+  s += txt(W / 2, LOG0 + 90, t(st.rep ? 'bc.setup.rep' : 'bc.setup.distinct', { d: plural(st.len, st.rep ? 'bc.digits' : 'bc.ddigits') }), { size: 20, color: 'var(--muted)', weight: 600, max: W - 70 });
+  s += bullIcon(70, LOG0 + 128, 8, 'demo-b') + txt(84, LOG0 + 128, t('bc.lbl.bull'), { size: 19, anchor: 'start', weight: 600, color: 'var(--bc-text-2)', max: 90 });
+  s += closeIcon(200, LOG0 + 128, 8, 'demo-c') + txt(214, LOG0 + 128, t('bc.lbl.close'), { size: 19, anchor: 'start', weight: 600, color: 'var(--bc-text-2)', max: 90 });
   return s;
 }
 
 function infoLine() {
-  if (over()) return txt(W / 2, INFO, t('bc.reveal', { a: st.secrets[0], b: st.secrets[1] }), { size: 20, color: '#666', weight: 600 });
+  if (over()) return txt(W / 2, INFO, t('bc.reveal', { a: st.secrets[0], b: st.secrets[1] }), { size: 20, color: 'var(--muted)', weight: 600 });
   const p = keypadPlayer();
   if (st.phase === 'play' && cfg.count && (isLocal(p))) {
-    return txt(W / 2, INFO, t('bc.possible', { n: possible(st, p) }), { size: 19, color: COLORS[p].dark, weight: 600 });
+    return txt(W / 2, INFO, t('bc.possible', { n: possible(st, p) }), { size: 19, color: COLORS[p].text, weight: 600 });
   }
   return '';
 }
@@ -195,7 +195,7 @@ function keypad() {
     const off = notesMode ? !(st.phase === 'play' || st.phase === 'over') : !typing || used || draft.length >= L;
     const mark = nt[d];
     let g = `<path d="${box(`k${d}`, x, y, kw, KH)}" class="key${notesMode ? ' notes' : ''}" />`;
-    g += txt(x + kw / 2, y + KH / 2 + 1, d, { size: 30, color: mark === 1 ? '#b0b0b0' : 'var(--ink)' });
+    g += txt(x + kw / 2, y + KH / 2 + 1, d, { size: 30, color: mark === 1 ? 'var(--bc-faint)' : 'var(--ink)' });
     if (mark === 1) g += `<path class="strike" d="${shapeFor('st' + d, () => line(x + kw / 2 - 13, y + KH - 9, x + kw / 2 + 13, y + 9, 1))}"/>`;
     if (mark === 2) g += `<path class="ring" d="${shapeFor('rg' + d, () => circle(x + kw / 2, y + KH / 2 + 1, 15, 16, 0.08))}" stroke="${PALETTE.ink}"/>`;
     s += `<g class="sbtn${off ? ' off' : ''}" data-act="k${d}">${g}</g>`;
@@ -217,7 +217,7 @@ function cover(p) {
   s += `<path class="paper" d="${box('cover', 26, 80, W - 52, 300, 2)}"/>`;
   s += txt(W / 2, 130, t('bc.cover.title'), { size: 32, max: W - 80 });
   s += txt(W / 2, 180, t('bc.cover.who', { name: name(p) }), { size: 26, color: c.main, max: W - 80 });
-  s += txt(W / 2, 220, t('bc.cover.note'), { size: 20, color: '#777', weight: 600, max: W - 80 });
+  s += txt(W / 2, 220, t('bc.cover.note'), { size: 20, color: 'var(--bc-note)', weight: 600, max: W - 80 });
   s += button('cvb', 'uncover', W / 2 - 80, 268, 160, 54, t('bc.cover.btn'), { color: c, size: 28 });
   return s;
 }
@@ -235,7 +235,7 @@ function render() {
   s += keypad();
   if (online() && !sess.connected) {
     s += `<rect x="0" y="${LOG0}" width="${W}" height="${H - LOG0}" fill="var(--paper)" opacity=".85"/>`;
-    s += txt(W / 2, LOG0 + 110, t('bc.online.wait'), { size: 26, color: '#777' });
+    s += txt(W / 2, LOG0 + 110, t('bc.online.wait'), { size: 26, color: 'var(--bc-note)' });
   }
   const cov = coverFor();
   if (cov >= 0) s += cover(cov);

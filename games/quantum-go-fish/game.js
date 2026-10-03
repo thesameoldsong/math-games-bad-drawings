@@ -12,12 +12,12 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 // Eight player colours: the book's blue and red first.
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3a9d4f', dark: '#22703a', fill: '#9bd6a5' },
-  { main: '#f08a24', dark: '#b35f0c', fill: '#f8c08a' },
-  { main: '#8b5cc8', dark: '#5e3797', fill: '#c7aee8' },
-  { main: '#e0559a', dark: '#a8306d', fill: '#f1a9cc' },
-  { main: '#9a6b3f', dark: '#6b4522', fill: '#d2b394' },
-  { main: '#7d8f20', dark: '#56630f', fill: '#c4d07a' },
+  { main: 'var(--qgf-green)', text: 'var(--qgf-green)', fill: 'var(--qgf-green-fill)', dark: 'var(--qgf-green-face)' },
+  { main: 'var(--qgf-orange)', text: 'var(--qgf-orange)', fill: 'var(--qgf-orange-fill)', dark: 'var(--qgf-orange-face)' },
+  { main: 'var(--qgf-violet)', text: 'var(--qgf-violet)', fill: 'var(--qgf-violet-fill)', dark: 'var(--qgf-violet-face)' },
+  { main: 'var(--qgf-pink)', text: 'var(--qgf-pink)', fill: 'var(--qgf-pink-fill)', dark: 'var(--qgf-pink-face)' },
+  { main: 'var(--qgf-brown)', text: 'var(--qgf-brown)', fill: 'var(--qgf-brown-fill)', dark: 'var(--qgf-brown-face)' },
+  { main: 'var(--qgf-olive)', text: 'var(--qgf-olive)', fill: 'var(--qgf-olive-fill)', dark: 'var(--qgf-olive-face)' },
 ];
 
 // Suit drawings (our own), 24×24 box: crayon fill + ink outline + details.
@@ -113,7 +113,7 @@ function buildSeats() {
   shapes = {};
   $('#seats').className = `seats n${st.n}${st.n >= 6 ? ' compact' : ''}`;
   $('#seats').innerHTML = Array.from({ length: st.n }, (_, p) => `
-    <div class="seat" data-p="${p}" style="--pc:${COLORS[p].main}; --pd:${COLORS[p].dark}">
+    <div class="seat" data-p="${p}" style="--pc:${COLORS[p].main}">
       <div class="fig-wrap"><div class="bubble" style="color:${COLORS[p].main}"></div><div class="fig"></div></div>
       <div class="seat-main">
         <div class="seat-top"><span class="nm"></span><span class="cnt"></span><span class="off"></span><span class="nots"></span></div>

@@ -121,7 +121,7 @@ function render(animateLast) {
     lines.forEach((L, k) => {
       const hx = L.kind === 'r' ? x1 + HM / 2 + 1 : M + L.idx * S + S / 2;
       const hy = L.kind === 'r' ? M + L.idx * S + S / 2 : y1 + HM / 2;
-      let txt, color = '#8a8a90', cls = 'hint';
+      let txt, color = 'var(--pro-hint)', cls = 'hint';
       if (over) {
         const info = sc.lines[k];
         if (info.owner >= 0) { txt = '+' + info.count; color = COLORS[info.owner].main; cls += ' won'; }

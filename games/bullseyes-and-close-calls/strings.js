@@ -1,8 +1,8 @@
 import { addStrings } from '../../shared/i18n.js';
 
 // Little inline pictures of the two kinds of feedback, matching the board.
-const BULL = '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="#3b3b44" stroke-width="2.2"/><circle cx="10" cy="10" r="3.4" fill="#3b3b44"/></svg>';
-const CLOSE = '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="#3b3b44" stroke-width="2.2"/></svg>';
+const BULL = '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="var(--dot)" stroke-width="2.2"/><circle cx="10" cy="10" r="3.4" fill="var(--dot)"/></svg>';
+const CLOSE = '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="var(--dot)" stroke-width="2.2"/></svg>';
 
 addStrings('ru', {
   'bc.title': 'В яблочко и почти',

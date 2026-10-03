@@ -8,7 +8,7 @@ import './strings.js';
 const SLUG = 'amazons';
 const S = 50, M = 8; // cell size, margin
 const COLORS = [PALETTE.blue, PALETTE.red];
-const INK = PALETTE.ink;
+const INK = 'var(--amz-burnt)'; // burnt square: ink on paper, charcoal on slate
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
 
@@ -150,7 +150,7 @@ function render(animate) {
   // last turn: the amazon's path and the arrow's flight
   if (last && !pend) {
     out += trail(last.from, last.to, COLORS[last.who].main, 'm', 'trail', false);
-    out += trail(last.to, last.arrow, COLORS[last.who].dark, 'a', 'trail shot', true);
+    out += trail(last.to, last.arrow, COLORS[last.who].text, 'a', 'trail shot', true);
   }
 
   const mine = canMove();
@@ -180,7 +180,7 @@ function render(animate) {
   if (mine && pend) {
     for (const i of AMZ.arrowTargets(st, pend.from, pend.to)) {
       const [x, y] = cellXY(i);
-      out += `<g class="target shoot" stroke="${COLORS[st.turn].dark}"><path d="M${x - 5} ${y - 5} L${x + 5} ${y + 5} M${x + 5} ${y - 5} L${x - 5} ${y + 5}"/></g>`;
+      out += `<g class="target shoot" stroke="${COLORS[st.turn].text}"><path d="M${x - 5} ${y - 5} L${x + 5} ${y + 5} M${x + 5} ${y - 5} L${x - 5} ${y + 5}"/></g>`;
     }
   } else if (mine && sel >= 0) {
     for (const i of AMZ.targets(st, sel)) {
@@ -434,7 +434,7 @@ svg.addEventListener('pointermove', (evt) => {
   if (seg) {
     const [x1, y1] = cellXY(seg[0]), [x2, y2] = cellXY(seg[1]);
     pv.setAttribute('d', `M${x1} ${y1} L${x2} ${y2}`);
-    pv.setAttribute('stroke', (a.move ? COLORS[st.turn].dark : COLORS[st.turn].main));
+    pv.setAttribute('stroke', (a.move ? COLORS[st.turn].text : COLORS[st.turn].main));
   } else pv.setAttribute('d', '');
 });
 svg.addEventListener('pointerleave', () => { hoverCell = -1; svg.querySelector('#preview')?.setAttribute('d', ''); });

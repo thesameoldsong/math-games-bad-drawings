@@ -9,6 +9,8 @@ const SLUG = 'jam';
 const STORE = 'mg-' + SLUG;
 const W = 360, R = 29;                     // board width, number circle radius
 const COLORS = [PALETTE.blue, PALETTE.red];
+// digit colour on a filled hand chip (dark ink in both themes, see style.css)
+const ON_FILL = ['var(--jam-on-blue)', 'var(--jam-on-red)'];
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
 
@@ -98,7 +100,7 @@ function render(animateLast) {
       out += `<circle class="need" cx="${x}" cy="${y}" r="${rr}" stroke="${COLORS[p].main}"/>`;
     });
     out += `<path class="ring" d="${ring}" stroke="${o < 0 ? PALETTE.ink : COLORS[o].main}"/>`;
-    out += `<text class="digit" x="${x}" y="${y + 1}" fill="${o < 0 ? PALETTE.ink : COLORS[o].dark}">${n}</text>`;
+    out += `<text class="digit" x="${x}" y="${y + 1}" fill="${o < 0 ? PALETTE.ink : COLORS[o].text}">${n}</text>`;
     out += '</g>';
   }
 
@@ -126,8 +128,8 @@ function render(animateLast) {
     mine.forEach((n, i) => {
       const x = x0 + i * step, y = handY;
       const w = trio.includes(n) && st.winner === p;
-      out += `<path class="chip${w ? ' win' : ''}" d="${shapeFor(`h${L}${p}_${n}_${i}_${mine.length}`, () => circle(x, y, r, r, 0.06))}" stroke="${COLORS[p].main}" fill="${w ? COLORS[p].fill : '#fff'}"/>`;
-      out += `<text class="chip-digit" x="${x}" y="${y + 1}" fill="${COLORS[p].dark}">${n}</text>`;
+      out += `<path class="chip${w ? ' win' : ''}" d="${shapeFor(`h${L}${p}_${n}_${i}_${mine.length}`, () => circle(x, y, r, r, 0.06))}" stroke="${COLORS[p].main}" fill="${w ? COLORS[p].fill : 'var(--card)'}"/>`;
+      out += `<text class="chip-digit" x="${x}" y="${y + 1}" fill="${w ? ON_FILL[p] : COLORS[p].text}">${n}</text>`;
     });
   }
   if (st.trio) {

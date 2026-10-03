@@ -6,10 +6,8 @@ import { SAE, ATOMS } from './engine.js';
 import './strings.js';
 
 const SLUG = 'saesara';
-const GREEN = { main: '#3aa655', dark: '#23753a', fill: '#8fd4a0' };
-const VIOLET = { main: '#8e5cc4', dark: '#5e3590', fill: '#c6a8e8' };
-const COLORS = [PALETTE.blue, PALETTE.red, GREEN, VIOLET];
-const OK = '#2f9e4f', NO = '#d6343f';
+const COLORS = [PALETTE.blue, PALETTE.red, PALETTE.green, PALETTE.violet];
+const OK = 'var(--ok)', NO = 'var(--sae-no)', FAINT = 'var(--sae-faint)', ZERO = 'var(--sae-zero)';
 const CELL = 50, M = 8;
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
@@ -54,7 +52,7 @@ function name(p) {
   const n = online() && !isLocal(p) ? netNames[p] : cfg.names[p];
   return (n && n.trim()) || t('sae.p' + p);
 }
-const colorOf = (p) => (p >= 0 ? COLORS[p] : { main: PALETTE.ink, dark: PALETTE.ink });
+const colorOf = (p) => (p >= 0 ? COLORS[p] : { main: PALETTE.ink, text: PALETTE.ink, dark: PALETTE.ink });
 const centerK = (N) => N - 2 * Math.floor(N / 4);
 
 // ---------- rule text ----------
@@ -87,7 +85,7 @@ function boardSVG(o) {
     const x0 = M + (sq % N) * CELL + 4, y0 = M + Math.floor(sq / N) * CELL + 11;
     list.slice(-3).forEach((m, i) => {
       const x = x0 + i * 15, w = String(m.n).length * 7 + 2;
-      s += `<text class="small" x="${x}" y="${y0}" fill="${m.ok ? OK : '#8a8a92'}">${m.n}</text>`;
+      s += `<text class="small" x="${x}" y="${y0}" fill="${m.ok ? OK : FAINT}">${m.n}</text>`;
       if (!m.ok) s += `<path class="strike" d="M${x - 2} ${y0 - 12} L${x + w} ${y0 + 2}"/>`;
     });
   }
@@ -120,7 +118,7 @@ function render() {
   const nums = [], smalls = {}, crosses = [], rings = [];
   st.pos.forEach((sq, k) => {
     if (sq < 0) return;
-    nums.push({ n: k, sq, color: k === 0 ? '#77777f' : colorOf(placerOf(k)).main, zero: k === 0, fresh: sq === freshSq });
+    nums.push({ n: k, sq, color: k === 0 ? ZERO : colorOf(placerOf(k)).main, zero: k === 0, fresh: sq === freshSq });
   });
   for (const o of st.obs) {
     if (o.pre?.length) continue;
@@ -376,7 +374,7 @@ function showCx(g) {
   const nums = [];
   P.forEach((sq, k) => {
     if (sq < 0) return;
-    nums.push({ n: k, sq, zero: k === 0, dashed: k >= real, color: k === 0 ? '#77777f' : k >= real ? '#77777f' : colorOf(placerOf(k)).main });
+    nums.push({ n: k, sq, zero: k === 0, dashed: k >= real, color: k === 0 ? ZERO : k >= real ? ZERO : colorOf(placerOf(k)).main });
   });
   const o = { N, nums, rings: c.ok ? [{ sq: c.sq, n: c.n }] : [], crosses: c.ok ? [] : [c.sq] };
   const { s, W } = boardSVG(o);

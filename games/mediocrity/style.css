@@ -1,5 +1,10 @@
 /* Mediocrity: three players in a row above the board. */
-.green { color: #3aa655; }
+.green { color: var(--green); }
+
+/* napkins: a slightly warm sheet on paper; on the slate board a lighter chalky grey */
+:root { --med-nap: #fffdf6; --med-fold: #f2efe6; }
+:root[data-theme=dark] { --med-nap: #2d333c; --med-fold: #3b424d; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --med-nap: #2d333c; --med-fold: #3b424d; } }
 
 .med-arena { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "p0 p1 p2" "board board board" "status status status"; gap: 2px 4px; }
 .med-arena .p2 { grid-area: p2; }
@@ -35,7 +40,7 @@
 
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board .t { font-family: var(--hand); dominant-baseline: central; }
-#board .nap { fill: #fffdf6; stroke: var(--pencil); stroke-width: 2.2; stroke-linejoin: round; }
+#board .nap { fill: var(--med-nap); stroke: var(--pencil); stroke-width: 2.2; stroke-linejoin: round; }
 #board .ring { fill: none; stroke-width: 3; stroke-linecap: round; }
 #board .axis, #board .tick { fill: none; stroke: var(--dot); stroke-width: 2.4; stroke-linecap: round; }
 #board .rule { fill: none; stroke: var(--pencil); stroke-width: 1.6; }
@@ -50,8 +55,8 @@
 @keyframes med-pop { from { opacity: 0; transform: scale(.4); } }
 @keyframes med-blink { 50% { opacity: .2; } }
 
-.result-sub { font-size: 22px; color: #666; margin: 0 0 8px; }
+.result-sub { font-size: 22px; color: var(--muted); margin: 0 0 8px; }
 
 /* online: a player whose device dropped out */
 .med-arena .player.away .fig, .med-arena .player.away .name { opacity: .4; }
-.med-arena .player.away .score { color: #999; font-style: italic; }
+.med-arena .player.away .score { color: var(--muted-2); font-style: italic; }

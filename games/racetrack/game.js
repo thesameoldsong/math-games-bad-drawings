@@ -46,7 +46,7 @@ function trackArt(id) {
   const poly = (w) => 'M' + w.map(([x, y]) => `${X(x).toFixed(1)} ${Y(y).toFixed(1)}`).join('L') + 'Z';
   const band = poly(T.walls[0]) + poly(T.walls[1]);
   let s = `<defs>
-    <pattern id="rt-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 3.5H7" stroke="#d9d4c7" stroke-width="1.6"/></pattern>
+    <pattern id="rt-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 3.5H7" stroke="var(--rt-hatch)" stroke-width="1.6"/></pattern>
     <clipPath id="rt-band"><path d="${band}" clip-rule="evenodd"/></clipPath>
   </defs>`;
   let g = '';
@@ -59,7 +59,7 @@ function trackArt(id) {
   let ch = '';
   for (let i = 0, x = Math.floor(fx1 / q) * q; x < fx2; x += q, i++)
     for (let r = 0; r < 2; r++) if ((i + r) % 2 === 0) ch += `M${X(x).toFixed(1)} ${Y(fy - q + r * q).toFixed(1)}h${q * S}v${q * S}h${-q * S}Z`;
-  s += `<g clip-path="url(#rt-band)"><rect x="${X(fx1)}" y="${Y(fy - q)}" width="${(fx2 - fx1) * S}" height="${2 * q * S}" fill="#fff"/><path class="checker" d="${ch}"/></g>`;
+  s += `<g clip-path="url(#rt-band)"><rect x="${X(fx1)}" y="${Y(fy - q)}" width="${(fx2 - fx1) * S}" height="${2 * q * S}" fill="var(--card)"/><path class="checker" d="${ch}"/></g>`;
   // pencil chevrons showing the direction of travel
   const C = T.center, n = C.length;
   withSeed(7, () => {
@@ -95,8 +95,8 @@ function carSVG(p, fresh) {
   return `<g class="${cls}"${style}><g transform="translate(${X(c.x)} ${Y(c.y)}) rotate(${angles[p].toFixed(0)}) scale(.85)">
     <rect x="-6" y="-7.5" width="4.5" height="3" rx="1" fill="${INK}"/><rect x="3.5" y="-7.5" width="4.5" height="3" rx="1" fill="${INK}"/>
     <rect x="-6" y="4.5" width="4.5" height="3" rx="1" fill="${INK}"/><rect x="3.5" y="4.5" width="4.5" height="3" rx="1" fill="${INK}"/>
-    <path d="M-9 -4.6Q-9 -5.6 -8 -5.6H6Q10.5 -5.6 10.5 0Q10.5 5.6 6 5.6H-8Q-9 5.6 -9 4.6Z" fill="${col.main}" stroke="${col.dark}" stroke-width="1.6"/>
-    <path d="M2.2 -3.8Q5.4 0 2.2 3.8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-9 -4.6Q-9 -5.6 -8 -5.6H6Q10.5 -5.6 10.5 0Q10.5 5.6 6 5.6H-8Q-9 5.6 -9 4.6Z" fill="${col.main}" stroke="${col.text}" stroke-width="1.6"/>
+    <path d="M2.2 -3.8Q5.4 0 2.2 3.8" fill="none" stroke="var(--eye)" stroke-width="2" stroke-linecap="round"/>
   </g></g>`;
 }
 
@@ -167,7 +167,7 @@ function renderOpts() {
     const x = X(o.x), y = Y(o.y);
     if (o.blocked) return;
     if (o.crash) s += `<path class="no${i === act ? ' on' : ''}" d="M${x - 4} ${y - 4}L${x + 4} ${y + 4}M${x + 4} ${y - 4}L${x - 4} ${y + 4}"/>`;
-    else s += `<circle class="opt${i === act ? ' on' : ''}" cx="${x}" cy="${y}" r="${i === act ? 6.5 : 5.2}" stroke="${col.main}" fill="${i === act ? col.main : '#fff'}"/>`;
+    else s += `<circle class="opt${i === act ? ' on' : ''}" cx="${x}" cy="${y}" r="${i === act ? 6.5 : 5.2}" stroke="${col.main}" fill="${i === act ? col.main : 'var(--card)'}"/>`;
   });
   g.innerHTML = s;
 }

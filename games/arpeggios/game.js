@@ -68,10 +68,10 @@ function die(i, v, cls, color) {
 }
 function button(x, y, w, h, label, act, color, { primary = false, off = false, sub = '', cls = '', data = '' } = {}) {
   const d = shapeFor(`btn${x}:${y}:${w}`, () => rrect(x, y, w, h, 12, 1.5));
-  const fill = primary && !off ? color.main : '#fff';
-  const ink = primary && !off ? '#fff' : off ? '#999' : color.main ?? INK;
+  const fill = primary && !off ? color.main : 'var(--card)';
+  const ink = primary && !off ? 'var(--on-accent)' : off ? 'var(--muted-2)' : color.main ?? INK;
   let o = `<g class="sbtn ${cls}${off ? ' off' : ''}" ${act && !off ? `data-act="${act}"` : ''} ${data}>`;
-  o += `<path d="${d}" fill="${fill}" stroke="${primary && !off ? color.dark : off ? '#bbb' : color.main ?? INK}" stroke-width="2.6"/>`;
+  o += `<path d="${d}" fill="${fill}" stroke="${primary && !off ? color.text : off ? 'var(--line)' : color.main ?? INK}" stroke-width="2.6"/>`;
   o += txt(x + w / 2, y + h / 2 + (sub ? -8 : 1), label, 'btn-txt', `fill="${ink}"`);
   if (sub) o += txt(x + w / 2, y + h - 10, sub, 'btn-sub', `fill="${ink}"`);
   return o + '</g>';
@@ -119,7 +119,7 @@ function render() {
       const y = rowY(st.breakAt[p]);
       o += stroke(shapeFor(`brk${p}_${st.breakAt[p]}`, () => line(cx - COLW / 2 + 6, y, cx + COLW / 2 - 6, y, 0.8)), c.main, 4.5);
     }
-    if (!over && ARP.stuck(st, p)) o += txt(cx, rowY(Math.min(L.length, 9)) + RH / 2 + 1, t('arp.stuck'), 'stucktag', `fill="${c.dark}"`);
+    if (!over && ARP.stuck(st, p)) o += txt(cx, rowY(Math.min(L.length, 9)) + RH / 2 + 1, t('arp.stuck'), 'stucktag', `fill="${c.text}"`);
   }
   // ghosts: what a number button would write (shown on hover via CSS :has)
   if (actor >= 0 && canAct()) {
@@ -137,7 +137,7 @@ function render() {
   const roller = st.phase === 'roll' ? st.turn : st.roller;
   const rc = COLORS[roller];
   if (st.dice) {
-    o += die(0, st.dice[0], rollAnim ? 'roll' : '', rc.dark) + die(1, st.dice[1], rollAnim ? 'roll2' : '', rc.dark);
+    o += die(0, st.dice[0], rollAnim ? 'roll' : '', rc.text) + die(1, st.dice[1], rollAnim ? 'roll2' : '', rc.text);
   } else {
     const can = local && st.phase === 'roll';
     o += die(0, 0, 'empty' + (can ? ' can' : '')) + die(1, 0, 'empty' + (can ? ' can' : ''));
@@ -157,7 +157,7 @@ function render() {
           off: !kd || !local, sub, cls: 'nb' + (!kd ? ' bad' : '') + (flash && flash.n === n && flash.p === p ? ' chosen' : ''),
           data: `data-n="${n}"`,
         });
-        if (!kd) o += stroke(shapeFor(`x${k}_${n}`, () => line(x + 26, 368, x + 86, 368, 1.5)), '#999', 3);
+        if (!kd) o += stroke(shapeFor(`x${k}_${n}`, () => line(x + 26, 368, x + 86, 368, 1.5)), 'var(--muted-2)', 3);
       });
       if (st.phase === 'decide' && ARP.canReroll(st)) {
         o += button(270, 342, 112, 52, t('arp.reroll'), 'reroll', INK_C, { off: !local, cls: 'small' });
@@ -172,7 +172,7 @@ function render() {
   rollAnim = false;
   renderPlayers();
 }
-const INK_C = { main: INK, dark: INK, fill: '#ddd' };
+const INK_C = { main: INK, text: INK, fill: 'var(--line)' };
 
 function renderPlayers() {
   for (const p of [0, 1]) {

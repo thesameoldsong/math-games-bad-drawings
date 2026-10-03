@@ -1,3 +1,10 @@
+/* local tokens: highlighted row/column band, last-move cell, edge hints, picker shadow, dimmed numbers */
+:root { --pro-band: #f3efe3; --pro-last: #fff3c4; --pro-hint: #8a8a90; --pro-pick-shadow: rgba(0,0,0,.1); --pro-dead: .3; }
+:root[data-theme=dark] { --pro-band: #262b32; --pro-last: #4a4330; --pro-hint: #9a958c; --pro-pick-shadow: rgba(0,0,0,.4); --pro-dead: .4; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --pro-band: #262b32; --pro-last: #4a4330; --pro-hint: #9a958c; --pro-pick-shadow: rgba(0,0,0,.4); --pro-dead: .4; }
+}
+
 #board {
   width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
   /* keep the board inside the phone screen above the picker and the bottom toolbar */
@@ -5,12 +12,12 @@
 }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; opacity: .7; }
 #board .grid.outer { stroke-width: 3.2; opacity: 1; }
-#board .band { fill: #f3efe3; }
-#board .last { fill: #fff3c4; }
+#board .band { fill: var(--pro-band); }
+#board .last { fill: var(--pro-last); }
 #board .sel { stroke-width: 3; fill-opacity: .35; }
 #board .hover { fill: none; stroke: var(--pencil); stroke-width: 2.5; stroke-dasharray: 5 5; pointer-events: none; }
 #board .num { font: 700 40px var(--hand); text-anchor: middle; dominant-baseline: central; transition: opacity .3s; }
-#board .num.dead { opacity: .3; }
+#board .num.dead { opacity: var(--pro-dead); }
 #board .pop.fresh, #board .xm.fresh { animation: pop .32s ease-out; }
 #board .xm path { fill: none; stroke-linecap: round; }
 #board .xm.auto.fresh { animation: fade .6s ease-out; }
@@ -29,10 +36,10 @@
 .pick {
   flex: 1 1 0; max-width: 50px; min-width: 0; height: 46px; padding: 0;
   display: grid; place-items: center;
-  background: #fff; border: 2.5px solid var(--pencil); border-radius: var(--sketchy); cursor: pointer;
+  background: var(--card); border: 2.5px solid var(--pencil); border-radius: var(--sketchy); cursor: pointer;
   font: 700 28px/1 var(--hand); color: var(--c); -webkit-tap-highlight-color: transparent; transition: transform .1s;
 }
-.picker.armed .pick:not(:disabled) { border-color: var(--c); box-shadow: 2px 3px 0 rgba(0,0,0,.1); }
+.picker.armed .pick:not(:disabled) { border-color: var(--c); box-shadow: 2px 3px 0 var(--pro-pick-shadow); }
 .picker.armed .pick:not(:disabled):hover { transform: rotate(-3deg) scale(1.06); }
 .pick:active:not(:disabled) { transform: scale(.94); }
 .pick:disabled { color: var(--ink); opacity: .22; cursor: default; }
@@ -40,8 +47,8 @@
 .pick svg { width: 26px; height: 26px; }
 
 .result-why { font: 700 30px/1.1 var(--hand); margin: 0 0 4px; }
-.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+.result-next { font-size: 20px; line-height: 1.15; color: var(--muted); margin: 0 0 10px; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0; }
 
 @media (min-width: 900px) {
   #board { max-width: min(100%, calc((100dvh - 250px) * var(--ar, 1))); }

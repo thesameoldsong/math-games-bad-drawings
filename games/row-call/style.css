@@ -1,7 +1,12 @@
+/* local tokens: faint previous line + last-move highlight */
+:root { --rc-prev: #e9e6dc; --rc-last: #fff3c4; }
+:root[data-theme=dark] { --rc-prev: #3a404a; --rc-last: #4d4630; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --rc-prev: #3a404a; --rc-last: #4d4630; } }
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.4; stroke-linecap: round; opacity: .7; }
 #board .grid.outer { stroke-width: 3.2; opacity: .95; }
-#board .last { fill: #fff3c4; }
+#board .last { fill: var(--rc-last); }
 #board .band { filter: url(#mg-crayon); }
 #board .band-under { opacity: 0; }
 #board .band-under.called { opacity: .28; }
@@ -37,9 +42,9 @@
 .player .score .mini { width: 22px; height: 22px; flex: none; overflow: visible; }
 
 .result-why { font: 700 23px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
-.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+.result-next { font-size: 20px; line-height: 1.15; color: var(--muted); margin: 0 0 10px; }
 .result-text { font-size: clamp(28px, 6.5vw, 40px); }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0; }
 .settings-note:empty { display: none; }
 .arena .status { font-size: clamp(20px, 5.6vw, 26px); }
 

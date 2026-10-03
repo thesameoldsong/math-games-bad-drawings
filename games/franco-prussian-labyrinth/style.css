@@ -1,7 +1,12 @@
+/* local tokens (light / dark) */
+:root { --fpl-label: #8a8a92; }
+:root[data-theme=dark] { --fpl-label: #8f8a80; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --fpl-label: #8f8a80; } }
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board .grid path { fill: none; stroke: var(--pencil); stroke-width: 1.4; stroke-linecap: round; }
 #board .frame { fill: none; stroke: var(--dot); stroke-width: 3; stroke-linecap: round; }
-#board .lbl { font: 700 17px var(--hand); fill: #8a8a92; text-anchor: middle; dominant-baseline: central; }
+#board .lbl { font: 700 17px var(--hand); fill: var(--fpl-label); text-anchor: middle; dominant-baseline: central; }
 #board .star { stroke-width: 1.8; stroke-linejoin: round; }
 #board .visited rect { opacity: .5; }
 #board .thread { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 2 6; opacity: .8; }
@@ -31,13 +36,13 @@
 .cover { position: absolute; inset: 0; display: grid; place-items: center; background: var(--paper); z-index: 4; }
 .cover[hidden] { display: none; }
 .cover-card {
-  max-width: 88%; text-align: center; padding: 16px 22px; background: #fff;
-  border: 3px solid var(--ink); border-radius: var(--sketchy); box-shadow: 4px 5px 0 rgba(0, 0, 0, .1); transform: rotate(-1deg);
+  max-width: 88%; text-align: center; padding: 16px 22px; background: var(--card);
+  border: 3px solid var(--ink); border-radius: var(--sketchy); box-shadow: 4px 5px 0 var(--shadow); transform: rotate(-1deg);
 }
 .cover-text { font: 700 clamp(28px, 7vw, 40px)/1.1 var(--hand); }
-.cover-sub { margin: 8px 0 12px; font-size: 17px; color: #555; }
+.cover-sub { margin: 8px 0 12px; font-size: 17px; color: var(--muted); }
 .cover-sub:empty { display: none; }
 
-.result-sub { font-size: 22px; color: #666; margin: -4px 0 10px; }
+.result-sub { font-size: 22px; color: var(--muted); margin: -4px 0 10px; }
 .result-btns { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .result-btns .btn[hidden] { display: none; }

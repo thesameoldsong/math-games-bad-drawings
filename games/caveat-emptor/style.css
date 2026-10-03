@@ -1,3 +1,40 @@
+/* local colour tokens: light values = the original look; dark = chalk on slate */
+:root {
+  --ce-soft: #555; --ce-note: #777; --ce-head: #888; --ce-faint: #aaa; --ce-used: #b5b5b5;
+  --ce-off: #c4c4c4; --ce-off-line: #ddd; --ce-away: #b33; --ce-gain: #2a8a3f;
+  --ce-frame: #fffaf0; --ce-eye: #3b3b44; --ce-tag: #fff6cf; --ce-hl-turn: #fff09a; --ce-hl-buy: #e3f6e6;
+  --ce-green: #3aa655; --ce-green-text: #1f6e33; --ce-green-fill: #93d6a3; --ce-green-face: #1f6e33;
+  --ce-orange: #f08a24; --ce-orange-text: #a8540a; --ce-orange-fill: #f8c48d; --ce-orange-face: #a8540a;
+  --ce-violet: #8a5cc7; --ce-violet-text: #5a3591; --ce-violet-fill: #c6aee8; --ce-violet-face: #5a3591;
+  --ce-teal: #14a39a; --ce-teal-text: #0b6b63; --ce-teal-fill: #86d6cf; --ce-teal-face: #0b6b63;
+  --ce-pink: #e05aa8; --ce-pink-text: #9c2a6c; --ce-pink-fill: #f2a9d3; --ce-pink-face: #9c2a6c;
+  --ce-brown: #9a6b3f; --ce-brown-text: #5f3f20; --ce-brown-fill: #d4b391; --ce-brown-face: #5f3f20;
+}
+:root[data-theme=dark] {
+  --ce-soft: #c9c3b8; --ce-note: #a29c92; --ce-head: #958f86; --ce-faint: #7d7870; --ce-used: #5f656f;
+  --ce-off: #5d636d; --ce-off-line: #3c424c; --ce-away: #ff8a94; --ce-gain: #6fd88e;
+  --ce-frame: #2c323b; --ce-eye: #1c2026; --ce-tag: #3d3a2a; --ce-hl-turn: #4d4626; --ce-hl-buy: #24402f;
+  --ce-green: #5cc97a; --ce-green-text: #9be3ad; --ce-green-fill: #3e9c5a; --ce-green-face: #164d27;
+  --ce-orange: #ffa552; --ce-orange-text: #ffc58f; --ce-orange-fill: #cf7a2a; --ce-orange-face: #5c2c05;
+  --ce-violet: #b48ae8; --ce-violet-text: #d6bdf6; --ce-violet-fill: #8a62bf; --ce-violet-face: #3f2366;
+  --ce-teal: #3fd0c5; --ce-teal-text: #93e8e1; --ce-teal-fill: #1f9c92; --ce-teal-face: #064a44;
+  --ce-pink: #f47fc2; --ce-pink-text: #f9b5dc; --ce-pink-fill: #c4508f; --ce-pink-face: #5c1240;
+  --ce-brown: #d09a67; --ce-brown-text: #e8c39e; --ce-brown-fill: #9a6b3f; --ce-brown-face: #3d2610;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --ce-soft: #c9c3b8; --ce-note: #a29c92; --ce-head: #958f86; --ce-faint: #7d7870; --ce-used: #5f656f;
+    --ce-off: #5d636d; --ce-off-line: #3c424c; --ce-away: #ff8a94; --ce-gain: #6fd88e;
+    --ce-frame: #2c323b; --ce-eye: #1c2026; --ce-tag: #3d3a2a; --ce-hl-turn: #4d4626; --ce-hl-buy: #24402f;
+    --ce-green: #5cc97a; --ce-green-text: #9be3ad; --ce-green-fill: #3e9c5a; --ce-green-face: #164d27;
+    --ce-orange: #ffa552; --ce-orange-text: #ffc58f; --ce-orange-fill: #cf7a2a; --ce-orange-face: #5c2c05;
+    --ce-violet: #b48ae8; --ce-violet-text: #d6bdf6; --ce-violet-fill: #8a62bf; --ce-violet-face: #3f2366;
+    --ce-teal: #3fd0c5; --ce-teal-text: #93e8e1; --ce-teal-fill: #1f9c92; --ce-teal-face: #064a44;
+    --ce-pink: #f47fc2; --ce-pink-text: #f9b5dc; --ce-pink-fill: #c4508f; --ce-pink-face: #5c1240;
+    --ce-brown: #d09a67; --ce-brown-text: #e8c39e; --ce-brown-fill: #9a6b3f; --ce-brown-face: #3d2610;
+  }
+}
+
 #board { width: 100%; display: block; user-select: none; -webkit-user-select: none; }
 #board text { font-family: var(--hand); }
 
@@ -12,7 +49,7 @@
 .seat .fig-wrap { position: relative; width: 34px; }
 .seat .who { min-width: 0; max-width: 100%; text-align: center; }
 .seat .nm { font: 700 17px/1.05 var(--hand); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; margin: 0 -4px; } /* padding: room for the slanted last letter */
-.seat .sc { font: 700 16px/1.05 var(--hand); color: #555; }
+.seat .sc { font: 700 16px/1.05 var(--hand); color: var(--ce-soft); }
 .arena[data-n="2"] .seat, .arena[data-n="3"] .seat { flex-direction: row; justify-content: center; gap: 6px; }
 .arena[data-n="2"] .seat .fig-wrap, .arena[data-n="3"] .seat .fig-wrap { width: 40px; }
 .arena[data-n="2"] .seat .who, .arena[data-n="3"] .seat .who { text-align: left; }
@@ -62,22 +99,22 @@
   display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
 .panel .ptitle { font-weight: 700; }
-.panel .pinfo { color: #555; }
+.panel .pinfo { color: var(--ce-soft); }
 .panel .pinfo.mine b { font-size: 24px; }
 .panel .deal { font-weight: 700; font-size: 23px; }
 .cards { display: flex; justify-content: center; gap: 6px; }
 .ce-card {
-  width: min(46px, 10.5vw); height: 58px; padding: 0; cursor: pointer; color: var(--ink); background: #fff;
+  width: min(46px, 10.5vw); height: 58px; padding: 0; cursor: pointer; color: var(--ink); background: var(--card);
   border: 2.5px solid var(--c, var(--ink)); border-radius: 9px 7px 10px 8px; font: 700 32px/1 var(--hand);
-  box-shadow: 2px 3px 0 rgba(0, 0, 0, .12); transition: transform .1s;
+  box-shadow: 2px 3px 0 var(--shadow); transition: transform .1s;
 }
 .ce-card:hover:not(:disabled) { transform: translateY(-3px) rotate(-2deg); }
 .ce-card:active:not(:disabled) { transform: scale(.94); }
-.ce-card:disabled { color: #c4c4c4; border-color: #ddd; box-shadow: none; text-decoration: line-through; cursor: default; }
+.ce-card:disabled { color: var(--ce-off); border-color: var(--ce-off-line); box-shadow: none; text-decoration: line-through; cursor: default; }
 
 .bidrow { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .step {
-  width: 40px; height: 40px; border-radius: 50%; border: 2.5px solid var(--ink); background: #fff; cursor: pointer;
+  width: 40px; height: 40px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--card); cursor: pointer;
   font: 700 28px/1 var(--hand); color: var(--ink); padding: 0; display: grid; place-items: center;
 }
 .step:disabled { opacity: .3; cursor: default; }
@@ -88,7 +125,7 @@
 
 .cover { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .cover-t { font-size: 25px; font-weight: 700; color: var(--c); }
-.cover-n { color: #777; font-size: 19px; }
+.cover-n { color: var(--ce-note); font-size: 19px; }
 
 .peek { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; border-color: var(--c); font-size: 20px; }
 .peek .eye { width: 22px; height: 15px; vertical-align: -2px; color: var(--c); }
@@ -105,10 +142,10 @@
 /* online: this device's own seat, seats whose device dropped */
 /* phone: hangs under the card so the seats stay level */
 .seat .who { position: relative; }
-.seat .tag { font: 600 14px/1 var(--hand); color: #777; position: absolute; left: 0; right: 0; top: 100%; white-space: nowrap; }
+.seat .tag { font: 600 14px/1 var(--hand); color: var(--ce-note); position: absolute; left: 0; right: 0; top: 100%; white-space: nowrap; }
 .seat .tag:empty { display: none; }
 .seat.me .tag { color: inherit; font-weight: 700; }
 .seat.away .fig { filter: grayscale(.8); }
-.seat.away .tag { color: #b33; }
-.panel .seatnote { font-size: 18px; color: #777; max-width: 34em; }
+.seat.away .tag { color: var(--ce-away); }
+.panel .seatnote { font-size: 18px; color: var(--ce-note); max-width: 34em; }
 @media (min-width: 900px) { .seat .tag { font-size: 17px; position: static; } }

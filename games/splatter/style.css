@@ -1,3 +1,8 @@
+/* local tokens: empty dots in the splat icons, result subtitle */
+:root { --spl-off: #ccc; --spl-sub: #555; }
+:root[data-theme=dark] { --spl-off: #5d6470; --spl-sub: var(--muted); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --spl-off: #5d6470; --spl-sub: var(--muted); } }
+
 #board { width: 100%; max-height: min(600px, calc(100dvh - 330px)); display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; opacity: .8; }
 #board .hit { fill: transparent; }
@@ -22,13 +27,13 @@
 .picker[hidden] { display: none; }
 .picker .pat {
   display: flex; align-items: center; gap: 4px; font: 700 21px/1 var(--hand); color: var(--c);
-  background: #fff; border: 2.5px solid var(--c); border-radius: var(--sketchy); padding: 4px 10px 4px 6px;
-  cursor: pointer; box-shadow: 2px 3px 0 rgba(0,0,0,.1); -webkit-tap-highlight-color: transparent;
+  background: var(--card); border: 2.5px solid var(--c); border-radius: var(--sketchy); padding: 4px 10px 4px 6px;
+  cursor: pointer; box-shadow: 2px 3px 0 var(--shadow); -webkit-tap-highlight-color: transparent;
 }
-.picker .pat.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--c); }
+.picker .pat.on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--c); }
 .picker .pat:active { transform: scale(.96); }
 .picker .pat-ico { width: 26px; height: 26px; }
-.result-sub { font-size: 22px; color: #555; margin: 0 0 8px; }
+.result-sub { font-size: 22px; color: var(--spl-sub); margin: 0 0 8px; }
 .result-sub:empty { display: none; }
 
 @media (max-width: 899px) {

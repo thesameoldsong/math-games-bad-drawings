@@ -1,8 +1,14 @@
+/* local tokens: greys for notes / past rounds; halo behind text drawn over the crayon fill */
+:root { --pb-note: #777; --pb-faint: #aaa; --pb-faint-2: #a5a5a5; --pb-halo: #fff; }
+:root[data-theme=dark] { --pb-note: #a39e94; --pb-faint: #7d786f; --pb-faint-2: #8a857c; --pb-halo: var(--paper); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --pb-note: #a39e94; --pb-faint: #7d786f; --pb-faint-2: #8a857c; --pb-halo: var(--paper); }
+}
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board .t { font-family: var(--hand); dominant-baseline: central; }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; }
 #board .hatch { fill: none; stroke-width: 2; stroke-linecap: round; opacity: .35; }
-#board .num.used { paint-order: stroke; stroke: #fffefb; stroke-width: 4px; stroke-linejoin: round; stroke-opacity: .85; }
+#board .num.used { paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; stroke-opacity: .85; }
 #board .opt { fill: none; stroke-width: 2.2; stroke-dasharray: 5 5; opacity: .8; }
 #board .path { fill: none; stroke-width: 4; stroke-linecap: round; opacity: .6; }
 #board .path.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: pb-draw .4s ease-out forwards; }
@@ -20,6 +26,6 @@
 @keyframes pb-draw { to { stroke-dashoffset: 0; } }
 @keyframes pb-pop { from { opacity: 0; transform: scale(.3); } }
 @keyframes pb-blink { 50% { opacity: .2; } }
-@media (hover: hover) { #board .cell:hover { fill: rgba(60, 60, 70, .07); } }
-#board .halo { paint-order: stroke; stroke: #fff; stroke-width: 7px; stroke-linejoin: round; }
-#board .halo-s { paint-order: stroke; stroke: #fffefb; stroke-width: 3px; stroke-linejoin: round; }
+@media (hover: hover) { #board .cell:hover { fill: color-mix(in srgb, var(--dot) 7%, transparent); } }
+#board .halo { paint-order: stroke; stroke: var(--pb-halo); stroke-width: 7px; stroke-linejoin: round; }
+#board .halo-s { paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }

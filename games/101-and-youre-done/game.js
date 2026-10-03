@@ -9,8 +9,8 @@ const SLUG = '101-and-youre-done';
 const VW = 400;
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3aa655', dark: '#22783a', fill: '#8fd19e' },
-  { main: '#f08a24', dark: '#b85d06', fill: '#f7bd80' },
+  PALETTE.green,
+  { main: 'var(--h101-orange)', text: 'var(--h101-orange-text)', fill: 'var(--h101-orange-fill)', dark: 'var(--h101-orange-face)' },
 ];
 const INK = PALETTE.ink;
 const ROUNDS = [1, 3, 5, 7];
@@ -113,7 +113,7 @@ function header() {
     if (!h) { o += stroke(ring, i === G.round ? INK : PALETTE.pencil, 2.2); continue; }
     if (h.winners.length === 1) {
       const c = COLORS[h.winners[0]];
-      o += `<path d="${ring}" fill="${c.main}" filter="url(#mg-crayon)"/>` + stroke(ring, c.dark, 2.2);
+      o += `<path d="${ring}" fill="${c.main}" filter="url(#mg-crayon)"/>` + stroke(ring, c.text, 2.2);
     } else if (h.winners.length) {
       h.winners.forEach((p, k) => {
         const a = (k / h.winners.length) * Math.PI * 2;
@@ -121,7 +121,7 @@ function header() {
       });
       o += stroke(ring, INK, 2.2);
     } else {
-      o += stroke(ring, PALETTE.pencil, 2.2) + stroke(line(x - 5, y - 5, x + 5, y + 5, 0.4), PALETTE.red.dark, 2.4) + stroke(line(x + 5, y - 5, x - 5, y + 5, 0.4), PALETTE.red.dark, 2.4);
+      o += stroke(ring, PALETTE.pencil, 2.2) + stroke(line(x - 5, y - 5, x + 5, y + 5, 0.4), PALETTE.red.text, 2.4) + stroke(line(x + 5, y - 5, x - 5, y + 5, 0.4), PALETTE.red.text, 2.4);
     }
   }
   return o;
@@ -135,7 +135,7 @@ function track() {
   o += stroke(shapeFor('track', () => line(X0, TRACK_Y, X100, TRACK_Y, 1.2)), INK, 3);
   for (let v = 0; v <= 100; v += 10) {
     const x = xOf(v), big = v % 50 === 0;
-    o += stroke(shapeFor('tick' + v, () => line(x, TRACK_Y - (big ? 7 : 4), x, TRACK_Y + (big ? 7 : 4), 0.3)), v === 100 ? PALETTE.red.dark : INK, big ? 2.6 : 1.8);
+    o += stroke(shapeFor('tick' + v, () => line(x, TRACK_Y - (big ? 7 : 4), x, TRACK_Y + (big ? 7 : 4), 0.3)), v === 100 ? PALETTE.red.text : INK, big ? 2.6 : 1.8);
     if (big) o += txt(x, TRACK_Y + 19, v, 'tick-lbl' + (v === 100 ? ' hundred' : ''));
   }
   // pins, bumped upward when they would overlap
@@ -152,11 +152,11 @@ function track() {
   for (const { p, x, lvl } of placed) {
     const y = TRACK_Y - 20 - lvl * (PR * 2 + 0.5), c = COLORS[p];
     const active = (G.phase === 'roll' || G.phase === 'choose') && G.turn === p;
-    stems += stroke(`M${fx(x)} ${fx(y + 8)} L${fx(x)} ${fx(TRACK_Y - 2)}`, c.dark, 2);
+    stems += stroke(`M${fx(x)} ${fx(y + 8)} L${fx(x)} ${fx(TRACK_Y - 2)}`, c.text, 2);
     heads += `<g class="pin${active ? ' active' : ''}">`;
     const ring = shapeFor(`pin${p}:${PR}`, () => circle(0, 0, PR, PR, 0.06));
-    heads += `<g transform="translate(${fx(x)} ${fx(y)})"><path d="${ring}" fill="${G.bust[p] ? '#fff' : c.main}" stroke="${c.dark}" stroke-width="2.2"/>`;
-    heads += txt(0, 1, initial(p), 'pin-lbl', `font-size="${PR * 1.45}" ` + `fill="${G.bust[p] ? c.dark : '#fff'}"`) + '</g></g>';
+    heads += `<g transform="translate(${fx(x)} ${fx(y)})"><path d="${ring}" fill="${G.bust[p] ? 'var(--card)' : c.main}" stroke="${c.text}" stroke-width="2.2"/>`;
+    heads += txt(0, 1, initial(p), 'pin-lbl', `font-size="${PR * 1.45}" ` + `fill="${G.bust[p] ? c.text : 'var(--on-accent)'}"`) + '</g></g>';
   }
   return o + stems + heads;
 }
@@ -176,7 +176,7 @@ function columns() {
       if (r) {
         const fresh = G.last && G.last.p === p && i === rolls.length - 1 && justMoved;
         const busted = G.bust[p] && i === rolls.length - 1;
-        o += txt(cx, y, '+' + (r.x10 ? r.d * 10 : r.d), `entry${r.x10 ? ' tens' : ''}${fresh ? ' fresh' : ''}${busted ? ' over' : ''}`, `fill="${busted ? PALETTE.red.dark : r.x10 ? c.dark : INK}"`);
+        o += txt(cx, y, '+' + (r.x10 ? r.d * 10 : r.d), `entry${r.x10 ? ' tens' : ''}${fresh ? ' fresh' : ''}${busted ? ' over' : ''}`, `fill="${busted ? PALETTE.red.text : r.x10 ? c.text : INK}"`);
       } else if (active && i === rolls.length) {
         o += `<path d="${shapeFor(`slot${p}:${i}:${G.n}`, () => rrect(cx - 30, y - 11, 60, 22, 7, 1))}" class="slot" stroke="${c.main}"/>`;
         if (G.phase === 'choose') o += txt(cx, y, '?', 'entry pend', `fill="${c.main}"`);
@@ -188,11 +188,11 @@ function columns() {
     o += stroke(shapeFor(`csum${p}:${G.n}`, () => line(cx - hw / 2 + 10, ty - 12, cx + hw / 2 - 10, ty - 12, 0.8)), INK, 2);
     const total = G.totals[p], ycen = ty + 14;
     if (G.bust[p]) {
-      o += txt(cx - 14, ycen, total, 'total bust', `fill="${PALETTE.red.dark}"`);
-      o += stroke(shapeFor(`strike${p}:${G.n}`, () => line(cx - 40, ycen + 6, cx + 12, ycen - 6, 0.8)), PALETTE.red.dark, 3);
-      o += txt(cx + 26, ycen + 1, '0', 'total', `fill="${PALETTE.red.dark}"`);
+      o += txt(cx - 14, ycen, total, 'total bust', `fill="${PALETTE.red.text}"`);
+      o += stroke(shapeFor(`strike${p}:${G.n}`, () => line(cx - 40, ycen + 6, cx + 12, ycen - 6, 0.8)), PALETTE.red.text, 3);
+      o += txt(cx + 26, ycen + 1, '0', 'total', `fill="${PALETTE.red.text}"`);
     } else {
-      o += txt(cx, ycen, total, 'total', `fill="${c.dark}"`);
+      o += txt(cx, ycen, total, 'total', `fill="${c.text}"`);
     }
     if (winners.includes(p)) {
       o += stroke(shapeFor(`win${p}:${G.n}:${G.round}`, () => circle(cx, ycen, Math.min(hw / 2 - 2, 42), 20, 0.07)), c.main, 3.2, 'class="winring"');
@@ -212,8 +212,8 @@ function button(x, y, w, h, key, color, { act, off, primary, big, small, smallCl
   const d = shapeFor(`btn${key}:${w}`, () => rrect(x, y, w, h, 12, 1.6));
   const on = !off && primary;
   let o = `<g class="sbtn${off ? ' off' : ''}" ${off ? '' : `data-act="${act}"`}>`;
-  o += `<path d="${d}" fill="${on ? color.main : '#fff'}" stroke="${on ? color.dark : off ? INK : color.dark}" stroke-width="2.8"/>`;
-  const fill = on ? '#fff' : INK;
+  o += `<path d="${d}" fill="${on ? color.main : 'var(--card)'}" stroke="${on ? color.text : off ? INK : color.text}" stroke-width="2.8"/>`;
+  const fill = on ? 'var(--on-accent)' : INK;
   if (small) {
     o += txt(x + w / 2, y + h * 0.36, big, 'btn-big', `fill="${fill}"`);
     o += txt(x + w / 2, y + h * 0.76, small, 'btn-small ' + smallCls, smallCls ? '' : `fill="${fill}"`);

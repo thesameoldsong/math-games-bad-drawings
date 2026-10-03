@@ -1,12 +1,19 @@
+/* local colour tokens (light = original look; dark = chalk on slate) */
+:root { --q3-blocked: #e6e6e6; --q3-blocked-op: .7; --q3-sub: #555; --q3-lbl: #777; }
+:root[data-theme=dark] { --q3-blocked: #3a414c; --q3-blocked-op: .6; --q3-sub: var(--muted); --q3-lbl: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --q3-blocked: #3a414c; --q3-blocked-op: .6; --q3-sub: var(--muted); --q3-lbl: var(--muted); }
+}
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-#board .lbl { font: 700 21px var(--hand); fill: #666; }
-#board .slab { fill: #fff; stroke: var(--pencil); stroke-width: 1.4; stroke-linejoin: round; }
+#board .lbl { font: 700 21px var(--hand); fill: var(--muted); }
+#board .slab { fill: var(--card); stroke: var(--pencil); stroke-width: 1.4; stroke-linejoin: round; }
 #board .slab.on { fill: var(--dot); stroke: var(--dot); }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2; stroke-linecap: round; }
 #board .frame { fill: none; stroke: var(--dot); stroke-width: 3; stroke-linecap: round; }
 #board .cellfill.last { opacity: .45; }
 #board .cellfill.win { opacity: .9; animation: glow .5s ease-out; }
-#board .cellfill.blocked { opacity: .7; }
+#board .cellfill.blocked { opacity: var(--q3-blocked-op); }
 #board .mark { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
 #board .mark.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .3s ease-out forwards; }
 #board .mark.dim { opacity: .3; }
@@ -18,10 +25,10 @@
 
 .arena .board-wrap { max-width: 540px; }
 .player .score .mk { font-size: 1.15em; }
-.result-sub { font-size: 21px; line-height: 1.2; color: #555; margin: 0 0 10px; }
+.result-sub { font-size: 21px; line-height: 1.2; color: var(--q3-sub); margin: 0 0 10px; }
 
 .how-pic svg { display: block; width: min(260px, 70%); margin: 0 auto 4px; }
-.how-pic .lbl { font: 700 18px var(--hand); fill: #777; }
+.how-pic .lbl { font: 700 18px var(--hand); fill: var(--q3-lbl); }
 
 /* result card: tap outside it to peek at the final board */
 .result { cursor: zoom-out; }

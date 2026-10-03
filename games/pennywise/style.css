@@ -1,16 +1,50 @@
+/* local colour tokens: light theme = original look; dark = chalk on slate */
+:root {
+  --pw-table: #f1dfbf; --pw-wood: #a67c4e; --pw-empty: #9a8a74; --pw-hint: #888;
+  --pw-copper: #eaa46c; --pw-copper-edge: #9a5527; --pw-copper-text: #6b330f;
+  --pw-silver: #d9dce2; --pw-silver-edge: #7a7f89; --pw-silver-text: #43464f;
+  --pw-tag: #8a8a94; --pw-sub: #555; --pw-cn: #777;
+  --pw-green: #3da84a; --pw-green-text: #22702c; --pw-green-fill: #9fd8a5; --pw-green-face: #22702c;
+  --pw-orange: #f08c22; --pw-orange-text: #b05a08; --pw-orange-fill: #f8c58c; --pw-orange-face: #b05a08;
+  --pw-violet: #8d5bd0; --pw-violet-text: #5a3494; --pw-violet-fill: #c9b0ef; --pw-violet-face: #5a3494;
+  --pw-pink: #e0569f; --pw-pink-text: #a12a6c; --pw-pink-fill: #f2acd2; --pw-pink-face: #a12a6c;
+}
+:root[data-theme=dark] {
+  --pw-table: #3d342b; --pw-wood: #c49a68; --pw-empty: #b3a184; --pw-hint: var(--muted);
+  --pw-copper: #d98f55; --pw-copper-edge: #f0b884; --pw-copper-text: #4a2208;
+  --pw-silver: #b4bac4; --pw-silver-edge: #e2e5ea; --pw-silver-text: #2a2d34;
+  --pw-tag: #5d646f; --pw-sub: var(--muted); --pw-cn: var(--muted-2);
+  --pw-green: #5cc96a; --pw-green-text: #9be3a5; --pw-green-fill: #3e9c4a; --pw-green-face: #164d1e;
+  --pw-orange: #ffa64d; --pw-orange-text: #ffc68a; --pw-orange-fill: #d0802f; --pw-orange-face: #6b3505;
+  --pw-violet: #b48ae8; --pw-violet-text: #d6bdf6; --pw-violet-fill: #8a62bf; --pw-violet-face: #3f2366;
+  --pw-pink: #f57fbd; --pw-pink-text: #f9b5da; --pw-pink-fill: #c9558f; --pw-pink-face: #6d1444;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+  --pw-table: #3d342b; --pw-wood: #c49a68; --pw-empty: #b3a184; --pw-hint: var(--muted);
+  --pw-copper: #d98f55; --pw-copper-edge: #f0b884; --pw-copper-text: #4a2208;
+  --pw-silver: #b4bac4; --pw-silver-edge: #e2e5ea; --pw-silver-text: #2a2d34;
+  --pw-tag: #5d646f; --pw-sub: var(--muted); --pw-cn: var(--muted-2);
+  --pw-green: #5cc96a; --pw-green-text: #9be3a5; --pw-green-fill: #3e9c4a; --pw-green-face: #164d1e;
+  --pw-orange: #ffa64d; --pw-orange-text: #ffc68a; --pw-orange-fill: #d0802f; --pw-orange-face: #6b3505;
+  --pw-violet: #b48ae8; --pw-violet-text: #d6bdf6; --pw-violet-fill: #8a62bf; --pw-violet-face: #3f2366;
+  --pw-pink: #f57fbd; --pw-pink-text: #f9b5da; --pw-pink-fill: #c9558f; --pw-pink-face: #6d1444;
+  }
+}
+
 /* board */
 #board { width: min(100%, calc((100dvh - 290px) * 360 / var(--board-h, 340))); min-width: 280px; margin: 0 auto; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board text { font-family: var(--hand); dominant-baseline: central; }
 #board .hit { fill: transparent; }
-#board .table { fill: #f1dfbf; }
-#board .table-rim { fill: none; stroke: #a67c4e; stroke-width: 2.6; stroke-linecap: round; }
-#board .tlabel { font-size: 17px; font-weight: 700; fill: #a67c4e; }
-#board .empty, #board .hint { font-size: 21px; fill: #9a8a74; text-anchor: middle; }
-#board .hint { fill: #888; }
+#board .table { fill: var(--pw-table); }
+#board .table-rim { fill: none; stroke: var(--pw-wood); stroke-width: 2.6; stroke-linecap: round; }
+#board .tlabel { font-size: 17px; font-weight: 700; fill: var(--pw-wood); }
+#board .empty, #board .hint { font-size: 21px; fill: var(--pw-empty); text-anchor: middle; }
+#board .hint { fill: var(--pw-hint); }
 #board .row { fill-opacity: .16; stroke-width: 1.6; stroke-opacity: .45; }
 #board .purse.cur .row { fill-opacity: .3; stroke-width: 3; stroke-opacity: 1; }
 #board .purse.out { opacity: .45; }
-#board .initial { font-size: 19px; font-weight: 700; fill: #fff; text-anchor: middle; }
+#board .initial { font-size: 19px; font-weight: 700; fill: var(--on-accent); text-anchor: middle; }
 #board .brokeT { font-size: 22px; font-weight: 700; text-anchor: middle; }
 #board .coin .rim { fill: none; stroke-width: 2.2; stroke-linecap: round; }
 #board .coin .ring { fill: none; stroke-width: 1; stroke-dasharray: 2 3; opacity: .55; }
@@ -22,12 +56,12 @@
 #board .live { cursor: pointer; }
 #board .chosen .coin { opacity: .9; }
 #board .cap { font-size: 18px; font-weight: 700; }
-#board .none { font-size: 20px; fill: #888; }
+#board .none { font-size: 20px; fill: var(--pw-hint); }
 #board .arrow { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; }
 #board .gring { fill: none; stroke-width: 2.6; }
 #board .okbtn { cursor: pointer; }
 #board .okbtn path { stroke-width: 2.4; }
-#board .okbtn text { font-size: 24px; font-weight: 700; fill: #fff; text-anchor: middle; }
+#board .okbtn text { font-size: 24px; font-weight: 700; fill: var(--on-accent); text-anchor: middle; }
 #board .okbtn:active { opacity: .75; }
 @media (hover: hover) {
   #board .slot.live:hover .coin, #board .tray .live:hover .coin { translate: 0 -3px; }
@@ -41,16 +75,16 @@
 .side-l { grid-area: p0; }
 .side-r { grid-area: p1; }
 .player.out { opacity: .35; }
-.player .score .tag { font-size: .8em; color: #fff; background: #8a8a94; border-radius: 8px 10px 8px 9px; padding: 0 5px; }
+.player .score .tag { font-size: .8em; color: var(--on-accent); background: var(--pw-tag); border-radius: 8px 10px 8px 9px; padding: 0 5px; }
 .player.me .score .tag { background: var(--ink); }
 .player.gone .fig { opacity: .45; filter: grayscale(1); }
-.result-sub { font-size: 21px; margin: 0 0 10px; color: #555; line-height: 1.2; }
-.purse-note { font-size: 19px; color: #666; margin: -4px 0 6px; text-align: right; }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+.result-sub { font-size: 21px; margin: 0 0 10px; color: var(--pw-sub); line-height: 1.2; }
+.purse-note { font-size: 19px; color: var(--muted); margin: -4px 0 6px; text-align: right; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0 0; }
 
 @media (max-width: 899px) {
   .player .score .sep { display: none; }
-  .player .score .cn { display: block; font-size: .85em; color: #777; }
+  .player .score .cn { display: block; font-size: .85em; color: var(--pw-cn); }
   .arena.many .player .score .cn { display: none; }
   .arena.many { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: none; gap: 2px 4px; }
   .arena.many .side { display: contents; }

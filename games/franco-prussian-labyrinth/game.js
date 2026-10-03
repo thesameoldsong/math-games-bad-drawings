@@ -219,8 +219,8 @@ function tokenSVG(c, w, ev) {
   const look = ev ? [[0, -2], [2.5, 0], [0, 2.5], [-2.5, 0]][ev.d] : [1.5, 0];
   return `<g transform="translate(${x} ${y})"><g class="${cls}" style="${style}">
     <path d="${head}" fill="${col.main}" filter="url(#mg-crayon)"/>
-    <path d="${head}" fill="none" stroke="${col.dark}" stroke-width="2.4"/>
-    <circle cx="-4.5" cy="-2" r="3.6" fill="#fff" stroke="${col.dark}" stroke-width="1.3"/><circle cx="4.5" cy="-2" r="3.6" fill="#fff" stroke="${col.dark}" stroke-width="1.3"/>
+    <path d="${head}" fill="none" stroke="${col.text}" stroke-width="2.4"/>
+    <circle cx="-4.5" cy="-2" r="3.6" fill="var(--eye)" stroke="${col.dark}" stroke-width="1.3"/><circle cx="4.5" cy="-2" r="3.6" fill="var(--eye)" stroke="${col.dark}" stroke-width="1.3"/>
     <circle cx="${-4.5 + look[0] * 0.6}" cy="${-2 + look[1] * 0.6}" r="1.6" fill="${col.dark}"/><circle cx="${4.5 + look[0] * 0.6}" cy="${-2 + look[1] * 0.6}" r="1.6" fill="${col.dark}"/>
   </g></g>`;
 }

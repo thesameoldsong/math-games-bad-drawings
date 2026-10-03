@@ -1,4 +1,35 @@
 /* Quantum Go Fish: a column of seats (figure, name, hand of cards) + a question panel. */
+/* local colour tokens: six extra seat colours (main / crayon fill / face) and a few greys */
+:root {
+  --qgf-green: #3a9d4f; --qgf-green-fill: #9bd6a5; --qgf-green-face: #22703a;
+  --qgf-orange: #f08a24; --qgf-orange-fill: #f8c08a; --qgf-orange-face: #b35f0c;
+  --qgf-violet: #8b5cc8; --qgf-violet-fill: #c7aee8; --qgf-violet-face: #5e3797;
+  --qgf-pink: #e0559a; --qgf-pink-fill: #f1a9cc; --qgf-pink-face: #a8306d;
+  --qgf-brown: #9a6b3f; --qgf-brown-fill: #d2b394; --qgf-brown-face: #6b4522;
+  --qgf-olive: #7d8f20; --qgf-olive-fill: #c4d07a; --qgf-olive-face: #56630f;
+  --qgf-soft: #777; --qgf-softer: #888; --qgf-strong: #555;
+  --qgf-unk: #fbfaf4; --qgf-deduced: #8a8a94; --qgf-chip-on: #fff1b8;
+}
+:root[data-theme=dark] {
+  --qgf-green: #5cc97a; --qgf-green-fill: #3e9c5a; --qgf-green-face: #164d27;
+  --qgf-orange: #ffa14d; --qgf-orange-fill: #d27a2e; --qgf-orange-face: #6b3505;
+  --qgf-violet: #b48ae8; --qgf-violet-fill: #8a62bf; --qgf-violet-face: #3f2366;
+  --qgf-pink: #f47fb8; --qgf-pink-fill: #c9558e; --qgf-pink-face: #6a1742;
+  --qgf-brown: #d1a173; --qgf-brown-fill: #9c7048; --qgf-brown-face: #4a2c12;
+  --qgf-olive: #b9cc4a; --qgf-olive-fill: #84962a; --qgf-olive-face: #353d06;
+  --qgf-soft: #a9a398; --qgf-softer: #8f8a80; --qgf-strong: #c4beb3;
+  --qgf-unk: #2b313a; --qgf-deduced: #8f96a1; --qgf-chip-on: #4d4526;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) {
+  --qgf-green: #5cc97a; --qgf-green-fill: #3e9c5a; --qgf-green-face: #164d27;
+  --qgf-orange: #ffa14d; --qgf-orange-fill: #d27a2e; --qgf-orange-face: #6b3505;
+  --qgf-violet: #b48ae8; --qgf-violet-fill: #8a62bf; --qgf-violet-face: #3f2366;
+  --qgf-pink: #f47fb8; --qgf-pink-fill: #c9558e; --qgf-pink-face: #6a1742;
+  --qgf-brown: #d1a173; --qgf-brown-fill: #9c7048; --qgf-brown-face: #4a2c12;
+  --qgf-olive: #b9cc4a; --qgf-olive-fill: #84962a; --qgf-olive-face: #353d06;
+  --qgf-soft: #a9a398; --qgf-softer: #8f8a80; --qgf-strong: #c4beb3;
+  --qgf-unk: #2b313a; --qgf-deduced: #8f96a1; --qgf-chip-on: #4d4526;
+} }
 .qgf-arena { grid-template-columns: minmax(0, 1fr); grid-template-areas: "board" "status"; }
 .qgf-arena .board-wrap { max-width: 560px; }
 .qgf-arena .status { font-size: 22px; min-height: 1.3em; line-height: 1.1; padding-top: 4px; }
@@ -9,21 +40,21 @@ div.seat {
   padding: 1px 8px 1px 4px; border: 2px solid transparent; border-radius: var(--sketchy); transition: background .2s, border-color .2s;
   -webkit-tap-highlight-color: transparent;
 }
-.seat.turn { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 7%, #fff); }
+.seat.turn { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 7%, var(--card)); }
 .seat.asked { border-color: var(--pc); border-style: dashed; }
 .seat.targetable { cursor: pointer; }
-.seat.targetable:hover { background: color-mix(in srgb, var(--pc) 10%, #fff); }
-.seat.sel { border-color: var(--pc); border-style: solid; background: color-mix(in srgb, var(--pc) 20%, #fff); transform: rotate(-.4deg); }
+.seat.targetable:hover { background: color-mix(in srgb, var(--pc) 10%, var(--card)); }
+.seat.sel { border-color: var(--pc); border-style: solid; background: color-mix(in srgb, var(--pc) 20%, var(--card)); transform: rotate(-.4deg); }
 .seat.empty { opacity: .55; }
-.seat.winner { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, #fff); }
+.seat.winner { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, var(--card)); }
 
 .seat .fig-wrap { position: relative; width: 46px; }
 .seat .fig .mg-figure { width: 100%; display: block; overflow: visible; }
 .seat-main { min-width: 0; }
 .seat-top { display: flex; align-items: baseline; gap: 6px; font-family: var(--hand); line-height: 1.05; min-width: 0; }
 .seat-top .nm { font-weight: 700; font-size: 21px; color: var(--pc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding-right: 3px; }
-.seat-top .cnt { font-size: 16px; color: #777; white-space: nowrap; }
-.seat-top .nots { margin-left: auto; display: flex; align-items: center; gap: 1px; font-size: 15px; color: #888; white-space: nowrap; }
+.seat-top .cnt { font-size: 16px; color: var(--qgf-soft); white-space: nowrap; }
+.seat-top .nots { margin-left: auto; display: flex; align-items: center; gap: 1px; font-size: 15px; color: var(--qgf-softer); white-space: nowrap; }
 .seat-top .nots-l { margin-right: 2px; }
 .seat-top .nots .ico { width: 17px; height: 17px; }
 .seat .hand { display: block; width: 100%; height: 50px; overflow: visible; }
@@ -37,10 +68,10 @@ div.seat {
 .ico .qmark { font-size: 24px; fill: var(--ink); }
 
 /* cards */
-.card .cbg { fill: #fff; stroke: none; }
-.card .cbg.unk { fill: #fbfaf4; }
+.card .cbg { fill: var(--card); stroke: none; }
+.card .cbg.unk { fill: var(--qgf-unk); }
 .card .cedge { fill: none; stroke-width: 2; stroke-linecap: round; }
-.card .cedge.deduced { stroke-dasharray: 3 3.5; stroke: #8a8a94; }
+.card .cedge.deduced { stroke-dasharray: 3 3.5; stroke: var(--qgf-deduced); }
 .card .sicon.deduced { opacity: .55; }
 .card.fresh { animation: qgf-pop .45s ease-out; transform-box: fill-box; transform-origin: center; }
 @keyframes qgf-pop { from { transform: translateY(-14px) scale(.6); opacity: 0; } }
@@ -56,19 +87,19 @@ div.seat {
 /* question panel under the table */
 .panel-wrap { position: relative; min-height: 96px; margin-top: 4px; }
 .panel { font-family: var(--hand); text-align: center; }
-.last { font-size: 18px; color: #666; margin: 0 0 6px; line-height: 1.2; }
+.last { font-size: 18px; color: var(--muted); margin: 0 0 6px; line-height: 1.2; }
 .last .ico { width: 18px; height: 18px; vertical-align: -4px; }
 .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .chip {
-  display: inline-flex; align-items: center; gap: 4px; font: 700 18px/1.1 var(--hand); color: var(--ink); background: #fff;
+  display: inline-flex; align-items: center; gap: 4px; font: 700 18px/1.1 var(--hand); color: var(--ink); background: var(--card);
   border: 2px solid var(--ink); border-radius: var(--sketchy); padding: 3px 9px 3px 6px; cursor: pointer;
   box-shadow: 1px 2px 0 rgba(0, 0, 0, .1); transition: transform .1s; -webkit-tap-highlight-color: transparent;
 }
 .chip:hover:not(:disabled) { transform: rotate(-1.5deg); }
-.chip.on { background: #fff1b8; border-color: var(--blue-dark); transform: rotate(-1.5deg) scale(1.05); }
+.chip.on { background: var(--qgf-chip-on); border-color: var(--blue-dark); transform: rotate(-1.5deg) scale(1.05); }
 .chip:disabled { opacity: .3; cursor: default; box-shadow: none; }
 .chips.idle .chip:disabled { opacity: .55; }
-.chip-n { font-size: 14px; color: #888; font-weight: 600; }
+.chip-n { font-size: 14px; color: var(--qgf-softer); font-weight: 600; }
 .question { font-size: 22px; line-height: 1.15; }
 .question .asks { display: block; font-size: 18px; font-weight: 700; }
 .question .q { font-weight: 700; }
@@ -76,10 +107,10 @@ div.seat {
 .answers .ans { min-width: 120px; line-height: 1.05; padding: 4px 14px; }
 .answers .ans small { display: block; font-size: 15px; }
 
-.panel-wrap .result { align-items: end; background: rgba(255, 254, 251, .82); }
+.panel-wrap .result { align-items: end; background: color-mix(in srgb, var(--paper) 82%, transparent); }
 .panel-wrap .result-card { padding: 8px 20px 12px; }
 .panel-wrap .result-text { font-size: clamp(28px, 7vw, 38px); margin-bottom: 2px; }
-.result-why { font-size: 19px; color: #555; margin: 0 0 8px; line-height: 1.15; }
+.result-why { font-size: 19px; color: var(--qgf-strong); margin: 0 0 8px; line-height: 1.15; }
 
 /* many players: tighter rows (the figure is cropped at the hips) */
 .seats.n5 .seat, .seats.n6 .seat { grid-template-columns: 40px minmax(0, 1fr); }
@@ -98,7 +129,7 @@ div.seat {
 .names { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
 .names input { width: 9em; font-weight: 700; }
 .mg-dialog .names-field { align-items: flex-start; }
-.settings-note { color: #666; font-size: 19px; line-height: 1.2; }
+.settings-note { color: var(--muted); font-size: 19px; line-height: 1.2; }
 
 @media (min-width: 900px) {
   .qgf-arena {

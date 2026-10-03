@@ -1,44 +1,62 @@
+/* local colour tokens: light values = the original look; dark = chalk on slate */
+:root {
+  --lm-gold: #ffd84d; --lm-hover: #fffbe6; --lm-faint: #aaa; --lm-row: #777;
+  --lm-slot-full: #fbf7ee; --lm-slot-mix: 100%; --lm-hover-2: #f6f1e4; --lm-turn: #f3f3f3;
+  --lm-head: #e3dccf; --lm-head-o: #9a9488; --lm-back: #ece9e2; --lm-ghost: #e2dfd8; --lm-grey: #8a8a92;
+}
+:root[data-theme=dark] {
+  --lm-gold: #f2c94c; --lm-hover: #333a44; --lm-faint: var(--muted-2); --lm-row: var(--muted);
+  --lm-slot-full: #2f353e; --lm-slot-mix: 38%; --lm-hover-2: #2f353e; --lm-turn: #2c323a;
+  --lm-head: #6a6f78; --lm-head-o: #a39d92; --lm-back: #343a43; --lm-ghost: #3f4651; --lm-grey: #a3a3ad;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --lm-gold: #f2c94c; --lm-hover: #333a44; --lm-faint: var(--muted-2); --lm-row: var(--muted);
+    --lm-slot-full: #2f353e; --lm-slot-mix: 38%; --lm-hover-2: #2f353e; --lm-turn: #2c323a;
+    --lm-head: #6a6f78; --lm-head-o: #a39d92; --lm-back: #343a43; --lm-ghost: #3f4651; --lm-grey: #a3a3ad;
+  }
+}
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: visible; }
 #board text { font-family: var(--hand); dominant-baseline: central; }
 #board .lm-round { font-size: 20px; font-weight: 700; fill: var(--ink); dominant-baseline: auto; }
-#board .lm-tick { fill: #fff; stroke: var(--ink); stroke-width: 2; }
-#board .lm-tick.used { fill: var(--pencil); stroke: #999; }
-#board .lm-tick.now { fill: #ffd84d; stroke-width: 2.6; }
-#board .lm-wait path { fill: #fff; stroke: var(--pencil); stroke-width: 2.4; stroke-linecap: round; }
-#board .lm-wait text { font-size: 21px; font-weight: 700; text-anchor: middle; fill: #aaa; dominant-baseline: auto; }
+#board .lm-tick { fill: var(--card); stroke: var(--ink); stroke-width: 2; }
+#board .lm-tick.used { fill: var(--pencil); stroke: var(--muted-2); }
+#board .lm-tick.now { fill: var(--lm-gold); stroke-width: 2.6; }
+#board .lm-wait path { fill: var(--card); stroke: var(--pencil); stroke-width: 2.4; stroke-linecap: round; }
+#board .lm-wait text { font-size: 21px; font-weight: 700; text-anchor: middle; fill: var(--lm-faint); dominant-baseline: auto; }
 #board .lm-wait.on { cursor: pointer; }
 #board .lm-wait.on text { fill: var(--ink); }
-#board .lm-wait.on:hover path { fill: #fffbe6; }
-#board .lm-row { font-size: 19px; font-weight: 700; text-anchor: end; fill: #777; }
+#board .lm-wait.on:hover path { fill: var(--lm-hover); }
+#board .lm-row { font-size: 19px; font-weight: 700; text-anchor: end; fill: var(--lm-row); }
 #board .lm-row.next { fill: var(--ink); font-size: 22px; }
 #board .lm-next { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; fill: none; }
-#board .lm-slot { fill: #fff; stroke: var(--pencil); stroke-width: 1.8; stroke-linecap: round; }
-#board .lm-slot.full { stroke: var(--ink); fill: #fbf7ee; }
+#board .lm-slot { fill: var(--card); stroke: var(--pencil); stroke-width: 1.8; stroke-linecap: round; }
+#board .lm-slot.full { stroke: var(--ink); fill: var(--lm-slot-full); }
 #board .lm-slotnum { font-size: 20px; font-weight: 700; text-anchor: middle; fill: var(--ink); }
 #board .lm-slotnum.fresh { animation: lm-pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
 #board .lm-arrow { fill: none; stroke-width: 3; stroke-dasharray: 3 7; stroke-linecap: round; opacity: .75; pointer-events: none; }
 #board .lm-guest .hit { fill: transparent; }
 #board .lm-guest.tap { cursor: pointer; }
-#board .lm-guest.tap:hover .hit { fill: #f6f1e4; }
-#board .lm-guest.turn .hit { fill: #f3f3f3; }
-#board .lm-head { fill: #e3dccf; stroke: none; }
-#board .lm-head-o { fill: none; stroke: #9a9488; stroke-width: 2; }
-#board .lm-card { fill: #fff; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-#board .lm-card.back { fill: #ece9e2; stroke: #999; }
+#board .lm-guest.tap:hover .hit { fill: var(--lm-hover-2); }
+#board .lm-guest.turn .hit { fill: var(--lm-turn); }
+#board .lm-head { fill: var(--lm-head); stroke: none; }
+#board .lm-head-o { fill: none; stroke: var(--lm-head-o); stroke-width: 2; }
+#board .lm-card { fill: var(--card); stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+#board .lm-card.back { fill: var(--lm-back); stroke: var(--muted-2); }
 #board .lm-card.suitor { stroke-width: 3.6; }
 #board .lm-card.fresh { animation: lm-flip .35s ease-out; transform-box: fill-box; transform-origin: center; }
 #board .lm-num { font-size: 25px; font-weight: 700; text-anchor: middle; fill: var(--ink); pointer-events: none; }
-#board .lm-num.q { fill: #999; }
+#board .lm-num.q { fill: var(--muted-2); }
 #board .lm-court { font-size: 15px; font-weight: 700; pointer-events: none; }
-#board .lm-badge { stroke: #fff; stroke-width: 1.5; animation: lm-beat 1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-#board .lm-ghost { fill: none; stroke: #e2dfd8; stroke-width: 2; }
+#board .lm-badge { stroke: var(--card); stroke-width: 1.5; animation: lm-beat 1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+#board .lm-ghost { fill: none; stroke: var(--lm-ghost); stroke-width: 2; }
 #board .lm-pop { pointer-events: none; animation: lm-pop .25s ease-out; transform-box: fill-box; transform-origin: center bottom; }
-#board .lm-pop rect { fill: #fff; stroke-width: 2.2; }
+#board .lm-pop rect { fill: var(--card); stroke-width: 2.2; }
 #board .lm-pop text { font-size: 17px; font-weight: 700; text-anchor: middle; }
 .result-sub { font-size: 22px; line-height: 1.2; margin: -2px 0 10px; }
-.result-sub .lm-small { color: #777; font-size: 18px; }
+.result-sub .lm-small { color: var(--lm-row); font-size: 18px; }
 @keyframes lm-pop { from { transform: scale(.3); opacity: 0; } }
 @keyframes lm-flip { from { transform: scaleX(.1); } }
 @keyframes lm-beat { 50% { transform: scale(1.25); } }
-.lm-hint { display: block; font-size: 18px; color: #777; font-weight: 600; line-height: 1.1; }
+.lm-hint { display: block; font-size: 18px; color: var(--lm-row); font-weight: 600; line-height: 1.1; }
 .result-sub .lm-total { font-size: 34px; font-weight: 700; margin-bottom: 4px; }

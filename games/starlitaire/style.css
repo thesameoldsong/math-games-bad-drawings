@@ -1,3 +1,22 @@
+/* local tokens: extra loop colours + a few greys (light = original look, dark = chalk on slate) */
+:root {
+  --star-violet: #7b4bb7; --star-gold: #f0a800; --star-green: #2bb24c; --star-orange: #f07c22;
+  --star-pink: #e0559b; --star-teal: #14a39a; --star-brown: #8a5a2b;
+  --star-used: #222; --star-count: #777; --star-sub: #555; --star-chip-shadow: rgba(0, 0, 0, .1);
+}
+:root[data-theme=dark] {
+  --star-violet: #b48ae8; --star-gold: #ffc93c; --star-green: #5cc97a; --star-orange: #ff9a4d;
+  --star-pink: #ff86c2; --star-teal: #3fd3c6; --star-brown: #d19a63;
+  --star-used: #fffaf0; --star-count: var(--muted); --star-sub: var(--muted); --star-chip-shadow: var(--shadow);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --star-violet: #b48ae8; --star-gold: #ffc93c; --star-green: #5cc97a; --star-orange: #ff9a4d;
+    --star-pink: #ff86c2; --star-teal: #3fd3c6; --star-brown: #d19a63;
+    --star-used: #fffaf0; --star-count: var(--muted); --star-sub: var(--muted); --star-chip-shadow: var(--shadow);
+  }
+}
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; }
 .arena .board-wrap { max-width: min(600px, calc(100dvh - 330px)); min-width: min(100%, 290px); }
 @media (min-width: 900px) { .arena .board-wrap { max-width: min(600px, calc(100dvh - 220px)); } }
@@ -7,11 +26,11 @@
 #board .seg.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .16s ease-out forwards; }
 #board .seg.glow { animation: twinkle 1.2s ease-in-out 1; }
 #board .dot { fill: var(--dot); }
-#board .dot.used { fill: #222; }
+#board .dot.used { fill: var(--star-used); }
 #board .pen { fill: none; stroke-width: 3.2; stroke-linecap: round; }
 #board .target { fill: none; stroke-width: 3; stroke-dasharray: 5 5; animation: pulse 1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 #board .open { fill: none; stroke: var(--pencil); stroke-width: 2.2; stroke-dasharray: 3 4; }
-#board .count { font: 700 21px var(--hand); fill: #777; text-anchor: middle; dominant-baseline: central; }
+#board .count { font: 700 21px var(--hand); fill: var(--star-count); text-anchor: middle; dominant-baseline: central; }
 #board .miss { fill: none; stroke: var(--red-dark); stroke-width: 3.4; stroke-linecap: round; animation: fade-out .7s ease-in forwards; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes pulse { 50% { transform: scale(1.25); opacity: .55; } }
@@ -24,16 +43,16 @@
 .arena .status { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 23px; color: var(--ink); }
 #chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 34px; }
 .chip {
-  font: 700 20px/1 var(--hand); color: var(--ink); background: #fff; cursor: pointer; padding: 5px 12px;
-  border: 2px solid var(--ink); border-radius: var(--sketchy); box-shadow: 1px 2px 0 rgba(0, 0, 0, .1);
+  font: 700 20px/1 var(--hand); color: var(--ink); background: var(--card); cursor: pointer; padding: 5px 12px;
+  border: 2px solid var(--ink); border-radius: var(--sketchy); box-shadow: 1px 2px 0 var(--star-chip-shadow);
 }
 .chip.num { min-width: 38px; color: var(--blue-dark); border-color: var(--blue-dark); }
-.chip.primary { background: var(--blue); border-color: var(--blue-dark); color: #fff; }
+.chip.primary { background: var(--blue); border-color: var(--blue-dark); color: var(--on-accent); }
 .chip:active { transform: scale(.95); box-shadow: none; }
 
-.result { background: rgba(255, 254, 251, .35); }
+.result { background: color-mix(in srgb, var(--paper) 35%, transparent); }
 .result-card { padding: 10px 18px 14px; }
 .result-text { color: var(--red); }
-.result-sub { display: flex; flex-direction: column; font-size: 21px; line-height: 1.2; color: #555; margin: 0 0 10px; }
+.result-sub { display: flex; flex-direction: column; font-size: 21px; line-height: 1.2; color: var(--star-sub); margin: 0 0 10px; }
 .result-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 @media (min-width: 900px) { .arena .status { font-size: 28px; } }

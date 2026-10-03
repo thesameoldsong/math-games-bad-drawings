@@ -3,7 +3,7 @@
 #board .grid.outer { stroke-width: 3.2; opacity: 1; }
 #board .own { opacity: .38; }
 #board .dead { fill: none; stroke: var(--pencil); stroke-width: 3; stroke-linecap: round; }
-#board .last { fill: #fff3c4; }
+#board .last { fill: var(--cad-last); }
 #board .nope { fill: none; stroke: var(--ink); stroke-width: 3; stroke-dasharray: 6 6; opacity: .55; animation: nope .4s ease-out; }
 #board .animal.fresh { animation: pop .3s ease-out; }
 #board .animal.ghost { opacity: .35; pointer-events: none; }
@@ -18,12 +18,17 @@
 .player .score .mini { width: 26px; height: 26px; flex: none; }
 
 .result-why { font: 700 23px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
-.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+.result-next { font-size: 20px; line-height: 1.15; color: var(--muted); margin: 0 0 10px; }
 .result-text { font-size: clamp(26px, 6vw, 38px); }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0; }
 
 @media (min-width: 900px) {
   #board { max-width: min(100%, calc(100dvh - 230px)); }
   .player .score { justify-content: center; }
   .player .score .mini { width: 32px; height: 32px; }
 }
+
+/* highlight of the last move: pale yellow on paper, dim chalk-yellow on slate */
+:root { --cad-last: #fff3c4; }
+:root[data-theme=dark] { --cad-last: #4a4530; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --cad-last: #4a4530; } }

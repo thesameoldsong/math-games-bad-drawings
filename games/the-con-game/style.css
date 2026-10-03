@@ -1,6 +1,21 @@
 /* The Con Game: 2–4 players; with 3–4 the player cards sit in a row above the board. */
-.green { color: #3aa655; }
-.violet { color: #8e5cc4; }
+:root {
+  --con-sel: #fff4c4; --con-back: #ecebe4; --con-unknown: #f4f3ee; --con-back-line: #aaa; --con-back-x: #ccc;
+  --con-q: #b8b6ad; --con-rock: #9a98a3; --con-zone: #fbf8ee; --con-zone-line: #d6d4cc; --con-cover: #f6f5f0;
+  --con-hint: #777; --con-soft: #888; --con-faint: #aaa; --con-dash: #bbb; --con-away: #b33;
+}
+:root[data-theme=dark] {
+  --con-sel: #4a4330; --con-back: #313740; --con-unknown: #2c3139; --con-back-line: #6b727d; --con-back-x: #4a515c;
+  --con-q: #6f6c66; --con-rock: #8d8b95; --con-zone: #2a3038; --con-zone-line: #48505b; --con-cover: #232830;
+  --con-hint: #a7a196; --con-soft: #99938a; --con-faint: #7c7870; --con-dash: #5d6470; --con-away: #ff8a94;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --con-sel: #4a4330; --con-back: #313740; --con-unknown: #2c3139; --con-back-line: #6b727d; --con-back-x: #4a515c;
+    --con-q: #6f6c66; --con-rock: #8d8b95; --con-zone: #2a3038; --con-zone-line: #48505b; --con-cover: #232830;
+    --con-hint: #a7a196; --con-soft: #99938a; --con-faint: #7c7870; --con-dash: #5d6470; --con-away: #ff8a94;
+  }
+}
 .con-arena .player[hidden] { display: none; }
 
 #board {
@@ -15,7 +30,7 @@
 #board .pop { animation: con-pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
 @keyframes con-pop { from { opacity: 0; transform: scale(.5); } }
 
-.result-sub { font-size: 22px; color: #666; margin: 0 0 8px; }
+.result-sub { font-size: 22px; color: var(--muted); margin: 0 0 8px; }
 
 /* 3–4 players: compact cards in one row on mobile */
 .con-arena.multi { gap: 2px 4px; }
@@ -78,4 +93,4 @@
 /* online: your own card is underlined; a seat whose device dropped out is greyed */
 .con-arena .player.me .name { border-bottom: 2px dotted currentColor; border-radius: 0; }
 .con-arena .player.away .fig { opacity: .35; filter: grayscale(1); }
-.con-arena .player.away .score { color: #b33; }
+.con-arena .player.away .score { color: var(--con-away); }

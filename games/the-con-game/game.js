@@ -6,9 +6,14 @@ import { CON } from './engine.js';
 import './strings.js';
 
 const SLUG = 'the-con-game';
-const GREEN = { main: '#3aa655', dark: '#1f7a37', fill: '#97d9a8' };
-const VIOLET = { main: '#8e5cc4', dark: '#5f3590', fill: '#c9b0e6' };
-const COLORS = [PALETTE.blue, PALETTE.red, GREEN, VIOLET];
+const COLORS = [PALETTE.blue, PALETTE.red, PALETTE.green, PALETTE.violet];
+// Board tints (light/dark values live in style.css).
+const C = {
+  card: 'var(--card)', sel: 'var(--con-sel)', back: 'var(--con-back)', unknown: 'var(--con-unknown)',
+  backLine: 'var(--con-back-line)', backX: 'var(--con-back-x)', q: 'var(--con-q)', rock: 'var(--con-rock)',
+  zone: 'var(--con-zone)', zoneLine: 'var(--con-zone-line)', cover: 'var(--con-cover)',
+  muted: 'var(--muted)', muted2: 'var(--muted-2)', hint: 'var(--con-hint)', soft: 'var(--con-soft)', faint: 'var(--con-faint)', dash: 'var(--con-dash)',
+};
 const INK = PALETTE.ink;
 const W = 360, PAD = 6;
 const $ = (sel) => document.querySelector(sel);
@@ -113,10 +118,10 @@ function box(k, x, y, w, h, amp = 1.1) {
     line(x + w, y + h, x, y + h, amp).replace('M', 'L') + ' ' + line(x, y + h, x, y, amp).replace('M', 'L') + ' Z');
 }
 function button(act, x, y, w, h, label, { color = null, off = false } = {}) {
-  const fill = color ? color.main : '#fff', stroke = color ? color.dark : INK;
+  const fill = color ? color.main : C.card, stroke = color ? color.dark : INK; // .dark = same shade as .btn.primary's border
   return `<g class="sbtn${off ? ' off' : ''}" ${off ? '' : `data-act="${act}"`} role="button">
     <path d="${box(`btn${w}x${h}_${x}_${y}`, x, y, w, h, 1.4)}" fill="${fill}" stroke="${stroke}" stroke-width="2.6" stroke-linejoin="round"/>
-    ${txt(x + w / 2, y + h / 2 + 7, label, { size: 22, color: color ? '#fff' : INK, max: w - 12 })}</g>`;
+    ${txt(x + w / 2, y + h / 2 + 7, label, { size: 22, color: color ? 'var(--on-accent)' : INK, max: w - 12 })}</g>`;
 }
 
 // Type pictures, drawn in a 24×24 box centred on 0,0.
@@ -126,16 +131,16 @@ function typeIcon(type) {
     const sw = 'stroke-linecap="round" stroke-linejoin="round"';
     if (type === 0) {
       const d = circle(0, 1, 10, 8.4, 0.13);
-      return `<path d="${d}" fill="#9a98a3" filter="url(#mg-crayon)"/><path d="${d}" fill="none" stroke="${INK}" stroke-width="2" ${sw}/>` +
+      return `<path d="${d}" fill="${C.rock}" filter="url(#mg-crayon)"/><path d="${d}" fill="none" stroke="${INK}" stroke-width="2" ${sw}/>` +
         `<path d="M-4 -2 Q-1 -4 2 -3" fill="none" stroke="${INK}" stroke-width="1.3" ${sw}/>`;
     }
     if (type === 1) {
-      return `<g transform="rotate(-8)"><path d="M-7.5 -10.5 L5 -10.5 L8 -7.5 L8 10.5 L-7.5 10.5 Z" fill="#fff" stroke="${INK}" stroke-width="2" ${sw}/>` +
-        `<path d="M-4.5 -5 L4.5 -5 M-4.5 -1 L4.5 -1 M-4.5 3 L4.5 3 M-4.5 7 L1.5 7" stroke="#9a98a3" stroke-width="1.4" ${sw}/></g>`;
+      return `<g transform="rotate(-8)"><path d="M-7.5 -10.5 L5 -10.5 L8 -7.5 L8 10.5 L-7.5 10.5 Z" fill="${C.card}" stroke="${INK}" stroke-width="2" ${sw}/>` +
+        `<path d="M-4.5 -5 L4.5 -5 M-4.5 -1 L4.5 -1 M-4.5 3 L4.5 3 M-4.5 7 L1.5 7" stroke="${C.rock}" stroke-width="1.4" ${sw}/></g>`;
     }
     return `<path d="M-2.4 3.8 L6 -11 M2.4 3.8 L-6 -11" stroke="${INK}" stroke-width="2.4" ${sw} fill="none"/>` +
-      `<path d="${circle(-4.6, 7.4, 3.6, 3.6, 0.05)}" fill="#fff" stroke="${INK}" stroke-width="2" ${sw}/>` +
-      `<path d="${circle(4.6, 7.4, 3.6, 3.6, 0.05)}" fill="#fff" stroke="${INK}" stroke-width="2" ${sw}/>`;
+      `<path d="${circle(-4.6, 7.4, 3.6, 3.6, 0.05)}" fill="${C.card}" stroke="${INK}" stroke-width="2" ${sw}/>` +
+      `<path d="${circle(4.6, 7.4, 3.6, 3.6, 0.05)}" fill="${C.card}" stroke="${INK}" stroke-width="2" ${sw}/>`;
   }));
 }
 const STAR = 'M0 -5.5 L1.6 -1.7 L5.4 -1.6 L2.4 1 L3.4 5 L0 2.7 L-3.4 5 L-2.4 1 L-5.4 -1.6 L-1.6 -1.7 Z';
@@ -145,22 +150,22 @@ function card(id, x, y, w, h, { type = null, sel = false, star = false, act = ''
   const back = id < 0;
   const own = back ? null : COLORS[CON.owner(id)];
   const body = box(`card${back ? 'b' : id}_${w.toFixed(1)}x${h.toFixed(1)}`, 0, 0, w, h, Math.min(1.2, w / 40));
-  const fill = sel ? '#fff4c4' : back ? '#ecebe4' : type === null ? '#f4f3ee' : '#fff';
+  const fill = sel ? C.sel : back ? C.back : type === null ? C.unknown : C.card;
   // The animation class sits on an inner group: a CSS transform on the outer one would replace its translate.
   let s = `<g class="card${sel ? ' sel' : ''}" transform="translate(${x.toFixed(1)} ${(y - (sel ? 6 : 0)).toFixed(1)})" ${act}><g class="${cls}">`;
-  s += `<path d="${body}" fill="${fill}" stroke="${back ? '#aaa' : sel ? INK : own.main}" stroke-width="${sel ? 3 : 2.4}" stroke-linejoin="round"/>`;
+  s += `<path d="${body}" fill="${fill}" stroke="${back ? C.backLine : sel ? INK : own.main}" stroke-width="${sel ? 3 : 2.4}" stroke-linejoin="round"/>`;
   if (back) {
-    s += `<path d="M${w * 0.2} ${h * 0.25} L${w * 0.8} ${h * 0.75} M${w * 0.8} ${h * 0.25} L${w * 0.2} ${h * 0.75}" stroke="#ccc" stroke-width="2" stroke-linecap="round"/>`;
-    s += txt(w / 2, h / 2 + w * 0.2, '?', { size: w * 0.6, color: '#999' });
+    s += `<path d="M${w * 0.2} ${h * 0.25} L${w * 0.8} ${h * 0.75} M${w * 0.8} ${h * 0.25} L${w * 0.2} ${h * 0.75}" stroke="${C.backX}" stroke-width="2" stroke-linecap="round"/>`;
+    s += txt(w / 2, h / 2 + w * 0.2, '?', { size: w * 0.6, color: C.muted2 });
     return s + '</g></g>';
   }
   const ns = Math.max(11, Math.min(w * 0.42, h * 0.3));
   s += txt(4 + ns * 0.02, ns * 0.95, CON.num(id), { size: ns, color: own.main, anchor: 'start' });
   const k = Math.min(w * 0.68, h * (word ? 0.4 : 0.48)) / 24;
   const cy = word ? h * 0.52 : h * 0.62;
-  if (type === null) s += txt(w / 2, cy + 9 * k, '?', { size: 26 * k, color: '#b8b6ad' });
+  if (type === null) s += txt(w / 2, cy + 9 * k, '?', { size: 26 * k, color: C.q });
   else s += `<g transform="translate(${(w / 2).toFixed(1)} ${cy.toFixed(1)}) scale(${k.toFixed(2)})">${typeIcon(type)}</g>`;
-  if (word && type !== null) s += txt(w / 2, h - 7, t('con.type' + type), { size: Math.min(16, w * 0.26), color: '#666', weight: 600, max: w - 6 });
+  if (word && type !== null) s += txt(w / 2, h - 7, t('con.type' + type), { size: Math.min(16, w * 0.26), color: C.muted, weight: 600, max: w - 6 });
   if (star) s += `<path d="${STAR}" transform="translate(${(w - 7).toFixed(1)} 8) scale(${Math.min(1.1, w / 36).toFixed(2)})" fill="#f2b705" stroke="#b07f00" stroke-width="1"/>`;
   return s + '</g></g>';
 }
@@ -179,7 +184,7 @@ const sortHand = (hand, me) => hand.slice().sort((a, b) =>
   ((CON.owner(a) - me + 4) % 4) - ((CON.owner(b) - me + 4) % 4) || a - b);
 
 function handCards(ids, x, y, w, h, opts) {
-  if (!ids.length) return txt(x + w / 2, y + h / 2 + 6, '—', { size: 24, color: '#bbb' });
+  if (!ids.length) return txt(x + w / 2, y + h / 2 + 6, '—', { size: 24, color: C.dash });
   const { cw, ch, cols, gap } = fit(ids.length, w, h, opts.max);
   const rows = Math.ceil(ids.length / cols);
   let s = '';
@@ -236,7 +241,7 @@ function oppZone(z, kv) {
   const stars = CON.counting(st, q);
   const c = COLORS[q];
   let s = `<g class="zone${can || tradeable ? ' pick' : ''}" ${can || tradeable ? `data-act="zone" data-q="${q}"` : ''}>`;
-  s += `<path d="${box('zone' + q + '_' + h + '_' + y, PAD, y, W - 2 * PAD, h, 1)}" fill="${chosen ? '#fbf8ee' : 'transparent'}" stroke="${chosen ? c.main : '#d6d4cc'}" stroke-width="${chosen ? 2.6 : 1.6}" ${chosen ? '' : 'stroke-dasharray="5 6"'}/>`;
+  s += `<path d="${box('zone' + q + '_' + h + '_' + y, PAD, y, W - 2 * PAD, h, 1)}" fill="${chosen ? C.zone : 'transparent'}" stroke="${chosen ? c.main : C.zoneLine}" stroke-width="${chosen ? 2.6 : 1.6}" ${chosen ? '' : 'stroke-dasharray="5 6"'}/>`;
   s += zoneHeader(PAD + 4, y + 3, q, st.hand[q].length);
   const ids = sortHand(st.hand[q], q);
   s += handCards(ids, PAD + 6, y + 24, W - 2 * PAD - 12, h - 30, {
@@ -270,7 +275,7 @@ function duelPic(L, left, right, mid, caption, capColor, under) {
   if (under) s += txt(cx, cy + ch + 22, under[0], { size: 19, color: under[1] });
   return s;
 }
-const vsMark = (cx, cy) => txt(cx, cy + 8, 'vs', { size: 26, color: '#999' });
+const vsMark = (cx, cy) => txt(cx, cy + 8, 'vs', { size: 26, color: C.muted2 });
 
 function arena(L, kv) {
   const y = L.arenaY, cx = W / 2;
@@ -279,18 +284,18 @@ function arena(L, kv) {
     const la = localActor();
     if (la >= 0 && !covered()) {
       s += txt(cx, y + 40, t('con.h.setup'), { size: 22, color: COLORS[la].main });
-      s += txt(cx, y + 68, t('con.h.setup2'), { size: 17, color: '#777', weight: 600 });
+      s += txt(cx, y + 68, t('con.h.setup2'), { size: 17, color: C.hint, weight: 600 });
       const cnt = [0, 1, 2].map((k) => ui.setup.filter((x) => x === k).length);
       [0, 1, 2].forEach((k) => {
         const x = cx - 96 + k * 80;
         s += `<g transform="translate(${x} ${y + 98}) scale(.95)">${typeIcon(k)}</g>` + txt(x + 24, y + 106, '× ' + cnt[k], { size: 21, color: INK, anchor: 'middle' });
       });
     } else {
-      s += txt(cx, y + 46, t('con.a.waitsetup'), { size: 21, color: '#666' });
+      s += txt(cx, y + 46, t('con.a.waitsetup'), { size: 21, color: C.muted });
       seats().forEach((p, i) => {
         const x = cx + (i - (NP() - 1) / 2) * 76;
         s += `<circle cx="${x - 28}" cy="${y + 80}" r="6" fill="${COLORS[p].main}"/>`;
-        s += txt(x - 18, y + 86, st.ready[p] ? '✓ ' + t('con.ready') : '…', { size: 19, color: st.ready[p] ? COLORS[p].main : '#aaa', anchor: 'start' });
+        s += txt(x - 18, y + 86, st.ready[p] ? '✓ ' + t('con.ready') : '…', { size: 19, color: st.ready[p] ? COLORS[p].main : C.faint, anchor: 'start' });
       });
     }
     return s;
@@ -317,9 +322,9 @@ function arena(L, kv) {
   if (st.last) {
     const { a, b, ca, cb, w } = st.last;
     const anim = fresh ? ' pop' : '';
-    const res = w >= 0 ? [t('con.r.win', { name: name(w) }), COLORS[w].main] : [t('con.r.tie'), '#777'];
+    const res = w >= 0 ? [t('con.r.win', { name: name(w) }), COLORS[w].main] : [t('con.r.tie'), C.hint];
     const mark = (x, yy) => {
-      if (w < 0) return txt(x, yy + 9, '=', { size: 34, color: '#999' });
+      if (w < 0) return txt(x, yy + 9, '=', { size: 34, color: C.muted2 });
       const dir = w === a ? 1 : -1; // arrow points from winner to loser
       const d = shapeFor('arr' + dir, () => line(x - 24 * dir, yy, x + 24 * dir, yy, 1.4));
       return `<g class="arrow${anim}"><path d="${d}" stroke="${COLORS[w].main}" stroke-width="4" fill="none" stroke-linecap="round"/>` +
@@ -329,29 +334,29 @@ function arena(L, kv) {
       (x, yy, wd, h) => card(ca, x, yy, wd, h, { type: kv.type[ca], cls: anim, word: true }),
       (x, yy, wd, h) => card(cb, x, yy, wd, h, { type: kv.type[cb], cls: anim, word: true }),
       mark,
-      ev ? ev[0] : `${name(a)} ⚔ ${name(b)}`, ev ? ev[1] : '#888', res);
+      ev ? ev[0] : `${name(a)} ⚔ ${name(b)}`, ev ? ev[1] : C.soft, res);
     return s;
   }
   if (ev) s += txt(cx, y + 15, ev[0], { size: 18, color: ev[1] });
   s += txt(cx, y + 60, t('con.a.start', { name: name(st.first) }), { size: 23, color: COLORS[st.first].main });
   s += `<g transform="translate(${cx - 50} ${y + 92})">${typeIcon(0)}</g><g transform="translate(${cx} ${y + 92})">${typeIcon(2)}</g><g transform="translate(${cx + 50} ${y + 92})">${typeIcon(1)}</g>`;
-  s += txt(cx - 25, y + 99, '›', { size: 24, color: '#999' }) + txt(cx + 25, y + 99, '›', { size: 24, color: '#999' });
+  s += txt(cx - 25, y + 99, '›', { size: 24, color: C.muted2 }) + txt(cx + 25, y + 99, '›', { size: 24, color: C.muted2 });
   return s;
 }
 
 function myZone(L, kv) {
   const y = L.myY, h = L.myH, me = L.me;
-  if (me < 0) return over() || blocked() ? '' : txt(W / 2, y + h / 2, t('con.watch'), { size: 20, color: '#888' });
+  if (me < 0) return over() || blocked() ? '' : txt(W / 2, y + h / 2, t('con.watch'), { size: 20, color: C.soft });
   if (over()) {
     return zoneHeader(PAD + 4, y + 2, me, st.hand[me].length) + handCards(sortHand(st.hand[me], me), PAD + 6, y + 24, W - 2 * PAD - 12, h - 26,
       { max: 52, each: (id) => ({ type: st.type[id], star: CON.counting(st, me).has(id) }) });
   }
   if (covered()) {
     const p = localActor(), c = COLORS[p];
-    let s = `<path d="${box('cover' + y, 10, y + 4, W - 20, h + L.barH - 8, 1.4)}" fill="#f6f5f0" stroke="${PALETTE.pencil}" stroke-width="2.5"/>`;
-    s += txt(W / 2, y + 40, t('con.cover.title'), { size: 24, color: '#666' });
+    let s = `<path d="${box('cover' + y, 10, y + 4, W - 20, h + L.barH - 8, 1.4)}" fill="${C.cover}" stroke="${PALETTE.pencil}" stroke-width="2.5"/>`;
+    s += txt(W / 2, y + 40, t('con.cover.title'), { size: 24, color: C.muted });
     s += txt(W / 2, y + 86, name(p), { size: 44, color: c.main });
-    s += txt(W / 2, y + 116, t('con.cover.note'), { size: 19, color: '#888', weight: 600 });
+    s += txt(W / 2, y + 116, t('con.cover.note'), { size: 19, color: C.soft, weight: 600 });
     s += button('uncover', 60, y + 138, 240, 46, t('con.cover.btn'), { color: c });
     return s;
   }
@@ -382,7 +387,7 @@ function myZone(L, kv) {
 function actionBar(L, kv) {
   const y = L.barY, la = localActor();
   if (over() || covered()) return '';
-  const hint = (k, c = '#777') => txt(W / 2, y + 14, t(k), { size: 18, color: c, weight: 600 });
+  const hint = (k, c = C.hint) => txt(W / 2, y + 14, t(k), { size: 18, color: c, weight: 600 });
   const by = y + 20, bh = 42;
   if (st.phase === 'setup') {
     if (la < 0) return hint('con.h.wait');
@@ -419,7 +424,7 @@ function statusLine() {
   if (online() && blocked()) return [t(!sess.host && sess.maxPlayers > 2 ? 'con.online.host' : 'con.online.wait'), INK];
   if (over()) return ['', INK];
   if (notice && Date.now() < notice.until) return [t(notice.key), COLORS[mySeat()]?.main || INK];
-  if (spectator()) return [t('con.watch'), '#777'];
+  if (spectator()) return [t('con.watch'), C.hint];
   const away = online() ? CON.actors(st).find((p) => ctrl[p] === 'away') : undefined;
   if (away !== undefined && localActor() < 0) return [t(st.np > 2 ? 'con.away.status' : 'con.away.wait', { name: name(away) }), COLORS[away].main];
   const round = t('con.round', { r: CON.round(st), n: st.rounds });
@@ -428,7 +433,7 @@ function statusLine() {
   if (st.phase === 'setup') {
     if (la >= 0 && covered()) return [t('con.cover.status', { name: name(la) }), COLORS[la].main];
     if (la >= 0) return [solo ? t('con.setup.you') : t('con.setup.name', { name: name(la) }), COLORS[la].main];
-    return [t('con.setup.wait'), '#777'];
+    return [t('con.setup.wait'), C.hint];
   }
   const [p] = CON.actors(st);
   if (la >= 0) {

@@ -6,8 +6,10 @@ import './strings.js';
 
 const SLUG = 'starlitaire';
 const VB = 400, CX = 200, CY = 200, R = 166;
+// loop colours: CSS vars (local ones in style.css) so they follow the light/dark theme
 const INK = [
-  '#ec3a4a', '#1ea5cf', '#7b4bb7', '#f0a800', '#2bb24c', '#f07c22', '#e0559b', '#14a39a', '#3b3b44', '#8a5a2b',
+  'var(--red)', 'var(--blue)', 'var(--star-violet)', 'var(--star-gold)', 'var(--star-green)',
+  'var(--star-orange)', 'var(--star-pink)', 'var(--star-teal)', 'var(--dot)', 'var(--star-brown)',
 ];
 const FIGS = [{ color: PALETTE.blue, seed: 11 }, { color: PALETTE.red, seed: 42 }];
 const $ = (sel) => document.querySelector(sel);

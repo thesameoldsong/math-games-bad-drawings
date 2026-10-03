@@ -81,15 +81,15 @@ function handSVG(n, color, key) {
     const palm = circle(0, 0, 23, 25, 0.06);
     const sw = 'fill="none" stroke-linecap="round" stroke-linejoin="round"';
     let s = '';
-    for (const g of segs) s += `<path d="${g.d}" ${sw} stroke="${color.dark}" stroke-width="${g.w + 6}"/>`;
-    s += `<path d="${palm}" fill="#fff" stroke="${color.dark}" stroke-width="5"/>`;
-    for (const g of segs) s += `<path d="${g.d}" ${sw} stroke="#fff" stroke-width="${g.w}"/>`;
+    for (const g of segs) s += `<path d="${g.d}" ${sw} stroke="${color.text}" stroke-width="${g.w + 6}"/>`;
+    s += `<path d="${palm}" fill="var(--card)" stroke="${color.text}" stroke-width="5"/>`;
+    for (const g of segs) s += `<path d="${g.d}" ${sw} stroke="var(--card)" stroke-width="${g.w}"/>`;
     let c = `<path d="${palm}" fill="${color.main}"/>`;
     for (const g of segs) c += `<path d="${g.d}" ${sw} stroke="${color.main}" stroke-width="${g.w}"/>`;
     s += `<g filter="url(#mg-crayon)" opacity=".9">${c}</g>`;
-    if (!up.includes(0)) s += `<path d="${line(-20, 8, -2, 3, 0.8)}" ${sw} stroke="${color.dark}" stroke-width="3.5"/>`;
+    if (!up.includes(0)) s += `<path d="${line(-20, 8, -2, 3, 0.8)}" ${sw} stroke="${color.text}" stroke-width="3.5"/>`;
     // cuff
-    s += `<path d="${line(-13, 32, 14, 32, 0.6)}" ${sw} stroke="${color.dark}" stroke-width="3.5"/>`;
+    s += `<path d="${line(-13, 32, 14, 32, 0.6)}" ${sw} stroke="${color.text}" stroke-width="3.5"/>`;
     return s;
   }));
 }
@@ -120,9 +120,9 @@ function renderMeter() {
     const lead = d > 0 ? 0 : 1;
     s += `<path d="M${cx} ${y} L${mx.toFixed(1)} ${y}" stroke="${COLORS[lead].main}" stroke-width="7" stroke-linecap="round" class="rope"/>`;
   }
-  s += `<g class="knot" style="transform: translate(${mx.toFixed(1)}px, ${y}px)"><path d="${shapeFor('knot', () => circle(0, 0, 9, 9, 0.08))}" fill="#fff" stroke="${INK}" stroke-width="3.5"/></g>`;
+  s += `<g class="knot" style="transform: translate(${mx.toFixed(1)}px, ${y}px)"><path d="${shapeFor('knot', () => circle(0, 0, 9, 9, 0.08))}" fill="var(--card)" stroke="${INK}" stroke-width="3.5"/></g>`;
   const label = d ? t('uc.lead', { n: Math.abs(d), t: T }) : t('uc.even', { t: T });
-  s += txt(cx, 14, label, { size: 19, color: d ? COLORS[d > 0 ? 0 : 1].main : '#777', weight: 700 });
+  s += txt(cx, 14, label, { size: 19, color: d ? COLORS[d > 0 ? 0 : 1].main : 'var(--muted)', weight: 700 });
   return s;
 }
 
@@ -133,7 +133,7 @@ function renderArena() {
   const last = st.rounds[st.rounds.length - 1];
   const showing = revealing ? null : last;
   // round label + per-player status tags
-  if (st.rounds.length) s += txt(W / 2, 80, t('uc.round', { n: st.rounds.length }), { size: 18, color: '#888', weight: 600 });
+  if (st.rounds.length) s += txt(W / 2, 80, t('uc.round', { n: st.rounds.length }), { size: 18, color: 'var(--muted-2)', weight: 600 });
   for (const p of [0, 1]) {
     const tagOn = !over && !revealing && st.pending[p] !== null;
     if (tagOn) s += txt(HX[p], 80, t('uc.ready'), { size: 19, color: COLORS[p].main, cls: 'tag' });
@@ -144,19 +144,19 @@ function renderArena() {
     const cls = revealing ? 'hand shake' : fresh && showing ? 'hand pop' : 'hand';
     s += `<g transform="translate(${HX[p]} ${HY}) scale(${flip * 0.95} 0.95)"><g class="${cls}">${handSVG(n, COLORS[p], 'big' + p)}</g></g>`;
     if (!showing) {
-      s += txt(HX[p] + flip * 2, HY + 8, '?', { size: 40, color: '#fff', cls: 'q' });
+      s += txt(HX[p] + flip * 2, HY + 8, '?', { size: 40, color: 'var(--on-accent)', cls: 'q' });
       continue;
     }
     // points circle
     const pts = showing.pts[p];
     const cy = 238, ccls = fresh ? 'pts drop' : 'pts';
     s += `<g class="${ccls}">`;
-    s += `<path d="${shapeFor('pc' + p, () => circle(HX[p], cy, 24, 17, 0.06))}" fill="#fff" stroke="${pts ? COLORS[p].main : PALETTE.pencil}" stroke-width="3.5"/>`;
-    s += txt(HX[p], cy + 7, '+' + pts, { size: 24, color: pts ? COLORS[p].main : '#aaa' });
+    s += `<path d="${shapeFor('pc' + p, () => circle(HX[p], cy, 24, 17, 0.06))}" fill="var(--card)" stroke="${pts ? COLORS[p].main : PALETTE.pencil}" stroke-width="3.5"/>`;
+    s += txt(HX[p], cy + 7, '+' + pts, { size: 24, color: pts ? COLORS[p].main : 'var(--muted-2)' });
     s += '</g>';
     if (st.flaunt && showing.vals[p] !== showing.picks[p]) {
       const k = Math.round(Math.log(showing.vals[p]) / Math.log(showing.picks[p]));
-      s += txt(HX[p] + flip * 50, 116, showing.picks[p] + sup(k), { size: 24, color: COLORS[p].dark, cls: 'pow' });
+      s += txt(HX[p] + flip * 50, 116, showing.picks[p] + sup(k), { size: 24, color: COLORS[p].text, cls: 'pow' });
     }
   }
   // centre: undercut arrow or "same"
@@ -174,9 +174,9 @@ function renderArena() {
     s += txt(W / 2, 150, t('uc.cut'), { size: 30, color: COLORS[c].main, cls: 'cut' });
     s += '</g>';
   } else if (showing && showing.picks[0] === showing.picks[1]) {
-    s += txt(W / 2, 156, '=', { size: 40, color: '#888' });
+    s += txt(W / 2, 156, '=', { size: 40, color: 'var(--muted-2)' });
   } else if (showing) {
-    s += txt(W / 2, 154, ':', { size: 34, color: '#bbb' });
+    s += txt(W / 2, 154, ':', { size: 34, color: 'var(--line)' });
   }
   return s;
 }
@@ -208,18 +208,18 @@ function renderPicker() {
   if (p >= 0 && hotSeat() && uncovered !== p) {
     // cover: pass the device
     const c = COLORS[p];
-    s += `<path d="${shapeFor('cover', () => `M10 ${PK.y + 4} L${W - 10} ${PK.y} L${W - 8} ${PK.y + PK.h} L8 ${PK.y + PK.h - 2} Z`)}" fill="#f6f5f0" stroke="${PALETTE.pencil}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    s += `<path d="${shapeFor('cover', () => `M10 ${PK.y + 4} L${W - 10} ${PK.y} L${W - 8} ${PK.y + PK.h} L8 ${PK.y + PK.h - 2} Z`)}" fill="var(--uc-cover)" stroke="${PALETTE.pencil}" stroke-width="2.5" stroke-linejoin="round"/>`;
     s += txt(W / 2, PK.y + 40, t('uc.cover.title', { name: name(p) }), { size: 28, color: c.main });
-    s += txt(W / 2, PK.y + 70, t('uc.cover.note'), { size: 20, color: '#777', weight: 600 });
+    s += txt(W / 2, PK.y + 70, t('uc.cover.note'), { size: 20, color: 'var(--muted)', weight: 600 });
     s += `<g class="btn-svg" data-act="uncover" role="button">`;
-    s += `<path d="${shapeFor('covbtn', () => `M70 ${PK.y + 96} Q180 ${PK.y + 92} 290 ${PK.y + 97} L288 ${PK.y + 142} Q180 ${PK.y + 146} 72 ${PK.y + 141} Z`)}" fill="${c.main}" stroke="${c.dark}" stroke-width="3" stroke-linejoin="round"/>`;
-    s += txt(W / 2, PK.y + 128, t('uc.cover.btn'), { size: 25, color: '#fff' });
+    s += `<path d="${shapeFor('covbtn', () => `M70 ${PK.y + 96} Q180 ${PK.y + 92} 290 ${PK.y + 97} L288 ${PK.y + 142} Q180 ${PK.y + 146} 72 ${PK.y + 141} Z`)}" fill="${c.main}" stroke="${c.text}" stroke-width="3" stroke-linejoin="round"/>`;
+    s += txt(W / 2, PK.y + 128, t('uc.cover.btn'), { size: 25, color: 'var(--on-accent)' });
     s += '</g>';
     return s;
   }
   const owner = p >= 0 ? p : online() ? mySeat() : hotSeat() ? -1 : 0;
   const mine = online() ? st.pending[mySeat()] : null;
-  const color = owner >= 0 ? COLORS[owner] : { main: '#aaa', dark: '#888', fill: '#ddd' };
+  const color = owner >= 0 ? COLORS[owner] : { main: 'var(--muted-2)', text: 'var(--muted-2)', fill: 'var(--line)' };
   const flip = owner === 1 ? -1 : 1;
   for (let i = 0; i < 5; i++) {
     const v = i + 1, x = pkX(i);
@@ -229,13 +229,13 @@ function renderPicker() {
     s += `<path class="pk-bg" d="${shapeFor('pkb' + i, () => {
       const r = () => (Math.random() * 2 - 1) * 2;
       return `M${x + r()} ${PK.y + r()} L${x + PK.w + r()} ${PK.y + r()} L${x + PK.w + r()} ${PK.y + PK.h + r()} L${x + r()} ${PK.y + PK.h + r()} Z`;
-    })}" fill="#fff" stroke="${chosen ? color.main : enabled ? INK : PALETTE.pencil}" stroke-width="${chosen ? 4 : 2.5}" stroke-linejoin="round"/>`;
+    })}" fill="var(--card)" stroke="${chosen ? color.main : enabled ? INK : PALETTE.pencil}" stroke-width="${chosen ? 4 : 2.5}" stroke-linejoin="round"/>`;
     s += `<g transform="translate(${x + PK.w / 2} ${PK.y + 78}) scale(${flip * 0.62} 0.62)" opacity="${enabled || chosen ? 1 : 0.35}">${handSVG(v, color, 'pk' + Math.max(owner, 0))}</g>`;
     if (st.flaunt && owner >= 0) {
       const k = UC.streak(st, owner, v);
-      if (k > 1) s += txt(x + PK.w / 2, PK.y + 22, `${v}${sup(k)}=${v ** k}`, { size: 17, color: color.dark, cls: 'pow' });
+      if (k > 1) s += txt(x + PK.w / 2, PK.y + 22, `${v}${sup(k)}=${v ** k}`, { size: 17, color: color.text, cls: 'pow' });
     }
-    s += txt(x + PK.w / 2, PK.y + PK.h - 12, v, { size: 34, color: enabled || chosen ? color.main : '#bbb' });
+    s += txt(x + PK.w / 2, PK.y + PK.h - 12, v, { size: 34, color: enabled || chosen ? color.main : 'var(--line)' });
     s += '</g>';
   }
   return s;

@@ -6,10 +6,9 @@ import { WLB } from './engine.js';
 import './strings.js';
 
 const SLUG = 'win-lose-banana';
-const GREEN = { main: '#3aa655', dark: '#1f7a37', fill: '#97d9a8' };
-const COLORS = [PALETTE.blue, PALETTE.red, GREEN];
+const COLORS = [PALETTE.blue, PALETTE.red, PALETTE.green];
 const INK = PALETTE.ink;
-const GOLD = '#c58a00';
+const GOLD = 'var(--wlb-gold)';
 const W = 360, H = 360;
 const CX = [60, 180, 300], CW = 92, CH = 126, CT = 8;
 const $ = (sel) => document.querySelector(sel);
@@ -105,30 +104,30 @@ function box(k, x, y, w, h, amp = 1.1) {
 }
 function button(act, x, y, w, h, label, { color = PALETTE.blue, primary = true, size = 22 } = {}) {
   let s = `<g class="sbtn" data-act="${act}">`;
-  s += `<path d="${box('btn' + act + x + y + w, x, y, w, h, 1)}" fill="${primary ? color.main : '#fff'}" stroke="${color.dark}" stroke-width="2.5" stroke-linejoin="round"/>`;
-  s += txt(x + w / 2, y + h / 2 + size * 0.34, label, { size, color: primary ? '#fff' : color.dark, max: w - 14 });
+  s += `<path d="${box('btn' + act + x + y + w, x, y, w, h, 1)}" fill="${primary ? color.main : 'var(--card)'}" stroke="${color.text}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  s += txt(x + w / 2, y + h / 2 + size * 0.34, label, { size, color: primary ? 'var(--on-accent)' : color.text, max: w - 14 });
   return s + '</g>';
 }
 
 // Pictures on the card faces (our own doodles), centred at (0, 0).
 function banana(k) {
   const outline = 'M-34 -14 C-30 18 20 28 36 -6 C18 8 -14 6 -34 -14 Z';
-  return `<path d="${outline}" fill="#f7d23e" filter="url(#mg-crayon)"/>` +
-    `<path d="${outline}" fill="none" stroke="#c99a10" stroke-width="2.6" stroke-linejoin="round"/>` +
-    `<path d="${shapeFor(k + 'h', () => line(-22, 2, 14, 10, 1.2))}" stroke="#c99a10" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>` +
-    `<path d="${shapeFor(k + 's', () => line(35, -6, 41, -16, 0.6))}" stroke="#6b4a1e" stroke-width="5" stroke-linecap="round" fill="none"/>` +
-    `<circle cx="-33" cy="-13" r="2.6" fill="#6b4a1e"/>`;
+  return `<path d="${outline}" fill="var(--wlb-banana)" filter="url(#mg-crayon)"/>` +
+    `<path d="${outline}" fill="none" stroke="var(--wlb-banana-edge)" stroke-width="2.6" stroke-linejoin="round"/>` +
+    `<path d="${shapeFor(k + 'h', () => line(-22, 2, 14, 10, 1.2))}" stroke="var(--wlb-banana-edge)" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>` +
+    `<path d="${shapeFor(k + 's', () => line(35, -6, 41, -16, 0.6))}" stroke="var(--wlb-stem)" stroke-width="5" stroke-linecap="round" fill="none"/>` +
+    `<circle cx="-33" cy="-13" r="2.6" fill="var(--wlb-stem)"/>`;
 }
 function trophy() {
   const cup = 'M-20 -24 L20 -24 C20 -2 10 6 0 6 C-10 6 -20 -2 -20 -24 Z';
-  return `<path d="M-20 -18 C-33 -18 -31 -2 -15 0 M20 -18 C33 -18 31 -2 15 0" stroke="#b98a12" stroke-width="3" fill="none" stroke-linecap="round"/>` +
-    `<path d="${cup}" fill="#f4bf3a" filter="url(#mg-crayon)"/><path d="${cup}" fill="none" stroke="#b98a12" stroke-width="2.6" stroke-linejoin="round"/>` +
-    `<path d="M0 6 L0 16 M-12 19 L12 19" stroke="#b98a12" stroke-width="4" stroke-linecap="round"/>` +
+  return `<path d="M-20 -18 C-33 -18 -31 -2 -15 0 M20 -18 C33 -18 31 -2 15 0" stroke="var(--wlb-trophy)" stroke-width="3" fill="none" stroke-linecap="round"/>` +
+    `<path d="${cup}" fill="var(--wlb-trophy-fill)" filter="url(#mg-crayon)"/><path d="${cup}" fill="none" stroke="var(--wlb-trophy)" stroke-width="2.6" stroke-linejoin="round"/>` +
+    `<path d="M0 6 L0 16 M-12 19 L12 19" stroke="var(--wlb-trophy)" stroke-width="4" stroke-linecap="round"/>` +
     `<path d="M0 -19 L2.6 -13.4 L8.6 -12.8 L4 -8.8 L5.4 -2.8 L0 -6 L-5.4 -2.8 L-4 -8.8 L-8.6 -12.8 L-2.6 -13.4 Z" fill="#fff" opacity=".85"/>`;
 }
 function cloud(k) {
   const c = shapeFor(k + 'c', () => circle(-12, -6, 12, 10) + ' ' + circle(4, -12, 15, 13) + ' ' + circle(17, -3, 11, 9) + ' ' + circle(0, 0, 19, 8));
-  let s = `<path d="${c}" fill="#b7bac6" filter="url(#mg-crayon)"/><path d="${c}" fill="none" stroke="#6c7080" stroke-width="2"/>`;
+  let s = `<path d="${c}" fill="var(--wlb-cloud)" filter="url(#mg-crayon)"/><path d="${c}" fill="none" stroke="var(--wlb-cloud-edge)" stroke-width="2"/>`;
   for (const [x, y] of [[-12, 14], [0, 18], [12, 13]]) s += `<path d="${shapeFor(k + 'd' + x, () => line(x, y, x - 3, y + 8, 0.5))}" stroke="${PALETTE.blue.main}" stroke-width="3" stroke-linecap="round" fill="none"/>`;
   return s;
 }
@@ -138,7 +137,7 @@ function card(p, role) {
   const act = canChoose(p) ? ` data-act="card:${p}"` : '';
   const selected = sel === p && !over();
   let s = `<g class="card${act ? ' pickable' : ''}${selected ? ' sel' : ''}"${act}>`;
-  s += `<path d="${box(k, x, y, CW, CH, 1.2)}" fill="#fff" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>`;
+  s += `<path d="${box(k, x, y, CW, CH, 1.2)}" fill="var(--card)" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>`;
   if (!role) {
     // back: pencil hatching and a question mark
     s += `<clipPath id="clip${p}"><rect x="${x + 7}" y="${y + 7}" width="${CW - 14}" height="${CH - 14}"/></clipPath>`;
@@ -147,19 +146,19 @@ function card(p, role) {
       for (let i = -CH; i < CW; i += 13) d += line(x + i, y, x + i + CH, y + CH, 0.8) + ' ';
       return d;
     })}" stroke="${PALETTE.pencil}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
-    s += `<circle cx="${CX[p]}" cy="${y + CH / 2}" r="22" fill="#fff"/>`;
+    s += `<circle cx="${CX[p]}" cy="${y + CH / 2}" r="22" fill="var(--card)"/>`;
     s += txt(CX[p], y + CH / 2 + 13, '?', { size: 40, color: COLORS[p].main });
   } else {
     const pic = role === 'win' ? trophy() : role === 'lose' ? cloud(k) : banana(k);
     s += `<g transform="translate(${CX[p]} ${y + 50})">${pic}</g>`;
-    const col = role === 'win' ? '#b98a12' : role === 'lose' ? '#6c7080' : GOLD;
+    const col = role === 'win' ? 'var(--wlb-trophy)' : role === 'lose' ? 'var(--wlb-cloud-edge)' : GOLD;
     const label = t('wlb.card.' + role);
     s += txt(CX[p], y + CH - 18, label, { size: label.length > 6 ? 17 : 20, color: col, max: CW - 16, force: label.length > 6 });
   }
   if (st.tell[p] === 'nervous' && !over() && !waiting && !(online() && gathering)) {
     // sweat drops: a bot's tell
     for (const [dx, dy] of [[CW / 2 + 4, 10], [CW / 2 + 10, 26]]) {
-      s += `<path d="M${CX[p] + dx} ${y + dy} q4 7 0 9 q-4 -2 0 -9 Z" fill="#9fdcf2" stroke="${PALETTE.blue.dark}" stroke-width="1.3"/>`;
+      s += `<path d="M${CX[p] + dx} ${y + dy} q4 7 0 9 q-4 -2 0 -9 Z" fill="var(--wlb-drop)" stroke="${PALETTE.blue.text}" stroke-width="1.3"/>`;
     }
   }
   if (selected) s += `<path d="${shapeFor(k + 'sel', () => circle(CX[p], y + CH / 2, CW / 2 + 10, CH / 2 + 8, 0.04))}" stroke="${COLORS[st.win].main}" stroke-width="3.5" fill="none" stroke-dasharray="7 6"/>`;
@@ -167,7 +166,7 @@ function card(p, role) {
     const ok = st.result.correct;
     s += `<path class="pop" d="${shapeFor(k + 'pick', () => circle(CX[p], y + CH / 2, CW / 2 + 9, CH / 2 + 7, 0.05))}" stroke="${COLORS[st.win].main}" stroke-width="4" fill="none"/>`;
     s += `<g class="pop">` + (ok
-      ? `<path d="M${CX[p] + 22} ${y + CH - 6} l9 10 l18 -26" stroke="#2a9d48" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      ? `<path d="M${CX[p] + 22} ${y + CH - 6} l9 10 l18 -26" stroke="var(--ok)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
       : `<path d="M${CX[p] + 24} ${y + CH - 14} l20 20 M${CX[p] + 44} ${y + CH - 14} l-20 20" stroke="${PALETTE.red.main}" stroke-width="6" fill="none" stroke-linecap="round"/>`) + '</g>';
   }
   return s + '</g>';
@@ -179,13 +178,13 @@ function chips(p) {
   WLB.PITCHES.forEach((id, i) => {
     const x = CX[p] - 55, y = CHIP_Y + i * (CHIP_H + CHIP_GAP);
     s += `<g class="chip" data-act="pitch:${p}:${id}">`;
-    s += `<path d="${box('chip' + p + id, x, y, 110, CHIP_H, 0.9)}" fill="#fff" stroke="${COLORS[p].main}" stroke-width="2.2" stroke-linejoin="round"/>`;
-    s += txt(CX[p], y + 22, t('wlb.chip.' + id), { size: 18, color: COLORS[p].dark, max: 100 });
+    s += `<path d="${box('chip' + p + id, x, y, 110, CHIP_H, 0.9)}" fill="var(--card)" stroke="${COLORS[p].main}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    s += txt(CX[p], y + 22, t('wlb.chip.' + id), { size: 18, color: COLORS[p].text, max: 100 });
     s += '</g>';
   });
   return s;
 }
-function lines(p, key, color = '#777') {
+function lines(p, key, color = 'var(--wlb-hint)') {
   return t(key).split('|').map((l, i) => txt(CX[p], CHIP_Y + 26 + i * 24, l, { size: 20, color, weight: 600, max: 112 })).join('');
 }
 
@@ -199,8 +198,8 @@ function render() {
     for (const p of [0, 1, 2]) {
       if (p === st.win) { s += txt(CX[p], 156, t('wlb.cap.win'), { size: 20, color: COLORS[p].main, max: 112 }); continue; }
       const last = st.said[p][st.said[p].length - 1];
-      s += last ? txt(CX[p], 156, `«${t('wlb.chip.' + last)}»`, { size: 18, color: COLORS[p].dark, max: 114 })
-        : txt(CX[p], 156, t('wlb.cap.quiet'), { size: 18, color: '#999', weight: 600, max: 112 });
+      s += last ? txt(CX[p], 156, `«${t('wlb.chip.' + last)}»`, { size: 18, color: COLORS[p].text, max: 114 })
+        : txt(CX[p], 156, t('wlb.cap.quiet'), { size: 18, color: 'var(--muted-2)', weight: 600, max: 112 });
     }
   }
 
@@ -208,7 +207,7 @@ function render() {
   else if (!waiting && !over() && !gathering) {
     for (const p of WLB.suspects(st)) if (canSpeak(p)) s += chips(p);
     const w = st.win;
-    if (isLocal(w) && canAct()) s += lines(w, 'wlb.hint.pick', COLORS[w].dark);
+    if (isLocal(w) && canAct()) s += lines(w, 'wlb.hint.pick', COLORS[w].text);
     else if (isBot(w) && st.oneWord && !WLB.allSpoke(st)) s += lines(w, 'wlb.hint.lastword');
     if (sel !== null && canChoose(sel)) s += button('confirm', 70, 318, 220, 38, t('wlb.confirm', { name: name(sel) }), { color: COLORS[w], size: 21 });
   }
@@ -222,14 +221,14 @@ function peekLayer() {
   const p = peeker(), c = COLORS[p];
   if (peek.shown) {
     let s = `<rect x="0" y="${CHIP_Y - 4}" width="${W}" height="${H - CHIP_Y + 4}" fill="var(--paper)"/>`;
-    s += txt(W / 2, CHIP_Y + 40, t('wlb.cover.know'), { size: 21, color: c.dark, weight: 600 });
+    s += txt(W / 2, CHIP_Y + 40, t('wlb.cover.know'), { size: 21, color: c.text, weight: 600 });
     return s + button('hide', 70, 268, 220, 44, t('wlb.cover.hide'), { color: c });
   }
-  let s = `<path d="${box('cover', 8, 4, W - 16, H - 8, 1.4)}" fill="#f6f5f0" stroke="${PALETTE.pencil}" stroke-width="2.5"/>`;
+  let s = `<path d="${box('cover', 8, 4, W - 16, H - 8, 1.4)}" fill="var(--wlb-cover)" stroke="${PALETTE.pencil}" stroke-width="2.5"/>`;
   s += `<g transform="translate(${W / 2} 92) scale(1.5)">${banana('coverb')}</g>`;
-  s += txt(W / 2, 168, t('wlb.cover.title'), { size: 24, color: '#666' });
+  s += txt(W / 2, 168, t('wlb.cover.title'), { size: 24, color: 'var(--muted)' });
   s += txt(W / 2, 212, name(p), { size: 40, color: c.main });
-  s += txt(W / 2, 246, t('wlb.cover.away'), { size: 20, color: '#888', weight: 600 });
+  s += txt(W / 2, 246, t('wlb.cover.away'), { size: 20, color: 'var(--wlb-faint)', weight: 600 });
   return s + button('peek', 70, 272, 220, 46, t('wlb.cover.btn'), { color: c });
 }
 

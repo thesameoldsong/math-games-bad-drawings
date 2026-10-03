@@ -1,3 +1,8 @@
+:root { --uc-hover: #f4f9fb; --uc-chosen: #fffbe6; --uc-cover: #f6f5f0; }
+:root[data-theme=dark] { --uc-hover: #2b3540; --uc-chosen: #3a3628; --uc-cover: #20252c; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --uc-hover: #2b3540; --uc-chosen: #3a3628; --uc-cover: #20252c; }
+}
 #board {
   width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
   max-height: calc(100dvh - 270px); min-height: 330px;
@@ -5,9 +10,9 @@
 #board text { font-family: var(--hand); dominant-baseline: auto; }
 #board [data-act] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 #board .pk .pk-bg { transition: fill .15s; }
-#board .pk.on:hover .pk-bg { fill: #f4f9fb; }
+#board .pk.on:hover .pk-bg { fill: var(--uc-hover); }
 #board .pk.on:active { transform-box: fill-box; transform-origin: center; transform: scale(.95); }
-#board .pk.chosen .pk-bg { fill: #fffbe6; }
+#board .pk.chosen .pk-bg { fill: var(--uc-chosen); }
 #board .btn-svg:active { transform-box: fill-box; transform-origin: center; transform: scale(.97); }
 #board .knot { transition: transform .5s cubic-bezier(.3, 1.4, .5, 1); }
 #board .hand { transform-box: fill-box; transform-origin: 50% 100%; }

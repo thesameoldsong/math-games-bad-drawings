@@ -83,10 +83,10 @@ function box(k, x, y, w, h) {
     line(x + w, y + h, x, y + h, 1.2).replace('M', 'L') + ' ' + line(x, y + h, x, y, 1.2).replace('M', 'L'));
 }
 function button(k, act, x, y, w, h, label, color = null, disabled = false) {
-  const fill = color ? color.main : '#fff';
+  const fill = color ? color.main : 'var(--card)';
   return `<g class="sbtn${disabled ? ' off' : ''}" data-act="${act}">
-    <path d="${box(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.dark : 'var(--ink)'}" stroke-width="2.6" stroke-linejoin="round"/>
-    ${txt(x + w / 2, y + h / 2 + 1, label, { size: 23, color: color ? '#fff' : 'var(--ink)', max: w - 14 })}</g>`;
+    <path d="${box(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.text : 'var(--ink)'}" stroke-width="2.6" stroke-linejoin="round"/>
+    ${txt(x + w / 2, y + h / 2 + 1, label, { size: 23, color: color ? 'var(--on-accent)' : 'var(--ink)', max: w - 14 })}</g>`;
 }
 const cellXY = (p, i) => [GX[p] + (i % 4) * CS, GY + Math.floor(i / 4) * CS];
 const centre = (p, i) => { const [x, y] = cellXY(p, i); return [x + CS / 2, y + CS / 2]; };
@@ -111,7 +111,7 @@ function hiddenGrid(p) {
   s += gridLines(p);
   const done = PB.isReady(st, p);
   const lab = done ? '✓ ' + t('pb.ready') : '?';
-  s += txt(x0 + n / 2, y0 + n / 2, lab, { size: done ? 30 : 64, color: c.dark, cls: 'halo' });
+  s += txt(x0 + n / 2, y0 + n / 2, lab, { size: done ? 30 : 64, color: c.text, cls: 'halo' });
   return s;
 }
 
@@ -137,7 +137,7 @@ function gridView(p) {
   s += gridLines(p);
   // the blank start square
   const [sx, sy] = centre(p, 0);
-  s += `<path d="${shapeFor('st' + p, () => circle(sx, sy, 5, 5, 0.1))}" fill="${c.main}" stroke="${c.dark}" stroke-width="1.5"/>`;
+  s += `<path d="${shapeFor('st' + p, () => circle(sx, sy, 5, 5, 0.1))}" fill="${c.main}" stroke="${c.text}" stroke-width="1.5"/>`;
   // path line
   if (!setup && path.length > 1) {
     for (let k = 1; k < path.length; k++) {
@@ -152,12 +152,12 @@ function gridView(p) {
     const [x, y] = centre(p, i);
     const on = isOn(i);
     const used = !setup && path.includes(i);
-    s += txt(x, y + 1, g[i], { size: 26, color: on ? '#fff' : used ? c.dark : c.main, cls: 'num' + (used ? ' used' : on ? '' : ' halo-s') });
+    s += txt(x, y + 1, g[i], { size: 26, color: on ? 'var(--on-accent)' : used ? c.text : c.main, cls: 'num' + (used ? ' used' : on ? '' : ' halo-s') });
   }
   // current square
   if (!setup && st.phase !== 'over') {
     const [cx, cy] = centre(p, st.pos[p]);
-    s += `<path class="ring" d="${shapeFor(`ring${p}_${st.pos[p]}`, () => circle(cx, cy, 17, 17, 0.08))}" stroke="${c.dark}"/>`;
+    s += `<path class="ring" d="${shapeFor(`ring${p}_${st.pos[p]}`, () => circle(cx, cy, 17, 17, 0.08))}" stroke="${c.text}"/>`;
     if (PB.trapped(st, p)) {
       const [x, y] = cellXY(p, st.pos[p]);
       s += `<path class="cross" d="${shapeFor('x' + p + st.pos[p], () => line(x + 6, y + 6, x + CS - 6, y + CS - 6, 1) + ' ' + line(x + CS - 6, y + 6, x + 6, y + CS - 6, 1))}"/>`;
@@ -179,7 +179,7 @@ function lastLine() {
   const e = st.log[st.log.length - 1];
   if (!e) return null;
   const r = st.log.length, [a, b] = e.v;
-  if (e.w < 0) return [t('pb.last.tie', { r, a, b }), '#777'];
+  if (e.w < 0) return [t('pb.last.tie', { r, a, b }), 'var(--pb-note)'];
   return [t('pb.last.win', { r, a, b, name: name(e.w) }), COLORS[e.w].main];
 }
 
@@ -188,25 +188,25 @@ function panel() {
   if (online() && !sess.connected) return '';
   if (cov >= 0) {
     return txt(112, y + 30, t('pb.cover.title', { name: name(cov) }), { size: 23, color: COLORS[cov].main, max: 200 }) +
-      txt(112, y + 56, t('pb.cover.note'), { size: 19, color: '#999', weight: 600, max: 200 }) +
+      txt(112, y + 56, t('pb.cover.note'), { size: 19, color: 'var(--muted-2)', weight: 600, max: 200 }) +
       button('cov', 'uncover', 228, y + 20, 120, 44, t('pb.cover.btn'), COLORS[cov]);
   }
   if (st.phase === 'setup') {
     const a = localArranger();
     if (a >= 0) {
-      return txt(180, y + 12, t('pb.setup.hint'), { size: 19, color: '#777', weight: 600 }) +
+      return txt(180, y + 12, t('pb.setup.hint'), { size: 19, color: 'var(--pb-note)', weight: 600 }) +
         button('shuf', 'shuffle', 36, y + 28, 136, 44, t('pb.shuffle')) +
         button('rdy', 'ready', 188, y + 28, 136, 44, t('pb.ready'), COLORS[a]);
     }
     const other = [0, 1].find((p) => !PB.isReady(st, p));
-    return other === undefined ? '' : txt(180, y + 40, t('pb.setup.wait', { name: name(other) }), { size: 22, color: '#777' });
+    return other === undefined ? '' : txt(180, y + 40, t('pb.setup.wait', { name: name(other) }), { size: 22, color: 'var(--pb-note)' });
   }
   let s = '';
   const last = lastLine();
   const lp = localPicker();
   if (lp >= 0) {
     if (last) s += txt(180, y + 12, last[0], { size: 19, color: last[1], weight: 600 });
-    else s += txt(180, y + 12, t('pb.tap'), { size: 19, color: '#777', weight: 600 });
+    else s += txt(180, y + 12, t('pb.tap'), { size: 19, color: 'var(--pb-note)', weight: 600 });
     const label = sel === null ? t('pb.choose') : t('pb.punch', { x: st.grids[lp][sel] });
     s += button('ok', 'lock', 100, y + 28, 160, 44, label, sel === null ? null : COLORS[lp], sel === null);
     return s;
@@ -230,7 +230,7 @@ function table() {
   let s = `<path class="rule" d="${shapeFor('rule', () => line(x0, y0 + 11, W - x0, y0 + 11, 0.6))}"/>`;
   for (let r = 0; r < 15; r++) {
     const cx = x0 + lab + r * cw + cw / 2, cur = r === st.round && st.phase === 'pick';
-    s += txt(cx, y0, r + 1, { size: 14, color: cur ? 'var(--ink)' : '#aaa', weight: cur ? 700 : 600 });
+    s += txt(cx, y0, r + 1, { size: 14, color: cur ? 'var(--ink)' : 'var(--pb-faint)', weight: cur ? 700 : 600 });
     if (cur) s += `<path class="cur" d="${shapeFor('cur' + r, () => circle(cx, y0, 9, 9, 0.08))}"/>`;
   }
   for (const p of [0, 1]) {
@@ -238,7 +238,7 @@ function table() {
     s += `<circle cx="${x0 + 9}" cy="${y}" r="6" fill="${COLORS[p].main}"/>`;
     st.log.forEach((e, r) => {
       const cx = x0 + lab + r * cw + cw / 2, won = e.w === p;
-      s += txt(cx, y, e.v[p], { size: won ? 20 : 17, color: won ? COLORS[p].main : '#a5a5a5', weight: won ? 700 : 500, cls: r === st.log.length - 1 && freshRound ? 'pop' : '' });
+      s += txt(cx, y, e.v[p], { size: won ? 20 : 17, color: won ? COLORS[p].main : 'var(--pb-faint-2)', weight: won ? 700 : 500, cls: r === st.log.length - 1 && freshRound ? 'pop' : '' });
       if (won) s += `<path d="${shapeFor(`u${r}_${p}`, () => circle(cx, y, 10.5, 10, 0.08))}" stroke="${COLORS[p].main}" class="win"/>`;
     });
   }
@@ -249,7 +249,7 @@ function table() {
 function render() {
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   let s = gridView(0) + gridView(1) + panel() + table();
-  if (online() && !sess.connected) s += txt(180, PANEL + 40, t('pb.online.wait'), { size: 24, color: '#777' });
+  if (online() && !sess.connected) s += txt(180, PANEL + 40, t('pb.online.wait'), { size: 24, color: 'var(--pb-note)' });
   svg.innerHTML = s;
   freshRound = false;
   renderPlayers();

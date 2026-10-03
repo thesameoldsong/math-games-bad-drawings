@@ -1,5 +1,24 @@
 /* Patterns II: 1–5 player cards, a 6×6 sheet, a tool palette and an action row. */
 
+/* ----- local colour tokens (light = original look; dark = chalk on slate) ----- */
+:root {
+  --pii-orange: #f08c1e; --pii-orange-text: #b8600a; --pii-orange-fill: #f8c58c; --pii-orange-face: #b8600a;
+  --pii-rev: #e9e5d8; --pii-tick: #9a968a; --pii-faint: #c9c6bd; --pii-right: #cdeccf; --pii-wrong: #fbd9dc;
+  --pii-cover: #f6f5f0; --pii-note: #777; --pii-note-2: #555; --pii-pc: #888;
+}
+:root[data-theme=dark] {
+  --pii-orange: #ffa94d; --pii-orange-text: #ffc98f; --pii-orange-fill: #d98a35; --pii-orange-face: #6b3a06;
+  --pii-rev: #363c46; --pii-tick: #8a857c; --pii-faint: #5f6672; --pii-right: #284634; --pii-wrong: #4e2a31;
+  --pii-cover: #2a3039; --pii-note: #a7a196; --pii-note-2: #c4beb2; --pii-pc: #8a857c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --pii-orange: #ffa94d; --pii-orange-text: #ffc98f; --pii-orange-fill: #d98a35; --pii-orange-face: #6b3a06;
+    --pii-rev: #363c46; --pii-tick: #8a857c; --pii-faint: #5f6672; --pii-right: #284634; --pii-wrong: #4e2a31;
+    --pii-cover: #2a3039; --pii-note: #a7a196; --pii-note-2: #c4beb2; --pii-pc: #8a857c;
+  }
+}
+
 /* ----- player cards: 3+ players on mobile → compact cards in rows above the board ----- */
 .pii-arena .p2 { grid-area: p2; }
 .pii-arena .p3 { grid-area: p3; }
@@ -34,11 +53,11 @@
 /* pass-the-device cover */
 .cover {
   position: absolute; inset: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  background: #f6f5f0; border: 2.5px solid var(--pencil); border-radius: var(--sketchy); text-align: center; padding: 16px;
+  background: var(--pii-cover); border: 2.5px solid var(--pencil); border-radius: var(--sketchy); text-align: center; padding: 16px;
 }
 .cover[hidden] { display: none; }
 .cover .ctitle { font: 700 32px/1.1 var(--hand); }
-.cover .cnote { font: 600 21px/1.2 var(--hand); color: #777; max-width: 22em; }
+.cover .cnote { font: 600 21px/1.2 var(--hand); color: var(--pii-note); max-width: 22em; }
 .cover .btn { font-size: 25px; margin-top: 6px; }
 
 /* tool palette */
@@ -48,13 +67,13 @@
 .pal .pgap { width: 6px; }
 .pb {
   display: flex; align-items: center; justify-content: center; gap: 2px; height: 44px; min-width: 44px; padding: 0 4px;
-  background: #fff; border: 2px solid var(--pencil); border-radius: var(--sketchy); color: var(--ink); cursor: pointer;
+  background: var(--card); border: 2px solid var(--pencil); border-radius: var(--sketchy); color: var(--ink); cursor: pointer;
   font: 700 18px/1 var(--hand); -webkit-tap-highlight-color: transparent;
 }
 .pb svg { width: 32px; height: 32px; flex: none; }
 .pb.wide svg { width: 24px; height: 24px; }
 .pb.wide { padding: 0 8px 0 6px; white-space: nowrap; }
-.pb.on { border-color: var(--pc, var(--ink)); border-width: 3px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc, #888) 22%, transparent); }
+.pb.on { border-color: var(--pc, var(--ink)); border-width: 3px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc, var(--pii-pc)) 22%, transparent); }
 .pb.peek.on { color: var(--pc); }
 .pb:active { transform: scale(.94); }
 
@@ -66,14 +85,14 @@
 
 /* result card */
 .pii-arena .result { align-items: start; padding-top: 12%; }
-.result-sub { font-size: 21px; color: #666; }
+.result-sub { font-size: 21px; color: var(--muted); }
 .result-sub[hidden] { display: none; }
 .result-list { display: grid; gap: 2px; margin: 4px 0 10px; text-align: left; }
 .rrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; font: 600 18px/1.15 var(--hand); }
 .rrow .rname { font-size: 23px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rrow .rsc { font-size: 23px; text-align: right; }
-.rrow .rdet { color: #777; grid-column: 1; }
-.rrow .rtot { color: #555; text-align: right; }
+.rrow .rdet { color: var(--pii-note); grid-column: 1; }
+.rrow .rtot { color: var(--pii-note-2); text-align: right; }
 .result-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .result-btns .btn[hidden] { display: none; }
 
@@ -122,6 +141,6 @@
 .pii-arena .player.off .score { font-style: italic; }
 .pii-arena .player.me .fig-wrap::after {
   content: attr(data-you); position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%) rotate(-4deg);
-  font: 700 14px/1 var(--hand); color: #fff; background: var(--ink); padding: 1px 5px 2px; border-radius: 6px; white-space: nowrap;
+  font: 700 14px/1 var(--hand); color: var(--card); background: var(--ink); padding: 1px 5px 2px; border-radius: 6px; white-space: nowrap;
 }
 @media (min-width: 900px) { .pii-arena .player.me .fig-wrap::after { font-size: 18px; bottom: 0; } }

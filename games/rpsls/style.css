@@ -1,15 +1,49 @@
+/* local colour tokens (light = original look; dark = chalk on slate) */
+:root {
+  --rps-grey: #9a9aa3; --rps-grey-text: #6d6d77; --rps-grey-fill: #d9d9de;
+  --rps-dim: #888; --rps-faint: #aaa; --rps-note: #777; --rps-vs: #bbb;
+  --rps-halo: #fff; --rps-arrow: #c4c4c9; --rps-prey: #f1f1f3; --rps-cover: #f6f5f0;
+  --rps-stone-bg: #fff; --rps-stone: #a3a3ad; --rps-shine: #fff;
+  --rps-sheet: #fff; --rps-rule: #8cc0dc; --rps-fold: #ebe8df;
+  --rps-steel: #cfd3da; --rps-handle: #e8902e;
+  --rps-lizard: #63b347; --rps-lizard-spot: #2f7a2a;
+  --rps-skin: #f3cba5; --rps-hair: #2b2b33;
+}
+:root[data-theme=dark] {
+  --rps-grey: #8a857c; --rps-grey-text: #b3ada2; --rps-grey-fill: #4a515c;
+  --rps-dim: #a29d93; --rps-faint: #8a857c; --rps-note: #b3ada2; --rps-vs: #7a7f88;
+  --rps-halo: var(--paper); --rps-arrow: #5a616c; --rps-prey: #313741; --rps-cover: #22272e;
+  --rps-stone-bg: #555b66; --rps-stone: #8e929c; --rps-shine: #d9d3c7;
+  --rps-sheet: #3a414c; --rps-rule: #5aa9cf; --rps-fold: #4f5661;
+  --rps-steel: #9aa1ac; --rps-handle: #f0a04b;
+  --rps-lizard: #5cc97a; --rps-lizard-spot: #1f5a2a;
+  --rps-skin: #d9ab86; --rps-hair: #14171c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --rps-grey: #8a857c; --rps-grey-text: #b3ada2; --rps-grey-fill: #4a515c;
+    --rps-dim: #a29d93; --rps-faint: #8a857c; --rps-note: #b3ada2; --rps-vs: #7a7f88;
+    --rps-halo: var(--paper); --rps-arrow: #5a616c; --rps-prey: #313741; --rps-cover: #22272e;
+    --rps-stone-bg: #555b66; --rps-stone: #8e929c; --rps-shine: #d9d3c7;
+    --rps-sheet: #3a414c; --rps-rule: #5aa9cf; --rps-fold: #4f5661;
+    --rps-steel: #9aa1ac; --rps-handle: #f0a04b;
+    --rps-lizard: #5cc97a; --rps-lizard-spot: #1f5a2a;
+    --rps-skin: #d9ab86; --rps-hair: #14171c;
+  }
+}
+
 #board {
   width: 100%; max-height: calc(100dvh - 275px); display: block; margin: 0 auto;
   touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: visible;
 }
 #board .t { font-family: var(--hand); dominant-baseline: auto; pointer-events: none; }
-#board .lbl, #board .tag, #board .verb { paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round; }
+#board .lbl, #board .tag, #board .verb { paint-order: stroke; stroke: var(--rps-halo); stroke-width: 5px; stroke-linejoin: round; }
 
 /* the star of arrows: winner → loser */
-#board .arr { fill: none; stroke: #c4c4c9; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: stroke .15s, opacity .15s; }
+#board .arr { fill: none; stroke: var(--rps-arrow); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: stroke .15s, opacity .15s; }
 #board .arr.decide { stroke: var(--dc); stroke-width: 3.6; }
 #board.hovering .arr { opacity: .35; }
-#board.hovering .arr.decide { stroke: #c4c4c9; stroke-width: 2.2; }
+#board.hovering .arr.decide { stroke: var(--rps-arrow); stroke-width: 2.2; }
 #board.hovering .arr.out { opacity: 1; stroke: var(--ink); stroke-width: 3.6; }
 
 #board .pk .lift { transition: transform .15s ease-out; }
@@ -17,7 +51,7 @@
 #board .pk.on:active .lift { transform: scale(.93); }
 #board .pk.hl.on .lift { transform: scale(1.08); }
 #board .pk.hl.on .pk-bg { stroke: var(--pc); stroke-width: 4; }
-#board .pk.prey .pk-bg { fill: #f1f1f3; }
+#board .pk.prey .pk-bg { fill: var(--rps-prey); }
 #board .pk.chosen .lift { transform: scale(1.06); }
 
 #board .btn-svg { cursor: pointer; }

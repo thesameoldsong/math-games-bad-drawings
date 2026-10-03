@@ -1,6 +1,18 @@
 /* Saesara: 1–4 players around an N×N board, an action bar under the status line. */
-.green { color: #3aa655; }
-.violet { color: #8e5cc4; }
+:root {
+  --sae-no: #d6343f; --sae-faint: #8a8a92; --sae-zero: #77777f; --sae-grey: #888; --sae-sub: #444;
+  --sae-badge: #777; --sae-strike: #c0505a; --sae-chip-on: #e5f5fb;
+}
+:root[data-theme=dark] {
+  --sae-no: #ff7a85; --sae-faint: #8f8a81; --sae-zero: #a8a298; --sae-grey: #9a958b; --sae-sub: #cfc9be;
+  --sae-badge: #a8a298; --sae-strike: #e2808a; --sae-chip-on: color-mix(in srgb, var(--blue) 20%, var(--card));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --sae-no: #ff7a85; --sae-faint: #8f8a81; --sae-zero: #a8a298; --sae-grey: #9a958b; --sae-sub: #cfc9be;
+    --sae-badge: #a8a298; --sae-strike: #e2808a; --sae-chip-on: color-mix(in srgb, var(--blue) 20%, var(--card));
+  }
+}
 
 .sae-arena { grid-template-areas: "p0 p1" "board board" "status status" "act act"; }
 .sae-arena .p2 { grid-area: p2; }
@@ -24,28 +36,28 @@
 .sae-arena.n4 .board-wrap { max-width: min(560px, calc(100dvh - 370px)); }
 
 .player .badge {
-  display: inline-block; font: 700 15px/1.2 var(--hand); color: #fff; background: #777; border-radius: var(--sketchy);
+  display: inline-block; font: 700 15px/1.2 var(--hand); color: var(--on-accent); background: var(--sae-badge); border-radius: var(--sketchy);
   padding: 0 6px; transform: rotate(-2deg);
 }
 .player.maker .badge { background: currentColor; }
-.player .seat-tag { font: 600 15px/1 var(--hand); color: #888; white-space: nowrap; }
+.player .seat-tag { font: 600 15px/1 var(--hand); color: var(--sae-grey); white-space: nowrap; }
 .player .seat-tag::before { content: '· '; }
-.player .seat-tag.off { color: #d6343f; }
+.player .seat-tag.off { color: var(--sae-no); }
 /* narrow cards (3–4 players): the tag gets its own line so nothing overflows */
 .sae-arena.n3 .player .seat-tag, .sae-arena.n4 .player .seat-tag { display: block; font-size: 14px; margin-top: 2px; }
 .sae-arena.n3 .player .seat-tag::before, .sae-arena.n4 .player .seat-tag::before { content: none; }
 .player.p0 .badge { background: var(--blue); } .player.p1 .badge { background: var(--red); }
-.player.p2 .badge { background: #3aa655; } .player.p3 .badge { background: #8e5cc4; }
+.player.p2 .badge { background: var(--green); } .player.p3 .badge { background: var(--violet); }
 
 .sae-arena .status { font-size: 23px; line-height: 1.15; min-height: 2.3em; display: flex; flex-direction: column; justify-content: center; }
 .sae-arena .status .flash { font-size: 19px; font-weight: 700; }
-.sae-arena .status .flash.round { color: #888; font-weight: 600; }
+.sae-arena .status .flash.round { color: var(--sae-grey); font-weight: 600; }
 
 .sae-actions { grid-area: act; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; min-height: 42px; }
 .sae-actions [hidden] { display: none; }
 .sae-actions .btn { font-size: 21px; padding: 1px 14px; }
 .linkish {
-  background: none; border: none; cursor: pointer; font: 600 19px var(--hand); color: #666; padding: 4px 6px;
+  background: none; border: none; cursor: pointer; font: 600 19px var(--hand); color: var(--muted); padding: 4px 6px;
   text-decoration: underline dotted; text-underline-offset: 3px;
 }
 .linkish:disabled { cursor: default; opacity: .6; }
@@ -61,14 +73,14 @@
 .num.ghost { opacity: .75; font-weight: 600; }
 .num.fresh { animation: pop .35s ease-out; }
 .small { font: 700 17px var(--hand); }
-.strike { stroke: #c0505a; stroke-width: 1.6; stroke-linecap: round; }
+.strike { stroke: var(--sae-strike); stroke-width: 1.6; stroke-linecap: round; }
 .cross { fill: none; stroke-width: 4; stroke-linecap: round; filter: url(#mg-marker); }
 .ring { fill: none; stroke-width: 3.2; stroke-dasharray: 6 5; stroke-linecap: round; }
-.zero-ring { fill: none; stroke: #999; stroke-width: 2; }
+.zero-ring { fill: none; stroke: var(--muted-2); stroke-width: 2; }
 @keyframes pop { from { opacity: 0; font-size: 10px; } }
 
 /* cover for the human patternmaker */
-.cover { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 254, 251, .93); z-index: 3; }
+.cover { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--paper) 93%, transparent); z-index: 3; }
 .cover[hidden] { display: none; }
 .cover-title { font: 700 clamp(28px, 7vw, 40px)/1.1 var(--hand); }
 .cover-text { font-size: 21px; margin: 6px 0 12px; }
@@ -77,24 +89,24 @@
 .result-sub { font-size: 21px; margin: 0 0 6px; }
 .result-score { font: 700 24px var(--hand); margin: 0 0 6px; }
 .result-score[hidden] { display: none; }
-.result-rule { font-size: 15px; line-height: 1.35; margin: 0 0 10px; color: #444; }
+.result-rule { font-size: 15px; line-height: 1.35; margin: 0 0 10px; color: var(--sae-sub); }
 .result-card { max-height: 96%; overflow: auto; }
 
 /* rule builder */
 .g-who { font-size: 22px; margin: 0 0 8px; }
 .g-kind { display: flex; gap: 8px; margin-bottom: 8px; }
 .chip {
-  flex: 1; font: 700 19px/1.15 var(--hand); background: #fff; color: var(--ink); cursor: pointer;
+  flex: 1; font: 700 19px/1.15 var(--hand); background: var(--card); color: var(--ink); cursor: pointer;
   border: 2px solid var(--pencil); border-radius: var(--sketchy); padding: 4px 8px;
 }
-.chip.on { border-color: var(--blue-dark); background: #e5f5fb; }
+.chip.on { border-color: var(--blue-dark); background: var(--sae-chip-on); }
 .g-block[hidden] { display: none; }
 .g-field { display: block; min-width: 0; margin: 6px 0; font: 600 20px var(--hand); }
 .g-field[hidden] { display: none; }
 .g-field span { display: block; }
 .g-field select { width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; font-size: 18px; padding: 3px 30px 3px 8px; }
 .g-preview { font-style: italic; border-left: 4px solid var(--blue); padding: 2px 0 2px 12px; margin: 12px 0 4px; }
-.g-warn { font-size: 19px; color: #666; margin: 4px 0 0; }
+.g-warn { font-size: 19px; color: var(--muted); margin: 4px 0 0; }
 .g-warn.bad { color: var(--red-dark); }
 
 /* counterexample + log */
@@ -102,8 +114,8 @@
 .cx-guess { margin: 0 0 4px; }
 .cx-text { font-size: 21px; line-height: 1.25; margin: 6px 0 0; }
 .log-item { margin: 8px 0; line-height: 1.35; }
-.log-item .log-n { color: #888; font-size: 14px; }
-.log-item .ok { color: #2f9e4f; }
+.log-item .log-n { color: var(--sae-grey); font-size: 14px; }
+.log-item .ok { color: var(--ok); }
 .log-item .linkish { font-size: 17px; padding: 0 4px; }
 
 @media (min-width: 900px) {

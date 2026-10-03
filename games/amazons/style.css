@@ -1,5 +1,8 @@
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-#board .shade { fill: #f1eee6; }
+:root { --amz-shade: #f1eee6; --amz-burnt: var(--dot); }
+:root[data-theme=dark] { --amz-shade: #2d333c; --amz-burnt: #77736c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --amz-shade: #2d333c; --amz-burnt: #77736c; } }
+#board .shade { fill: var(--amz-shade); }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; }
 #board .trail { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 7; opacity: .55; pointer-events: none; }
 #board .trail.shot { stroke-dasharray: 1 6; opacity: .75; }
@@ -16,7 +19,7 @@
 #board .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame .5s ease-out, flicker 1.6s ease-in-out .5s infinite; }
 #board.busy { cursor: default; }
 .result-why { font-size: 21px; line-height: 1.2; margin: 0 0 6px; color: var(--ink); }
-.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+.result-next { font-size: 20px; margin: 0 0 8px; color: var(--muted); }
 @keyframes slide { from { transform: translate(var(--dx), var(--dy)); } }
 @keyframes pop { from { opacity: 0; } }
 @keyframes flame { from { transform: scale(.2); opacity: 0; } }

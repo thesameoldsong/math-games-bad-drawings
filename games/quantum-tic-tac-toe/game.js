@@ -66,7 +66,7 @@ function bigMark(c, p, n, cls) {
     s += pathEl(shapeFor(`O${c}_${n}`, () => circle(cx, cy, r, r * 1.05, 0.06)), 'big', col);
   }
   const [x, y] = cellXY(c);
-  s += `<text class="bign" x="${x + CS - 12}" y="${y + CS - 10}" fill="${COLORS[p].dark}">${n}</text>`;
+  s += `<text class="bign" x="${x + CS - 12}" y="${y + CS - 10}" fill="${COLORS[p].text}">${n}</text>`;
   return `<g class="${cls}">${s}</g>`;
 }
 function spooky(c, m, cls = '') {
@@ -91,7 +91,7 @@ function render(animate = false) {
   const myTurn = canMove() && !coinPending();
 
   // cell backgrounds
-  if (cyc) for (const c of cyc.cells) out += cellFill(c, 'loop', '#ffe48a');
+  if (cyc) for (const c of cyc.cells) out += cellFill(c, 'loop', 'var(--qtt-loop)');
   if (pend && myTurn) for (const c of [pend.a, pend.b]) out += cellFill(c, 'cand' + (pick === c ? ' on' : ''));
   if (sel !== null) out += cellFill(sel, 'sel', COLORS[st.turn].fill);
   if (myTurn && st.phase === 'place' && hover !== null && hover !== sel && !st.cls[hover]) out += cellFill(hover, 'hov', COLORS[st.turn].fill);
@@ -130,7 +130,7 @@ function render(animate = false) {
   if (over && st.result) for (const l of st.result.lines) {
     const [x1, y1] = cellCenter(l.cells[0]), [x2, y2] = cellCenter(l.cells[2]);
     const dx = (x2 - x1) * 0.18, dy = (y2 - y1) * 0.18;
-    out += pathEl(shapeFor('win' + l.cells.join(), () => line(x1 - dx, y1 - dy, x2 + dx, y2 + dy, 4)), 'strike', COLORS[l.p].dark, 'pathLength="1"');
+    out += pathEl(shapeFor('win' + l.cells.join(), () => line(x1 - dx, y1 - dy, x2 + dx, y2 + dy, 4)), 'strike', COLORS[l.p].text, 'pathLength="1"');
   }
   svg.innerHTML = out;
   renderPlayers();

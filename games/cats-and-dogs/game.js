@@ -54,7 +54,7 @@ const shapeFor = (k, make) => (shapes[k] ??= make());
 // Our own doodles: a cat head (pointy ears, whiskers) and a dog head (floppy ears, big nose).
 function animalSVG(p, cx, cy, key, cls = '', cache = shapeFor) {
   const r = S * 0.3, col = COLORS[p];
-  const P = (d, w = 3.2, extra = '') => `<path d="${d}" stroke="${col.dark}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"${extra}/>`;
+  const P = (d, w = 3.2, extra = '', c = col.text) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"${extra}/>`;
   const F = (d) => `<path d="${d}" fill="${col.fill}" filter="url(#mg-crayon)"/>`;
   const dot = (x, y, rr) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rr}" fill="${col.dark}"/>`;
   let s = '';
@@ -82,11 +82,11 @@ function animalSVG(p, cx, cy, key, cls = '', cache = shapeFor) {
       + `<path d="${ear(sgn)}" fill="${col.main}" filter="url(#mg-crayon)"/>${P(ear(sgn), 2.6)}</g>`;
     const mouth = cache(key + 'm', () => curve([[cx - r * 0.2, hy + r * 0.5], [cx, hy + r * 0.6], [cx + r * 0.2, hy + r * 0.5]]));
     s = F(head) + P(head)
-      + `<path d="${snout}" fill="#fff"/>` + P(snout, 2)
+      + `<path d="${snout}" fill="var(--eye)"/>` + P(snout, 2, '', col.dark)
       + earG(-1) + earG(1)
       + dot(cx - r * 0.32, hy - r * 0.2, 2.6) + dot(cx + r * 0.32, hy - r * 0.2, 2.6)
       + `<ellipse cx="${cx}" cy="${(hy + r * 0.28).toFixed(1)}" rx="${(r * 0.2).toFixed(1)}" ry="${(r * 0.13).toFixed(1)}" fill="${col.dark}"/>`
-      + P(mouth, 2);
+      + P(mouth, 2, '', col.dark);
   }
   return `<g class="animal ${cls}" style="transform-origin:${cx}px ${cy}px">${s}</g>`;
 }

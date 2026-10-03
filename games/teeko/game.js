@@ -75,12 +75,12 @@ function token(i, v, fresh) {
   return `<g class="${cls}"${style}><g transform="translate(${x} ${y})"><g class="tok-in">
     <path d="${d}" fill="${col.fill}" filter="url(#mg-crayon)"/>
     <path d="${inner}" fill="none" stroke="${col.main}" stroke-width="2.4" opacity=".55"/>
-    <path d="${shine}" fill="#fff" opacity=".55"/>
+    <path d="${shine}" fill="var(--eye)" opacity=".55"/>
     <path d="${d}" fill="none" stroke="${col.main}" stroke-width="4"/></g></g></g>`;
 }
 
 function winMark(winFresh) {
-  const w = st.win, col = COLORS[st.winner].dark;
+  const w = st.win, col = COLORS[st.winner].text;
   const pts = w.cells.map(cellXY);
   if (w.kind === 'line') {
     const [a, b] = [pts[0], pts[3]];

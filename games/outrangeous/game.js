@@ -8,10 +8,8 @@ import './strings.js';
 const SLUG = 'outrangeous';
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3aa655', dark: '#1f7a37', fill: '#97d9a8' },
-  { main: '#f08c1e', dark: '#b8600a', fill: '#f8c58c' },
-  { main: '#8a5cc7', dark: '#5d3594', fill: '#c6aee6' },
-  { main: '#9a6b43', dark: '#6b4425', fill: '#d2b292' },
+  // seats 3-6: local theme tokens (see style.css), same shape as PALETTE (dark = face only)
+  ...['green', 'orange', 'violet', 'brown'].map((k) => ({ main: `var(--or-${k})`, text: `var(--or-${k}-dark)`, fill: `var(--or-${k}-fill)`, dark: `var(--or-${k}-face)` })),
 ];
 const MAXP = 6;
 const ALL = [...Array(MAXP).keys()];
@@ -102,8 +100,8 @@ function diceArt(q, value) {
     const PIPS = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] };
     for (let i = 0; i < n; i++) {
       const x = 4 + i * 40, y = 6 + (i % 2) * 4, rot = (i % 2 ? 7 : -6);
-      s += `<g transform="rotate(${rot} ${x + 16} ${y + 16})"><path d="${shapeFor('die' + n + i, () => line(x, y, x + 32, y, 1) + line(x + 32, y, x + 32, y + 32, 1).replace('M', 'L') + line(x + 32, y + 32, x, y + 32, 1).replace('M', 'L') + line(x, y + 32, x, y, 1).replace('M', 'L'))}" fill="#fff" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>`;
-      if (value == null) s += `<text x="${x + 16}" y="${y + 17}" class="t" font-size="24" text-anchor="middle" fill="#999">?</text>`;
+      s += `<g transform="rotate(${rot} ${x + 16} ${y + 16})"><path d="${shapeFor('die' + n + i, () => line(x, y, x + 32, y, 1) + line(x + 32, y, x + 32, y + 32, 1).replace('M', 'L') + line(x + 32, y + 32, x, y + 32, 1).replace('M', 'L') + line(x, y + 32, x, y, 1).replace('M', 'L'))}" fill="var(--card)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>`;
+      if (value == null) s += `<text x="${x + 16}" y="${y + 17}" class="t" font-size="24" text-anchor="middle" fill="var(--muted-2)">?</text>`;
       else for (const [dx, dy] of PIPS[faces[i]]) s += `<circle cx="${x + 16 + dx * 8}" cy="${y + 16 + dy * 8}" r="3.3" fill="var(--ink)"/>`;
       s += '</g>';
     }
@@ -112,8 +110,8 @@ function diceArt(q, value) {
   // a big polyhedral die: kite for d10, hexagon for d20
   const pts = sides === 10 ? [[24, 2], [44, 20], [24, 44], [4, 20]] : [[24, 1], [44, 12], [44, 34], [24, 45], [4, 34], [4, 12]];
   const d = shapeFor('poly' + sides, () => pts.map(([x, y], i) => { const [x2, y2] = pts[(i + 1) % pts.length]; const seg = line(x, y, x2, y2, 1); return i ? seg.replace('M', 'L') : seg; }).join(' ') + ' Z');
-  s += `<path d="${d}" fill="#fff" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>`;
-  s += `<text x="24" y="${sides === 10 ? 21 : 24}" class="t" font-size="${value == null ? 24 : 21}" text-anchor="middle" fill="${value == null ? '#999' : 'var(--ink)'}">${value == null ? '?' : value}</text>`;
+  s += `<path d="${d}" fill="var(--card)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  s += `<text x="24" y="${sides === 10 ? 21 : 24}" class="t" font-size="${value == null ? 24 : 21}" text-anchor="middle" fill="${value == null ? 'var(--muted-2)' : 'var(--ink)'}">${value == null ? '?' : value}</text>`;
   return `<svg viewBox="0 0 48 47" class="dice">${s}</svg>`;
 }
 
@@ -218,7 +216,7 @@ function revealSVG(e) {
   const q = OUT.BY_ID[e.id];
   const label = t(q.dice ? 'out.rolled' : 'out.answer', { a: fmt(e.a) }), lw = label.length * 10.5 + 20;
   const lx = Math.max(x0 - 6 + lw / 2, Math.min(x1 + 6 - lw / 2, ax));
-  s += `<rect x="${(lx - lw / 2).toFixed(1)}" y="4" width="${lw}" height="28" rx="8" fill="#fff" stroke="var(--ink)" stroke-width="2.4"/>`;
+  s += `<rect x="${(lx - lw / 2).toFixed(1)}" y="4" width="${lw}" height="28" rx="8" fill="var(--card)" stroke="var(--ink)" stroke-width="2.4"/>`;
   s += `<text x="${lx.toFixed(1)}" y="19" class="t" font-size="23" text-anchor="middle" fill="var(--ink)">${label}</text>`;
   rows.forEach((p, i) => {
     const g = e.guesses[p], c = COLORS[p], y = TOP + i * ROW, ok = e.correct[p];
@@ -227,16 +225,16 @@ function revealSVG(e) {
     const clipped = useLog && g.lo <= 0;
     const by = y + BAR;
     s += `<rect x="${bx0.toFixed(1)}" y="${by}" width="${(bx1 - bx0).toFixed(1)}" height="11" fill="${ok ? c.main : c.fill}" filter="url(#mg-crayon)" class="pop" style="animation-delay:${i * 0.12}s"/>`;
-    s += `<path d="${shapeFor(`bar${e.round}_${p}`, () => line(bx0, by, bx1, by, 0.6) + line(bx1, by + 11, bx0, by + 11, 0.6))}" stroke="${ok ? c.dark : c.main}" stroke-width="2" fill="none" stroke-linecap="round"${ok ? '' : ' stroke-dasharray="4 4"'}/>`;
-    if (clipped) s += `<path d="M${bx0 + 9} ${by - 1} L${bx0 + 1} ${by + 5.5} L${bx0 + 9} ${by + 12}" stroke="${c.dark}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    s += `<path d="${shapeFor(`bar${e.round}_${p}`, () => line(bx0, by, bx1, by, 0.6) + line(bx1, by + 11, bx0, by + 11, 0.6))}" stroke="${ok ? c.text : c.main}" stroke-width="2" fill="none" stroke-linecap="round"${ok ? '' : ' stroke-dasharray="4 4"'}/>`;
+    if (clipped) s += `<path d="M${bx0 + 9} ${by - 1} L${bx0 + 1} ${by + 5.5} L${bx0 + 9} ${by + 12}" stroke="${c.text}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
     s += `<text x="${x0 - 4}" y="${y + LBL}" class="t lbl" font-size="19" fill="${c.main}">${esc(name(p))}: <tspan fill="var(--ink)" font-weight="600">${rangeTxt(g)}</tspan></text>`;
     const gain = e.gains[p];
-    s += `<text x="${x1 + 4}" y="${y + LBL}" class="t lbl" font-size="20" text-anchor="end" fill="${ok ? c.dark : '#999'}">${ok ? '+' + gain : t('out.miss')}</text>`;
+    s += `<text x="${x1 + 4}" y="${y + LBL}" class="t lbl" font-size="20" text-anchor="end" fill="${ok ? c.text : 'var(--muted-2)'}">${ok ? '+' + gain : t('out.miss')}</text>`;
   });
   if (e.judge >= 0) {
     const y = TOP + rows.length * ROW + 10, c = COLORS[e.judge];
     s += `<text x="${x0 - 4}" y="${y}" class="t lbl" font-size="19" fill="${c.main}">${esc(name(e.judge))} (${t('out.judge.tag')})</text>`;
-    s += `<text x="${x1 + 4}" y="${y}" class="t lbl" font-size="20" text-anchor="end" fill="${c.dark}">+${e.gains[e.judge]}</text>`;
+    s += `<text x="${x1 + 4}" y="${y}" class="t lbl" font-size="20" text-anchor="end" fill="${c.text}">+${e.gains[e.judge]}</text>`;
   }
   // axis
   s += `<path d="${shapeFor('axis', () => line(x0 - 6, 0, x1 + 6, 0, 1))}" transform="translate(0 ${axisY})" class="axis"/>`;
@@ -251,7 +249,7 @@ function revealSVG(e) {
   for (const v of ticks) {
     const x = X(v);
     s += `<path d="M${x.toFixed(1)} ${axisY - 5} L${x.toFixed(1)} ${axisY + 5}" class="axis"/>`;
-    s += `<text x="${x.toFixed(1)}" y="${axisY + 18}" class="t" font-size="16" text-anchor="middle" fill="#888" font-weight="600">${fmtShort(v)}</text>`;
+    s += `<text x="${x.toFixed(1)}" y="${axisY + 18}" class="t" font-size="16" text-anchor="middle" fill="var(--or-hint)" font-weight="600">${fmtShort(v)}</text>`;
   }
   return `<svg class="revsvg" viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`;
 }

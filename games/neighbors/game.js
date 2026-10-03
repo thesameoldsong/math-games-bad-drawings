@@ -8,8 +8,8 @@ import './strings.js';
 const SLUG = 'neighbors';
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3aa655', dark: '#22753a', fill: '#9ad8a8' },
-  { main: '#f08c1e', dark: '#b05c00', fill: '#f8c58a' },
+  PALETTE.green,
+  { main: 'var(--nb-orange)', text: 'var(--nb-orange-text)', fill: 'var(--nb-orange-fill)', dark: 'var(--nb-orange-face)' },
 ];
 // SVG layout: a strip with the die and the other players' small boards, then the big 5×5 grid.
 const W = 340, TH = 114, DECK_H = 30, CELL = 64, GX = 10;
@@ -127,7 +127,7 @@ function dieSVG() {
       const p = [[14, 2], [78, 2], [78, 92], [14, 92]];
       return p.map((a, k) => line(...a, ...p[(k + 1) % 4], 1.2)).join(' ');
     });
-    s += `<g transform="rotate(-5 46 47)"><rect x="14" y="2" width="64" height="90" rx="6" fill="#fff"/>`;
+    s += `<g transform="rotate(-5 46 47)"><rect x="14" y="2" width="64" height="90" rx="6" fill="var(--card)"/>`;
     s += `<path d="${card}" class="ink-line"/>`;
     if (!over) {
       s += `<text class="die-num" x="46" y="50">${v}</text>`;
@@ -143,7 +143,7 @@ function dieSVG() {
     ].map(([a, b]) => line(...a, ...b, 1.2)).join(' '));
     const outline = [T, R, RB, B, LB, L].map((p) => p.join(' ')).join(' L');
     s += `<path d="M${outline} Z" class="die-fill" filter="url(#mg-crayon)"/>`;
-    s += `<path d="M${[fT, fR, fB, fL].map((p) => p.join(' ')).join(' L')} Z" fill="#fff" opacity=".55"/>`;
+    s += `<path d="M${[fT, fR, fB, fL].map((p) => p.join(' ')).join(' L')} Z" class="die-hi"/>`;
     s += `<path d="${d}" class="ink-line"/>`;
     if (!over) s += `<text class="die-num${v === 10 ? ' ten' : ''}" x="46" y="38">${v}</text>`;
   }
@@ -209,7 +209,7 @@ function bigBoard(y0) {
     const n = 5 * CELL, q = [[GX, y0], [GX + n, y0], [GX + n, y0 + n], [GX, y0 + n]];
     return q.map((a, k) => line(...a, ...q[(k + 1) % 4], 1.4)).join(' ');
   })}"/>`;
-  for (const run of NB.runs(b)) s += `<path class="oval" stroke="${col.dark}" d="${ovalPath(p, run, GX, y0, CELL, 'B')}"/>`;
+  for (const run of NB.runs(b)) s += `<path class="oval" stroke="${col.text}" d="${ovalPath(p, run, GX, y0, CELL, 'B')}"/>`;
   for (let i = 0; i < 25; i++) {
     const v = b[i];
     if (!v) continue;
@@ -221,7 +221,7 @@ function bigBoard(y0) {
   }
   if (fx && fx.fresh && fx.p === p && fx.g > 0) {
     const cx = GX + (fx.i % 5 + 0.5) * CELL, cy = y0 + (((fx.i / 5) | 0) + 0.2) * CELL;
-    s += `<text class="float" x="${cx}" y="${cy}" fill="${col.dark}">+${fx.g}</text>`;
+    s += `<text class="float" x="${cx}" y="${cy}" fill="${col.text}">+${fx.g}</text>`;
   }
   s += `<text id="ghost" class="num ghost" x="-99" y="-99" fill="${col.main}"></text>`;
   return s + '</g>';
@@ -249,10 +249,10 @@ function minisSVG() {
   for (const p of others) {
     const b = boardOf(p), col = COLORS[p];
     s += `<g class="mini${over ? ' pick' : ''}" data-view="${p}">`;
-    s += `<rect x="${x - 3}" y="${y - 3}" width="${5 * cell + 6}" height="${5 * cell + 6}" fill="#fff" fill-opacity="0"/>`;
+    s += `<rect x="${x - 3}" y="${y - 3}" width="${5 * cell + 6}" height="${5 * cell + 6}" fill="transparent"/>`;
     const slot = `${m}_${x}`;
     s += gridLines(x, y, cell, `gm${slot}`, 1.4).replace('class="grid"', `class="grid" style="stroke:${col.main}"`);
-    for (const run of NB.runs(b)) s += `<path class="oval mini-oval" stroke="${col.dark}" d="${ovalPath(p, run, x, y, cell, 'm' + slot + '_')}"/>`;
+    for (const run of NB.runs(b)) s += `<path class="oval mini-oval" stroke="${col.text}" d="${ovalPath(p, run, x, y, cell, 'm' + slot + '_')}"/>`;
     for (let i = 0; i < 25; i++) {
       const v = b[i];
       if (!v) continue;

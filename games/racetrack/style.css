@@ -1,13 +1,20 @@
+/* local colour tokens: light values = the original look; dark = chalk on slate */
+:root { --rt-grid: #d5e4ee; --rt-hatch: #d9d4c7; --rt-chev: #b4b4b4; --rt-no: #9a9a9a; --rt-why: #555; }
+:root[data-theme=dark] { --rt-grid: #2e3a45; --rt-hatch: #343a42; --rt-chev: #6f7680; --rt-no: #8a857c; --rt-why: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --rt-grid: #2e3a45; --rt-hatch: #343a42; --rt-chev: #6f7680; --rt-no: #8a857c; --rt-why: var(--muted); }
+}
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 /* keep the tall board on screen: mobile leaves room for cards, status and the bottom bar */
 .arena .board-wrap { max-width: min(600px, calc((100dvh - 250px) * 0.762)); }
 @media (min-width: 900px) { .arena .board-wrap { max-width: min(600px, calc((100dvh - 150px) * 0.762)); } }
 
-#board .grid { fill: none; stroke: #d5e4ee; stroke-width: 1; }
+#board .grid { fill: none; stroke: var(--rt-grid); stroke-width: 1; }
 #board .outside { fill: url(#rt-hatch); }
 #board .wall { fill: none; stroke: var(--dot); stroke-width: 3.4; stroke-linejoin: round; }
 #board .checker { fill: var(--dot); }
-#board .chev { fill: none; stroke: #b4b4b4; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+#board .chev { fill: none; stroke: var(--rt-chev); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
 #board .trail { fill: none; stroke-width: 2.6; stroke-linecap: round; opacity: .85; }
 #board .trail.tow { stroke-dasharray: 2 5; opacity: .6; }
@@ -24,11 +31,11 @@
 #board .inertia { fill: none; stroke: var(--pencil); stroke-width: 2; stroke-dasharray: 2 5; stroke-linecap: round; }
 #board .opt { stroke-width: 2.4; }
 #board .opt.on { stroke-width: 3; }
-#board .no { fill: none; stroke: #9a9a9a; stroke-width: 2.4; stroke-linecap: round; }
+#board .no { fill: none; stroke: var(--rt-no); stroke-width: 2.4; stroke-linecap: round; }
 #board .no.on { stroke: var(--red-dark); stroke-width: 3; }
 #board .pv { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 3 6; opacity: .8; }
 
-.result-why { font-size: 22px; line-height: 1.15; margin: 0 0 8px; color: #555; max-width: 15em; }
+.result-why { font-size: 22px; line-height: 1.15; margin: 0 0 8px; color: var(--rt-why); max-width: 15em; }
 
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes drive { from { transform: translate(var(--dx), var(--dy)); } }

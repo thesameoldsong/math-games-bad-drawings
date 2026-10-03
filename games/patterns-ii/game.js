@@ -10,9 +10,9 @@ const KEY = 'mg-patterns-ii';
 const CS = 60, M = 8, W = M * 2 + CS * N; // cell size, margin, board size
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3aa655', dark: '#1f7a37', fill: '#97d9a8' },
-  { main: '#f08c1e', dark: '#b8600a', fill: '#f8c58c' },
-  { main: '#8a5cc7', dark: '#5d3594', fill: '#c6aee6' },
+  PALETTE.green,
+  { main: 'var(--pii-orange)', text: 'var(--pii-orange-text)', fill: 'var(--pii-orange-fill)', dark: 'var(--pii-orange-face)' },
+  PALETTE.violet,
 ];
 const INK = PALETTE.ink;
 const $ = (s) => document.querySelector(s);
@@ -74,7 +74,7 @@ function present(p) {
   if (!multi() || isBot(p) || isMe(p)) return true;
   return (sess.host ? liveSeats() : m.conn || []).includes(p);
 }
-const COLOR = (p) => (p >= 0 ? COLORS[p] : { main: INK, dark: INK, fill: '#ccc' });
+const COLOR = (p) => (p >= 0 ? COLORS[p] : { main: INK, text: INK, dark: INK, fill: PALETTE.pencil });
 function name(p) {
   if (p < 0) return t('pii.cpu.designer');
   if (isBot(p)) {
@@ -175,7 +175,7 @@ function boardSVG() {
     const p = mode === 'sheet' ? a : ME(), col = COLOR(p).main, sh = sheet(p);
     for (let c = 0; c < CELLS; c++) {
       if (sh.rev[c] >= 0) {
-        s += cellBg(c, '#e9e5d8', 'filter="url(#mg-crayon)"') + tick(c, '#9a968a', 2.4);
+        s += cellBg(c, 'var(--pii-rev)', 'filter="url(#mg-crayon)"') + tick(c, 'var(--pii-tick)', 2.4);
         s += symbolSVG(sh.rev[c], ...cxy(c), INK, c);
         continue;
       }
@@ -193,13 +193,13 @@ function boardSVG() {
       const col = COLOR(p).main, sh = sheet(p);
       for (let c = 0; c < CELLS; c++) {
         const truth = r.pattern[c], [x, y] = cxy(c);
-        if (sh.rev[c] >= 0) { s += cellBg(c, '#e9e5d8', 'filter="url(#mg-crayon)"') + tick(c, '#9a968a', 2.4) + symbolSVG(truth, x, y, INK, c); continue; }
+        if (sh.rev[c] >= 0) { s += cellBg(c, 'var(--pii-rev)', 'filter="url(#mg-crayon)"') + tick(c, 'var(--pii-tick)', 2.4) + symbolSVG(truth, x, y, INK, c); continue; }
         const g = sh.guess[c];
-        if (g < 0) { s += symbolSVG(truth, x, y, '#c9c6bd', c); continue; }
-        if (g === truth) { s += cellBg(c, '#cdeccf') + symbolSVG(g, x, y, col, c); continue; }
-        s += cellBg(c, '#fbd9dc') + symbolSVG(g, x - 6, y - 6, col, c, 0.72);
+        if (g < 0) { s += symbolSVG(truth, x, y, 'var(--pii-faint)', c); continue; }
+        if (g === truth) { s += cellBg(c, 'var(--pii-right)') + symbolSVG(g, x, y, col, c); continue; }
+        s += cellBg(c, 'var(--pii-wrong)') + symbolSVG(g, x - 6, y - 6, col, c, 0.72);
         s += symbolSVG(truth, x + 15, y + 15, INK, 'w' + c, 0.42);
-        s += `<path d="${shapeFor('x' + c, () => line(x - 22, y + 10, x + 10, y - 22, 0.8))}" stroke="${PALETTE.red.dark}" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+        s += `<path d="${shapeFor('x' + c, () => line(x - 22, y + 10, x + 10, y - 22, 0.8))}" stroke="${PALETTE.red.text}" stroke-width="3" stroke-linecap="round" fill="none"/>`;
       }
     }
   }

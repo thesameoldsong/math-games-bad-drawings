@@ -109,7 +109,7 @@ function render(animateLast) {
       const cls = ['blob', v === mine ? 'mine' : '', i === sel ? 'sel' : '', affected.has(i) && i !== sel ? 'doomed' : '', f].join(' ');
       out += `<g class="${cls}" data-i="${i}" style="transform-origin:${cx}px ${cy}px">`;
       out += `<path d="${sh.body}" fill="${col.main}" filter="url(#mg-crayon)"/>`;
-      out += `<path d="${sh.body}" fill="none" stroke="${col.dark}" stroke-width="2.4"/>`;
+      out += `<path d="${sh.body}" fill="none" stroke="${col.text}" stroke-width="2.4"/>`;
       for (const [x, y, r] of sh.drops) out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${col.main}"/>`;
       out += `</g>`;
     }
@@ -140,7 +140,7 @@ function patIcon(p, color) {
   for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
     const on = PAT_ICON[p].some(([a, b]) => a === r && b === c);
     s += on ? `<circle cx="${5 + c * 10}" cy="${5 + r * 10}" r="${r === 1 && c === 1 ? 4.4 : 3.4}" fill="${color}"/>`
-      : `<circle cx="${5 + c * 10}" cy="${5 + r * 10}" r="1.6" fill="#ccc"/>`;
+      : `<circle cx="${5 + c * 10}" cy="${5 + r * 10}" r="1.6" fill="var(--spl-off)"/>`;
   }
   return s + '</svg>';
 }

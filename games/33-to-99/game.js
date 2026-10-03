@@ -9,9 +9,9 @@ const SLUG = '33-to-99';
 const VW = 400, VH = 450;
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3aa655', dark: '#22783a', fill: '#8fd19e' },
-  { main: '#f08a24', dark: '#b85d06', fill: '#f7bd80' },
-  { main: '#9a5cc6', dark: '#6d3a95', fill: '#cba6e3' },
+  PALETTE.green,
+  { main: 'var(--n99-orange)', text: 'var(--n99-orange-dark)', fill: 'var(--n99-orange-fill)', dark: 'var(--n99-orange-face)' },
+  PALETTE.violet,
 ];
 const INK = PALETTE.ink;
 const TIMERS = [0, 60, 90, 120, 180];
@@ -115,10 +115,10 @@ function die(x, y, s, v, key, extra = '') {
 function button(x, y, w, h, label, act, color, primary, disabled) {
   const k = 'btn' + act + w;
   const d = shapeFor(k, () => rrect(x, y, w, h, 12, 1.6));
-  const fill = primary && !disabled ? color.main : '#fff';
+  const fill = primary && !disabled ? color.main : 'var(--card)';
   return `<g class="sbtn${disabled ? ' off' : ''}" ${disabled ? '' : `data-act="${act}"`}>` +
-    `<path d="${d}" fill="${fill}" stroke="${primary && !disabled ? color.dark : INK}" stroke-width="2.6"/>` +
-    txt(x + w / 2, y + h / 2 + 1, label, 'btn-txt', `fill="${primary && !disabled ? '#fff' : INK}"`) + '</g>';
+    `<path d="${d}" fill="${fill}" stroke="${primary && !disabled ? color.text : INK}" stroke-width="2.6"/>` +
+    txt(x + w / 2, y + h / 2 + 1, label, 'btn-txt', `fill="${primary && !disabled ? 'var(--on-accent)' : INK}"`) + '</g>';
 }
 
 // A number tile: untouched dice keep their pips, worked-out numbers become paper slips.
@@ -179,7 +179,7 @@ function header(showTarget) {
   // a running clock stays visible even if the setting changes mid-answer (the new value applies next time)
   const showTimer = W && deadline && !covered && G.phase === 'solve';
   if (showTimer) {
-    o += `<g class="clock"><path d="${shapeFor('clk', () => circle(310, 40, 15, 15, 0.05))}" fill="#fff" stroke="${INK}" stroke-width="2.6"/>` +
+    o += `<g class="clock"><path d="${shapeFor('clk', () => circle(310, 40, 15, 15, 0.05))}" fill="var(--card)" stroke="${INK}" stroke-width="2.6"/>` +
       `<path d="M310 40 L310 30 M310 40 L317 44" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/></g>`;
     o += txt(390, 42, '', 'tnum timer', 'id="timer-txt"');
   }
@@ -191,7 +191,7 @@ function viewPick() {
   let o = header(false);
   if (!mine) {
     o += `<g class="dicerow">${[0, 1, 2, 3, 4].map((k) => die(72 + k * 64, 170, 52, 0, 'pk' + k)).join('')}</g>`;
-    o += txt(VW / 2, 270, t('n99.pick.wait'), 'mid', 'fill="#888"');
+    o += txt(VW / 2, 270, t('n99.pick.wait'), 'mid', 'fill="var(--muted-2)"');
     return o;
   }
   const c = COLORS[L];
@@ -227,8 +227,8 @@ function viewSolve() {
   ops.forEach((op, k) => {
     const x = 65 + k * 90, y = 206, on = W.op === op;
     o += `<g class="op${canOp ? '' : ' off'}${on ? ' on' : ''}" ${canOp ? `data-act="op" data-op="${op}"` : ''}>` +
-      `<path d="${shapeFor('op' + k, () => circle(x, y, 27, 27, 0.05))}" fill="${on ? c.main : '#fff'}" stroke="${on ? c.dark : INK}" stroke-width="2.8"/>` +
-      txt(x, y + 2, N99.SYM[op], 'op-sym', `fill="${on ? '#fff' : INK}"`) + '</g>';
+      `<path d="${shapeFor('op' + k, () => circle(x, y, 27, 27, 0.05))}" fill="${on ? c.main : 'var(--card)'}" stroke="${on ? c.text : INK}" stroke-width="2.8"/>` +
+      txt(x, y + 2, N99.SYM[op], 'op-sym', `fill="${on ? 'var(--on-accent)' : INK}"`) + '</g>';
   });
   // the work so far
   const lines = stepLines(G.dice, W.steps);
@@ -240,7 +240,7 @@ function viewSolve() {
   if (W.err) o += txt(VW / 2, 268 + Math.min(lines.length, 4) * 27, W.err, 'work err');
   // best answer so far
   const b = W.best;
-  o += txt(VW / 2, 384, b ? `${t('n99.best', { v: b.label })} → ${plural(b.pts, 'n99.pts')}` : t('n99.best.none'), 'bestline', b ? `fill="${c.dark}"` : '');
+  o += txt(VW / 2, 384, b ? `${t('n99.best', { v: b.label })} → ${plural(b.pts, 'n99.pts')}` : t('n99.best.none'), 'bestline', b ? `fill="${c.text}"` : '');
   o += button(24, 398, 160, 46, t('n99.reset'), 'reset', c, false, !W.steps.length);
   o += button(216, 398, 160, 46, t('n99.done') + ' ✓', 'done', c, true, !b);
   return o;
@@ -261,7 +261,7 @@ function viewWait() {
     }
   }
   const waiting = [...Array(G.n).keys()].filter((p) => !G.done[p]).map(nameAway).join(', ');
-  o += txt(VW / 2, 300, t('n99.still', { names: waiting }), 'mid', 'fill="#888"');
+  o += txt(VW / 2, 300, t('n99.still', { names: waiting }), 'mid', 'fill="var(--muted-2)"');
   return o;
 }
 
@@ -279,7 +279,7 @@ function resultRows(h, y0, rowH) {
     const y1 = y + (rowH - 6) * (s ? 0.3 : 0.5), y2 = y + (rowH - 6) * 0.73;
     o += txt(22, y1, name(p), 'rname', `fill="${c.main}"`);
     o += txt(VW - 74, y1, val, 'rval');
-    o += txt(VW - 22, y + (rowH - 6) / 2, '+' + h.pts[p], 'rpts', `fill="${h.pts[p] === 0 ? '#2a9d48' : h.pts[p] >= 10 ? 'var(--red-dark)' : INK}"`);
+    o += txt(VW - 22, y + (rowH - 6) / 2, '+' + h.pts[p], 'rpts', `fill="${h.pts[p] === 0 ? 'var(--ok)' : h.pts[p] >= 10 ? 'var(--red-dark)' : INK}"`);
     if (s) o += txt(22, y2, exprOf(h.dice, s), 'rexpr');
   }
   return o;

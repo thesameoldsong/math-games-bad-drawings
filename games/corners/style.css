@@ -14,7 +14,7 @@
 .claim-bar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .claim-bar[hidden], .claim-bar .btn[hidden] { display: none; }
 .claim-bar .btn { font-size: 21px; padding: 0 12px; }
-.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+.result-next { font-size: 20px; margin: 0 0 8px; color: var(--muted); }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes pop { from { opacity: 0; transform: scale(.3); } }
 @keyframes pulse { 50% { opacity: .2; } }

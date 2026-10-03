@@ -1,3 +1,10 @@
+/* local tokens: "last move" glow, hint legend, digits on a filled hand chip */
+:root { --jam-last: #fff3c4; --jam-legend: #777; --jam-on-blue: var(--blue-dark); --jam-on-red: var(--red-dark); }
+:root[data-theme=dark] { --jam-last: #4a4430; --jam-legend: var(--muted); --jam-on-blue: #0b3d52; --jam-on-red: #5e0a16; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --jam-last: #4a4430; --jam-legend: var(--muted); --jam-on-blue: #0b3d52; --jam-on-red: #5e0a16; }
+}
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 .board-wrap { display: flex; flex-direction: column; align-items: center; }
 /* keep the board inside the phone screen above the bottom toolbar */
@@ -13,7 +20,7 @@
 #board .digit { font: 700 40px var(--hand); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 #board .num.free .digit { opacity: .9; }
 #board.can-move .num.free { cursor: pointer; }
-#board .last { fill: #fff3c4; }
+#board .last { fill: var(--jam-last); }
 #board .need { fill: none; stroke-width: 2.6; stroke-dasharray: 5 5; opacity: .85; }
 #board .ghost { opacity: .45; pointer-events: none; }
 #board .num.fresh { animation: pop .3s ease-out; }
@@ -26,16 +33,16 @@
 #board .hand-empty { font: 700 24px var(--hand); text-anchor: middle; dominant-baseline: central; opacity: .5; }
 #board .equation { font: 700 28px var(--hand); text-anchor: middle; dominant-baseline: central; }
 #board .equation.fresh { animation: fade .5s .2s ease-out backwards; }
-#board .legend { font: 600 17px var(--hand); text-anchor: middle; dominant-baseline: central; fill: #777; }
+#board .legend { font: 600 17px var(--hand); text-anchor: middle; dominant-baseline: central; fill: var(--jam-legend); }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes pop { from { transform: scale(.6); } 60% { transform: scale(1.12); } }
 @keyframes wiggle { 50% { transform: rotate(-8deg) scale(1.08); } }
 @keyframes fade { from { opacity: 0; } }
 
 .result-why { font: 700 28px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
-.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+.result-next { font-size: 20px; line-height: 1.15; color: var(--muted); margin: 0 0 10px; }
 .result-text { font-size: clamp(28px, 6.5vw, 40px); }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0; }
 
 @media (min-width: 900px) {
   #board { max-height: calc(100dvh - 220px); }

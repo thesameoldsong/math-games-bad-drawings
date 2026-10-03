@@ -109,7 +109,7 @@ function renderGhost() {
   if (!ghost || !canMove()) { g.innerHTML = ''; return; }
   const ok = GL.canPlace(st, ghost);
   const x = bx(ghost.b) + ghost.c * CS, y = M + ghost.r * CS, w = ghost.w * CS, h = ghost.h * CS;
-  const col = ok ? COLORS[st.turn].main : '#8a8a92';
+  const col = ok ? COLORS[st.turn].main : 'var(--gl-mute)';
   g.setAttribute('class', ok ? 'ghost ok' : 'ghost bad');
   g.innerHTML = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${ok ? COLORS[st.turn].fill : 'url(#gl-hatch)'}" stroke="${col}"/>` +
     (ok ? '' : `<path class="x" d="M${x + 6} ${y + 6} L${x + w - 6} ${y + h - 6} M${x + w - 6} ${y + 6} L${x + 6} ${y + h - 6}"/>`);
@@ -118,7 +118,7 @@ function renderGhost() {
 const PIPS = { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [0, 2], [2, 0], [2, 2]], 5: [[0, 0], [0, 2], [1, 1], [2, 0], [2, 2]], 6: [[0, 0], [0, 2], [1, 0], [1, 2], [2, 0], [2, 2]] };
 function dieSVG(v, i) {
   const d = shapeFor('die' + i, () => rectPath(3, 3, 38, 38, 1.4));
-  let s = `<svg viewBox="0 0 44 44" class="die" aria-hidden="true"><rect x="4" y="4" width="36" height="36" rx="7" fill="#fff"/><path d="${d}" class="die-edge"/>`;
+  let s = `<svg viewBox="0 0 44 44" class="die" aria-hidden="true"><rect x="4" y="4" width="36" height="36" rx="7" fill="var(--card)"/><path d="${d}" class="die-edge"/>`;
   if (v) for (const [r, c] of PIPS[v]) s += `<circle cx="${12 + c * 10}" cy="${12 + r * 10}" r="3.4" class="pip"/>`;
   else s += `<text x="22" y="24" class="q">?</text>`;
   return s + '</svg>';
@@ -438,7 +438,7 @@ document.addEventListener('mg:lang', () => { render(false); if (st.over) resultT
 injectDefs();
 document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <pattern id="gl-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-    <rect width="8" height="8" fill="rgba(140,140,150,.12)"/><line x1="0" y1="0" x2="0" y2="8" stroke="rgba(120,120,130,.45)" stroke-width="3"/>
+    <rect width="8" height="8" style="fill:var(--gl-hatch-bg)"/><line x1="0" y1="0" x2="0" y2="8" style="stroke:var(--gl-hatch)" stroke-width="3"/>
   </pattern></defs></svg>`);
 mountTools();
 mountSheets();

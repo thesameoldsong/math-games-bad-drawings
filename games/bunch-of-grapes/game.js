@@ -63,14 +63,14 @@ const FLY = (c) => `
     <path d="M-6 5 L-10 11 M0 6 L-1 12 M5 5 L8 11"/>
   </g>
   <ellipse class="wing w2" cx="-6" cy="-7" rx="10" ry="5.4" transform="rotate(-40 -6 -7)"/>
-  <ellipse cx="-2" cy="1" rx="10.5" ry="7" fill="${c.main}" stroke="${c.dark}" stroke-width="2"/>
-  <path d="M-6 -4 Q-4 1 -6 6 M-1 -5.5 Q1 1 -1 7" stroke="${c.dark}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <ellipse cx="-2" cy="1" rx="10.5" ry="7" fill="${c.main}" stroke="${c.text}" stroke-width="2"/>
+  <path d="M-6 -4 Q-4 1 -6 6 M-1 -5.5 Q1 1 -1 7" stroke="${c.text}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
   <ellipse class="wing" cx="-3" cy="-9" rx="10" ry="5.4" transform="rotate(-18 -3 -9)"/>
-  <circle cx="10" cy="-1" r="6.4" fill="${c.dark}"/>
-  <circle cx="12.5" cy="-4.5" r="3.8" fill="#fff" stroke="${c.dark}" stroke-width="1.2"/>
-  <circle cx="8.6" cy="-5" r="3.4" fill="#fff" stroke="${c.dark}" stroke-width="1.2"/>
-  <circle class="pupil" cx="13.6" cy="-4.4" r="1.7" fill="${PALETTE.ink}"/>
-  <circle class="pupil" cx="9.6" cy="-4.9" r="1.6" fill="${PALETTE.ink}"/>`;
+  <circle cx="10" cy="-1" r="6.4" fill="${c.text}"/>
+  <circle cx="12.5" cy="-4.5" r="3.8" fill="var(--eye)" stroke="${c.dark}" stroke-width="1.2"/>
+  <circle cx="8.6" cy="-5" r="3.4" fill="var(--eye)" stroke="${c.dark}" stroke-width="1.2"/>
+  <circle class="pupil" cx="13.6" cy="-4.4" r="1.7" fill="var(--grp-pupil)"/>
+  <circle class="pupil" cx="9.6" cy="-4.9" r="1.6" fill="var(--grp-pupil)"/>`;
 
 function buildBoard() {
   const G = geometry();

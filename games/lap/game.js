@@ -8,10 +8,10 @@ import './strings.js';
 const SLUG = 'lap';
 const COLORS = [PALETTE.blue, PALETTE.red];
 const REG = [
-  { fill: '#f6c445', ink: '#8a6800', name: 'I' },
-  { fill: '#62c370', ink: '#256b33', name: 'II' },
-  { fill: '#a07ad9', ink: '#4f2f88', name: 'III' },
-  { fill: '#f59a3c', ink: '#94500c', name: 'IV' },
+  { fill: 'var(--lap-r1)', ink: 'var(--lap-r1-ink)', name: 'I' },
+  { fill: 'var(--lap-r2)', ink: 'var(--lap-r2-ink)', name: 'II' },
+  { fill: 'var(--lap-r3)', ink: 'var(--lap-r3-ink)', name: 'III' },
+  { fill: 'var(--lap-r4)', ink: 'var(--lap-r4-ink)', name: 'IV' },
 ];
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
@@ -224,7 +224,7 @@ function renderPanel() {
   log.scrollLeft = 0;
 }
 
-const probeIcon = () => '<svg viewBox="0 0 24 24" class="ti"><path d="M4 6.5h16v11H4z" stroke-dasharray="3 2.6"/><circle cx="17" cy="16" r="3.4" fill="#fff"/><path d="m19.4 18.4 2.4 2.4"/></svg>';
+const probeIcon = () => '<svg viewBox="0 0 24 24" class="ti"><path d="M4 6.5h16v11H4z" stroke-dasharray="3 2.6"/><circle cx="17" cy="16" r="3.4" fill="var(--card)"/><path d="m19.4 18.4 2.4 2.4"/></svg>';
 const mapIcon = () => '<svg viewBox="0 0 24 24" class="ti"><path d="M3.5 4.5h17v15h-17zM3.5 11h8V4.5M11.5 11v8.5M11.5 14h9"/></svg>';
 const eraseIcon = () => '<svg viewBox="0 0 24 24" class="ti"><path d="M8.5 19.5 3.8 14.8l9.4-9.4 6.3 6.3-8 7.8zM8.5 19.5H20"/><path d="m8.6 10 6.2 6.2"/></svg>';
 

@@ -8,12 +8,7 @@ import './strings.js';
 const SLUG = 'pig';
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3aa655', dark: '#22713a', fill: '#97d6a6' },
-  { main: '#f08c1e', dark: '#a85a06', fill: '#f8c183' },
-  { main: '#8e5cc4', dark: '#5b3590', fill: '#c6a9e6' },
-  { main: '#e05aa2', dark: '#a02e6a', fill: '#f2a8cf' },
-  { main: '#a0703c', dark: '#6b4721', fill: '#d8b48d' },
-  { main: '#6f6f7c', dark: '#3b3b44', fill: '#bdbdc6' },
+  ...[2, 3, 4, 5, 6, 7].map((i) => ({ main: `var(--pig-c${i})`, text: `var(--pig-c${i}-text)`, fill: `var(--pig-c${i}-fill)`, dark: `var(--pig-c${i}-face)` })),
 ];
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
@@ -178,7 +173,7 @@ function render(anim = false) {
       out += `<path class="pend" stroke="${c.main}" stroke-width="${sw}" d="M${xOf(s).toFixed(1)} ${y} L${xOf(s + st.k).toFixed(1)} ${y}"/>`;
     }
     const mx = xOf(s + (p === st.turn && !over ? st.k : 0));
-    out += `<path class="marker" fill="${c.main}" stroke="${c.dark}" d="${shapeFor('mk' + p, () => circle(0, 0, sw * 0.9 + 1.5, sw * 0.9 + 1.5, 0.08))}" transform="translate(${mx.toFixed(1)} ${y})"/>`;
+    out += `<path class="marker" fill="${c.main}" stroke="${c.text}" d="${shapeFor('mk' + p, () => circle(0, 0, sw * 0.9 + 1.5, sw * 0.9 + 1.5, 0.08))}" transform="translate(${mx.toFixed(1)} ${y})"/>`;
   }
 
   // dice
@@ -269,10 +264,10 @@ function renderPlayers() {
   hold.disabled = !act || !PIG.canHold(st);
   const c = COLORS[st.turn];
   roll.style.background = act ? c.main : '';
-  roll.style.borderColor = act ? c.dark : '';
-  roll.style.color = act ? '#fff' : '';
-  hold.style.borderColor = act && PIG.canHold(st) ? c.dark : '';
-  hold.style.color = act && PIG.canHold(st) ? c.dark : '';
+  roll.style.borderColor = act ? c.text : '';
+  roll.style.color = act ? 'var(--on-accent)' : '';
+  hold.style.borderColor = act && PIG.canHold(st) ? c.text : '';
+  hold.style.color = act && PIG.canHold(st) ? c.text : '';
 
   $('#undo').disabled = online() || !history.length || (isAI(st.turn) && !over);
   $('#mode').disabled = online();

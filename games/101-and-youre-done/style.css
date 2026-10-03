@@ -1,4 +1,22 @@
 /* 101 and You're Done — board styles. One SVG (viewBox 400 × 430): round pips, number line, score columns, die + buttons. */
+/* local colour tokens (4th seat orange, greys, board tints); light values match the original look */
+:root {
+  --h101-orange: #f08a24; --h101-orange-text: #b85d06; --h101-orange-fill: #f7bd80; --h101-orange-face: #b85d06;
+  --h101-lbl: #777; --h101-faint: #888; --h101-q: #aaa; --h101-sub: #555;
+  --h101-bust: #fde3e6; --h101-hover: #f3fbfe;
+}
+:root[data-theme=dark] {
+  --h101-orange: #ffa552; --h101-orange-text: #ffc590; --h101-orange-fill: #d9853a; --h101-orange-face: #6e3500;
+  --h101-lbl: #b3ada2; --h101-faint: #8a857c; --h101-q: #8a857c; --h101-sub: #c9c3b8;
+  --h101-bust: #3d2a31; --h101-hover: #2c3a45;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --h101-orange: #ffa552; --h101-orange-text: #ffc590; --h101-orange-fill: #d9853a; --h101-orange-face: #6e3500;
+    --h101-lbl: #b3ada2; --h101-faint: #8a857c; --h101-q: #8a857c; --h101-sub: #c9c3b8;
+    --h101-bust: #3d2a31; --h101-hover: #2c3a45;
+  }
+}
 .arena .board-wrap { display: flex; flex-direction: column; align-items: center; }
 #board {
   width: min(100%, calc((100dvh - 250px) * 400 / 430)); min-width: 290px; display: block;
@@ -8,10 +26,10 @@
 #board text:not([fill]) { fill: var(--ink); }
 #board [data-act] { cursor: pointer; }
 
-#board .lbl { font: 600 19px var(--hand); fill: #777; }
-#board .tick-lbl { font: 600 15px var(--hand); fill: #888; }
+#board .lbl { font: 600 19px var(--hand); fill: var(--h101-lbl); }
+#board .tick-lbl { font: 600 15px var(--hand); fill: var(--h101-faint); }
 #board .tick-lbl.hundred { fill: var(--red-dark); font-weight: 700; }
-#board .bustzone { fill: #fde3e6; stroke: var(--red); stroke-width: 2; stroke-dasharray: 4 4; }
+#board .bustzone { fill: var(--h101-bust); stroke: var(--red); stroke-width: 2; stroke-dasharray: 4 4; }
 #board .bustx { font: 700 18px var(--hand); fill: var(--red); opacity: .55; }
 #board .pin-lbl { font-weight: 700; }
 #board .pin > g { transition: transform .35s ease-out; }
@@ -22,18 +40,18 @@
 #board .entry.over { text-decoration: line-through; }
 #board .entry.fresh { animation: pop .35s ease-out; transform-box: fill-box; transform-origin: center; }
 #board .entry.pend { font-weight: 700; animation: blink 1s steps(2) infinite; }
-#board .slot { fill: #fff; stroke-width: 2.2; stroke-dasharray: 5 4; }
+#board .slot { fill: var(--card); stroke-width: 2.2; stroke-dasharray: 5 4; }
 #board .total { font: 700 32px var(--hand); }
 #board .total.bust { font-size: 26px; opacity: .8; }
 #board .winring { animation: ring .5s ease-out; }
 
-#board .die-body { fill: #fff; stroke: var(--ink); stroke-width: 2.8; }
+#board .die-body { fill: var(--card); stroke: var(--ink); stroke-width: 2.8; }
 #board .pip { fill: var(--ink); }
-#board .die-q { font-weight: 700; fill: #aaa; }
+#board .die-q { font-weight: 700; fill: var(--h101-q); }
 #board .die.faded { opacity: .45; }
 #board .die.roll { animation: roll .55s ease-out backwards; transform-box: fill-box; transform-origin: center; }
 #board .tap .die.pulse { animation: nudge 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-#board .tap:hover .die-body { fill: #f3fbfe; }
+#board .tap:hover .die-body { fill: var(--h101-hover); }
 
 #board .btn-txt { font: 700 27px var(--hand); }
 #board .btn-big { font: 700 32px var(--hand); }
@@ -77,10 +95,10 @@
 .board-wrap .result-text { font-size: clamp(26px, 6.5vw, 38px); margin-bottom: 0; flex-basis: 100%; }
 .board-wrap .result-wait { font-size: 18px; line-height: 1.2; }
 .board-wrap .result-card .btn { margin: 0; }
-.result-sub { font-size: 20px; margin: 0; color: #555; line-height: 1.2; }
+.result-sub { font-size: 20px; margin: 0; color: var(--h101-sub); line-height: 1.2; }
 /* 3–4 players: the per-round score line would wrap onto a third row and cover the totals; the cards show the stars */
 .arena.many .board-wrap .result-sub { display: none; }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0 0; }
 
 @media (min-width: 900px) {
   #board, .arena.many #board { width: min(100%, calc((100dvh - 190px) * 400 / 430)); }
@@ -93,6 +111,6 @@
 #board text.start { text-anchor: start; }
 #board text.end { text-anchor: end; }
 /* online: who sits where ("you", "computer", "offline") */
-.player .score .tag { font-size: .8em; color: #888; white-space: nowrap; }
+.player .score .tag { font-size: .8em; color: var(--h101-faint); white-space: nowrap; }
 .player .score .tag.away { color: var(--red-dark); }
 .arena.many .player .score .tag { display: block; line-height: 1; }

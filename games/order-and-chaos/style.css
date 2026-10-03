@@ -1,7 +1,13 @@
+:root { --oc-last: #fff3c4; --oc-order: #2a8a4a; --oc-chaos: #b0478f; }
+:root[data-theme=dark] { --oc-last: #4a4430; --oc-order: #7fd69a; --oc-chaos: #e98ccb; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --oc-last: #4a4430; --oc-order: #7fd69a; --oc-chaos: #e98ccb; }
+}
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; opacity: .75; }
 #board .grid.outer { stroke-width: 3.2; opacity: 1; }
-#board .last { fill: #fff3c4; }
+#board .last { fill: var(--oc-last); }
 #board .sym.fresh { animation: pop .3s ease-out; }
 #board .sym.ghost { opacity: .32; pointer-events: none; }
 #board .winline { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; opacity: .85; }
@@ -16,7 +22,7 @@
 .picker { display: flex; justify-content: center; gap: 10px; margin-top: 6px; min-height: 52px; }
 .pick {
   display: flex; align-items: center; gap: 2px; height: 50px; min-width: 64px; padding: 0 8px;
-  background: #fff; border: 2.5px solid var(--pencil); border-radius: var(--sketchy); cursor: pointer;
+  background: var(--card); border: 2.5px solid var(--pencil); border-radius: var(--sketchy); cursor: pointer;
   font: 700 18px/1 var(--hand); color: var(--ink); -webkit-tap-highlight-color: transparent;
   transition: transform .1s;
 }
@@ -27,15 +33,15 @@
 
 .player .score { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 .player .role { font-weight: 700; font-size: .95em; padding: 0 5px; border: 2px solid currentColor; border-radius: var(--sketchy); line-height: 1.05; }
-.player .role.r0 { color: #2a8a4a; }
-.player .role.r1 { color: #b0478f; }
+.player .role.r0 { color: var(--oc-order); }
+.player .role.r1 { color: var(--oc-chaos); }
 .player .pts { white-space: nowrap; }
 
 .result-why { font: 700 23px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
-.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+.result-next { font-size: 20px; line-height: 1.15; color: var(--muted); margin: 0 0 10px; }
 
 .result-text { font-size: clamp(26px, 6vw, 38px); }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0; }
 
 @media (min-width: 900px) {
   #board { max-width: min(100%, calc(100dvh - 230px)); }

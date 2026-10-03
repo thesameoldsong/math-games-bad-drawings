@@ -1,3 +1,10 @@
+/* local colours: meadow tint, used compass arrows, order numbers, result sub-line */
+:root { --meadow: #fbfdf3; --dan-used: #9a9aa2; --dan-ord: #888; --dan-sub: #555; }
+:root[data-theme=dark] { --meadow: #1f2723; --dan-used: #6c727c; --dan-ord: #9a948a; --dan-sub: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --meadow: #1f2723; --dan-used: #6c727c; --dan-ord: #9a948a; --dan-sub: var(--muted); }
+}
+
 .arena .board-wrap { display: flex; flex-direction: column; align-items: center; }
 /* Board shrinks on short screens so board + compass + status fit above the bottom toolbar. */
 #board {
@@ -6,7 +13,7 @@
 }
 #compass { width: min(100%, 380px); height: auto; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; margin-top: 2px; }
 
-#board .meadow { fill: #fbfdf3; }
+#board .meadow { fill: var(--meadow); }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.6; stroke-linecap: round; }
 #board .flower .spokes { fill: none; stroke-width: 2.6; stroke-linecap: round; }
 #board .flower .core { stroke-width: 2; }
@@ -43,7 +50,7 @@
 .player .score { display: flex; align-items: center; gap: 4px; }
 .player .score .ricon { width: 20px; height: 20px; flex: none; }
 
-.result-sub { font-size: 22px; margin: 0 0 10px; color: #555; }
+.result-sub { font-size: 22px; margin: 0 0 10px; color: var(--dan-sub); }
 .result-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .result-btns .btn[hidden] { display: none; }
 
@@ -51,7 +58,7 @@
 .mg-dialog .check input { width: 22px; height: 22px; flex: none; accent-color: var(--blue); }
 .mg-dialog .field[hidden] { display: none; }
 .mg-dialog .actions { flex-wrap: wrap; }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0 0; }
 
 @media (min-width: 900px) {
   #board { width: min(100%, calc(100dvh - 330px)); min-width: 320px; }

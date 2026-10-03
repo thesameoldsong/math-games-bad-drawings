@@ -1,15 +1,46 @@
+/* local colours: seats 3–8 (green, orange, violet, pink, brown, grey) + board greys, with chalk-on-slate variants */
+:root {
+  --pig-c2: #3aa655; --pig-c2-text: #22713a; --pig-c2-fill: #97d6a6; --pig-c2-face: #22713a;
+  --pig-c3: #f08c1e; --pig-c3-text: #a85a06; --pig-c3-fill: #f8c183; --pig-c3-face: #a85a06;
+  --pig-c4: #8e5cc4; --pig-c4-text: #5b3590; --pig-c4-fill: #c6a9e6; --pig-c4-face: #5b3590;
+  --pig-c5: #e05aa2; --pig-c5-text: #a02e6a; --pig-c5-fill: #f2a8cf; --pig-c5-face: #a02e6a;
+  --pig-c6: #a0703c; --pig-c6-text: #6b4721; --pig-c6-fill: #d8b48d; --pig-c6-face: #6b4721;
+  --pig-c7: #6f6f7c; --pig-c7-text: #3b3b44; --pig-c7-fill: #bdbdc6; --pig-c7-face: #3b3b44;
+  --pig-label: #888; --pig-lane: #d6d6d6;
+}
+:root[data-theme=dark] {
+  --pig-c2: #5cc97a; --pig-c2-text: #9be3ad; --pig-c2-fill: #3e9c5a; --pig-c2-face: #164d27;
+  --pig-c3: #ffa64d; --pig-c3-text: #ffc98f; --pig-c3-fill: #d9832e; --pig-c3-face: #6b3600;
+  --pig-c4: #b48ae8; --pig-c4-text: #d6bdf6; --pig-c4-fill: #8a62bf; --pig-c4-face: #3f2366;
+  --pig-c5: #ff7cc0; --pig-c5-text: #ffb3dc; --pig-c5-fill: #d0559a; --pig-c5-face: #6e1442;
+  --pig-c6: #d39a5e; --pig-c6-text: #e8c49c; --pig-c6-fill: #a87443; --pig-c6-face: #4a2c10;
+  --pig-c7: #aeb0bd; --pig-c7-text: #d3d4dc; --pig-c7-fill: #7c7e8a; --pig-c7-face: #2a2b33;
+  --pig-label: var(--muted-2); --pig-lane: var(--pencil);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --pig-c2: #5cc97a; --pig-c2-text: #9be3ad; --pig-c2-fill: #3e9c5a; --pig-c2-face: #164d27;
+    --pig-c3: #ffa64d; --pig-c3-text: #ffc98f; --pig-c3-fill: #d9832e; --pig-c3-face: #6b3600;
+    --pig-c4: #b48ae8; --pig-c4-text: #d6bdf6; --pig-c4-fill: #8a62bf; --pig-c4-face: #3f2366;
+    --pig-c5: #ff7cc0; --pig-c5-text: #ffb3dc; --pig-c5-fill: #d0559a; --pig-c5-face: #6e1442;
+    --pig-c6: #d39a5e; --pig-c6-text: #e8c49c; --pig-c6-fill: #a87443; --pig-c6-face: #4a2c10;
+    --pig-c7: #aeb0bd; --pig-c7-text: #d3d4dc; --pig-c7-fill: #7c7e8a; --pig-c7-face: #2a2b33;
+    --pig-label: var(--muted-2); --pig-lane: var(--pencil);
+  }
+}
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: visible; }
 #board.can-roll .die, #board.can-roll .dice-hit { cursor: pointer; }
-#board .trk-lbl { font: 600 15px var(--hand); fill: #888; text-anchor: middle; }
+#board .trk-lbl { font: 600 15px var(--hand); fill: var(--pig-label); text-anchor: middle; }
 #board .trk-lbl.goal { font-size: 19px; fill: var(--ink); dominant-baseline: central; }
 #board .tick { stroke: var(--pencil); stroke-width: 1.6; fill: none; stroke-dasharray: 3 4; }
-#board .lane { stroke: #d6d6d6; stroke-width: 2; fill: none; stroke-linecap: round; }
+#board .lane { stroke: var(--pig-lane); stroke-width: 2; fill: none; stroke-linecap: round; }
 #board .finish { stroke: var(--ink); stroke-width: 3; fill: none; stroke-linecap: round; }
 #board .flag { fill: var(--red); stroke: var(--red-dark); stroke-width: 1.5; stroke-linejoin: round; }
 #board .prog { fill: none; stroke-linecap: round; opacity: .9; }
 #board .pend { fill: none; stroke-linecap: round; stroke-dasharray: 2 7; opacity: .55; }
 #board .marker { stroke-width: 2; }
-#board .die-body { fill: #fff; stroke: var(--ink); stroke-width: 3.2; stroke-linejoin: round; }
+#board .die-body { fill: var(--card); stroke: var(--ink); stroke-width: 3.2; stroke-linejoin: round; }
 #board .pip { fill: var(--ink); }
 #board .pip.one { fill: var(--red); }
 #board .cross { stroke: var(--red); stroke-width: 6; stroke-linecap: round; fill: none; opacity: .85; }
@@ -29,11 +60,11 @@
 /* roll / bank buttons under the board */
 .pig-controls { display: flex; justify-content: center; gap: 14px; margin: 4px 0 2px; }
 .pig-controls .btn { font-size: 26px; padding: 4px 18px; min-width: 128px; min-height: 48px; }
-.pig-controls .btn.pig-roll:not(:disabled) { color: #fff; }
+.pig-controls .btn.pig-roll:not(:disabled) { color: var(--on-accent); }
 .player .score .pend-pts { font-weight: 700; }
 .result-scores { font-size: 22px; margin: 0 0 4px; line-height: 1.25; }
-.result-next { font-size: 20px; color: #666; margin: 0 0 10px; }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+.result-next { font-size: 20px; color: var(--muted); margin: 0 0 10px; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0 0; }
 
 /* more than two players: cards in rows of two, smaller figures */
 .arena .p2 { grid-area: p2; } .arena .p3 { grid-area: p3; } .arena .p4 { grid-area: p4; }
@@ -65,7 +96,7 @@
 .result-scores span { white-space: nowrap; }
 
 /* online: "you" / "offline" next to the score */
-.player .seat-tag { font-size: .8em; color: #888; white-space: nowrap; }
+.player .seat-tag { font-size: .8em; color: var(--pig-label); white-space: nowrap; }
 .player .seat-tag::before { content: '· '; }
 .player .seat-tag.off { color: var(--red-dark); }
 .player.away .fig { opacity: .4; }

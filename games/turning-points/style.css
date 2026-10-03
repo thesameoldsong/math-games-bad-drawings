@@ -1,3 +1,7 @@
+:root { --tp-none: #ecebe4; }
+:root[data-theme=dark] { --tp-none: #4a515c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --tp-none: #4a515c; } }
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: visible; }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; opacity: .8; }
 #board .shore { fill: none; stroke-width: 7; stroke-linecap: round; opacity: .85; }
@@ -8,15 +12,15 @@
 #board .pc path, #board .pc circle { transition: fill .2s, stroke .2s; }
 #board .pc .body, #board .pc .tail { stroke-width: 2.6; stroke-linejoin: round; }
 #board .pc .fin { fill: none; stroke-width: 2; stroke-linecap: round; }
-#board .pc.none .body, #board .pc.none .tail { fill: #ecebe4; stroke: var(--dot); }
+#board .pc.none .body, #board .pc.none .tail { fill: var(--tp-none); stroke: var(--dot); }
 #board .pc.none .fin { stroke: var(--dot); }
 #board .pc.none .eye { fill: var(--dot); }
 #board .pc.blue .body, #board .pc.blue .tail { fill: var(--blue); stroke: var(--blue-dark); }
 #board .pc.blue .fin { stroke: var(--blue-dark); }
-#board .pc.blue .eye { fill: #fff; }
+#board .pc.blue .eye { fill: var(--eye); }
 #board .pc.red .body, #board .pc.red .tail { fill: var(--red); stroke: var(--red-dark); }
 #board .pc.red .fin { stroke: var(--red-dark); }
-#board .pc.red .eye { fill: #fff; }
+#board .pc.red .eye { fill: var(--eye); }
 #board .pc.fresh { animation: tp-pop .3s ease-out; }
 
 #board .ghost { opacity: .45; pointer-events: none; }
@@ -26,7 +30,7 @@
 #board .pad { animation: tp-fade .15s ease-out; cursor: pointer; }
 
 .result-score { font-size: 26px; margin: 0; color: var(--ink); }
-.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+.result-next { font-size: 20px; margin: 0 0 8px; color: var(--muted); }
 
 @keyframes tp-pop { from { opacity: 0; scale: .3; } }
 @keyframes tp-fade { from { opacity: 0; } }

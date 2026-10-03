@@ -9,10 +9,10 @@ const SLUG = 'chopsticks';
 const COLORS = [
   PALETTE.blue,
   PALETTE.red,
-  { main: '#3aa655', dark: '#1f7536', fill: '#a3dcae' },
-  { main: '#8d5cc9', dark: '#5f3593', fill: '#cdb4ec' },
+  { main: 'var(--cs-green)', text: 'var(--cs-green-text)', fill: 'var(--cs-green-fill)', dark: 'var(--cs-green-face)' },
+  { main: 'var(--cs-violet)', text: 'var(--cs-violet-text)', fill: 'var(--cs-violet-fill)', dark: 'var(--cs-violet-face)' },
 ];
-const GREY = { main: '#bdbdbd', dark: '#9a9a9a', fill: '#ececec' };
+const GREY = { main: 'var(--cs-grey)', text: 'var(--cs-grey-text)', fill: 'var(--cs-grey-fill)', dark: 'var(--cs-grey-text)' };
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
 
@@ -111,20 +111,22 @@ function handArt(count, color, seed) {
     const thumb = line(-27, -14, -37, -27, 0.5);
     const sleeve = `M-23 -4 L-24 20 Q0 23 24 19 L23 -4 Q0 0 -23 -4 Z`;
     let s = '';
+    // paper under the crayon: plain card in light, a chalk tint of the hand colour on the dark board
+    const under = `color-mix(in srgb, ${color.fill} var(--cs-palm-mix), var(--card))`;
     const fingerPaths = (w, c) => fingers.map((f) => `<path d="${f.d}" stroke="${c}" stroke-width="${w}"/>`).join('') +
       `<path d="${thumb}" stroke="${c}" stroke-width="${w - 1}"/>`;
-    s += `<g fill="none" stroke-linecap="round">${fingerPaths(19.5, color.dark)}</g>`;
-    s += `<path d="${palm}" fill="${color.dark}" stroke="${color.dark}" stroke-width="5.5" stroke-linejoin="round"/>`;
-    s += `<g fill="none" stroke-linecap="round">${fingerPaths(13.5, '#fff')}</g><path d="${palm}" fill="#fff"/>`;
+    s += `<g fill="none" stroke-linecap="round">${fingerPaths(19.5, color.text)}</g>`;
+    s += `<path d="${palm}" fill="${color.text}" stroke="${color.text}" stroke-width="5.5" stroke-linejoin="round"/>`;
+    s += `<g fill="none" stroke-linecap="round">${fingerPaths(13.5, under)}</g><path d="${palm}" fill="${under}"/>`;
     s += `<g filter="url(#mg-crayon)"><g fill="none" stroke-linecap="round">${fingerPaths(13.5, color.fill)}</g><path d="${palm}" fill="${color.fill}"/></g>`;
     // nails on raised fingers, knuckle creases on folded ones
     for (const f of fingers) {
       const [x, y] = f.tip;
       s += f.up
-        ? `<path d="M${(x - 3.4).toFixed(1)} ${(y + 4.5).toFixed(1)} Q${x.toFixed(1)} ${(y + 7.5).toFixed(1)} ${(x + 3.4).toFixed(1)} ${(y + 4.5).toFixed(1)}" stroke="${color.dark}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
-        : `<path d="${line(x - 4.5, -45, x + 4.5, -45, 0.4)}" stroke="${color.dark}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+        ? `<path d="M${(x - 3.4).toFixed(1)} ${(y + 4.5).toFixed(1)} Q${x.toFixed(1)} ${(y + 7.5).toFixed(1)} ${(x + 3.4).toFixed(1)} ${(y + 4.5).toFixed(1)}" stroke="${color.text}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+        : `<path d="${line(x - 4.5, -45, x + 4.5, -45, 0.4)}" stroke="${color.text}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
     }
-    s += `<path d="${sleeve}" fill="${color.main}" stroke="${color.dark}" stroke-width="3" stroke-linejoin="round"/>`;
+    s += `<path d="${sleeve}" fill="${color.main}" stroke="${color.text}" stroke-width="3" stroke-linejoin="round"/>`;
     return s;
   });
   return (shapeCache[k] = art);
@@ -181,11 +183,11 @@ function render() {
       out += `<rect class="hit" x="-46" y="-110" width="92" height="136"/>`;
       out += `</g></g>`;
       const [nx, ny] = toBoard(hp, 0, -25);
-      out += `<text class="num" x="${nx.toFixed(1)}" y="${ny.toFixed(1)}" font-size="${(34 * hp.s).toFixed(1)}" fill="${color.dark}">${v}</text>`;
+      out += `<text class="num" x="${nx.toFixed(1)}" y="${ny.toFixed(1)}" font-size="${(34 * hp.s).toFixed(1)}" fill="${color.text}">${v}</text>`;
       if (tgt) {
         const [bx2, by2] = toBoard(hp, 0, -118);
         const txt = tgt.after ? `→ ${tgt.after}` : t('cs.out');
-        out += `<text class="badge" x="${bx2.toFixed(1)}" y="${by2.toFixed(1)}" fill="${COLORS[st.turn].dark}">${txt}</text>`;
+        out += `<text class="badge" x="${bx2.toFixed(1)}" y="${by2.toFixed(1)}" fill="${COLORS[st.turn].text}">${txt}</text>`;
       }
       out += `</g>`;
     }
@@ -343,7 +345,7 @@ function commit(m) {
   sel = -1; preview = null;
   if (m.t === 'tap') {
     const v = m.p;
-    fx = { p: v, h: m.to, text: info.knocked ? t('cs.out') : `+${info.add}`, color: info.knocked ? COLORS[who].dark : COLORS[who].main };
+    fx = { p: v, h: m.to, text: info.knocked ? t('cs.out') : `+${info.add}`, color: info.knocked ? COLORS[who].text : COLORS[who].main };
     if (info.knocked) {
       setMood(who, 'happy', 'wave');
       setMood(v, info.eliminated === v ? 'sad' : 'worried');

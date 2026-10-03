@@ -103,7 +103,7 @@ function render(animateLast) {
     const L = st.boardLines[b];
     if (L) {
       const [a1, a2, b1, b2] = ends(L, (c) => cellXY(b * 9 + c), 10);
-      out += `<path class="miniline" d="${shapeFor('ml' + b, () => line(a1, a2, b1, b2, 2))}" stroke="${COLORS[owner].dark}"/>`;
+      out += `<path class="miniline" d="${shapeFor('ml' + b, () => line(a1, a2, b1, b2, 2))}" stroke="${COLORS[owner].text}"/>`;
     }
     out += '</g>';
     if (owner === 0 || owner === 1) {
@@ -115,7 +115,7 @@ function render(animateLast) {
 
   if (st.line) {
     const [a1, a2, b1, b2] = ends(st.line, (b) => { const [x, y] = boardXY(b); return [x + B / 2, y + B / 2]; }, 40);
-    out += `<path class="winline${animateLast ? ' fresh' : ''}" d="${shapeFor('win', () => line(a1, a2, b1, b2, 5))}" stroke="${COLORS[st.winner].dark}" pathLength="1"/>`;
+    out += `<path class="winline${animateLast ? ' fresh' : ''}" d="${shapeFor('win', () => line(a1, a2, b1, b2, 5))}" stroke="${COLORS[st.winner].text}" pathLength="1"/>`;
   }
 
   out += `<path id="preview" class="preview" d=""/>`;

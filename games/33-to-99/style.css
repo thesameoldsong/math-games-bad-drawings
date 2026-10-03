@@ -1,4 +1,19 @@
 /* 33 to 99 — board styles. The board is one SVG (viewBox 400 × 450) that redraws per phase. */
+/* local colours: the 4th seat (orange) and the paper slips for worked-out numbers */
+:root {
+  --n99-orange: #f08a24; --n99-orange-dark: #b85d06; --n99-orange-fill: #f7bd80; --n99-orange-face: #b85d06;
+  --n99-slip: #fffbe6;
+}
+:root[data-theme=dark] {
+  --n99-orange: #ffa552; --n99-orange-dark: #ffc58f; --n99-orange-fill: #d9822f; --n99-orange-face: #6b3600;
+  --n99-slip: #353428;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --n99-orange: #ffa552; --n99-orange-dark: #ffc58f; --n99-orange-fill: #d9822f; --n99-orange-face: #6b3600;
+    --n99-slip: #353428;
+  }
+}
 .arena .board-wrap { display: flex; flex-direction: column; align-items: center; }
 #board {
   width: min(100%, calc((100dvh - 250px) * 400 / 450)); min-width: 280px; display: block;
@@ -9,25 +24,25 @@
 #board text:not([fill]) { fill: var(--ink); }
 #board [data-act] { cursor: pointer; }
 
-#board .tbox { fill: #fff; stroke: var(--ink); stroke-width: 2.6; }
-#board .lbl { font: 600 17px var(--hand); fill: #777; }
+#board .tbox { fill: var(--card); stroke: var(--ink); stroke-width: 2.6; }
+#board .lbl { font: 600 17px var(--hand); fill: var(--muted); }
 #board .lbl.round { font-size: 20px; }
 #board .tnum { font: 700 38px var(--hand); }
 #board .timer { font-size: 32px; text-anchor: end; }
 #board .timer.low { fill: var(--red-dark); animation: blink 1s steps(2) infinite; }
 #board .big { font: 700 30px var(--hand); }
 #board .mid { font: 700 23px var(--hand); }
-#board .small { font: 600 19px var(--hand); fill: #777; }
+#board .small { font: 600 19px var(--hand); fill: var(--muted); }
 
-#board .die-body { fill: #fff; stroke: var(--ink); stroke-width: 2.6; }
+#board .die-body { fill: var(--card); stroke: var(--ink); stroke-width: 2.6; }
 #board .pip { fill: var(--ink); }
-#board .die-q { font-weight: 700; fill: #aaa; }
+#board .die-q { font-weight: 700; fill: var(--muted-2); }
 #board .die.roll { animation: roll .55s ease-out backwards; transform-box: fill-box; transform-origin: center; }
 #board .tile:nth-of-type(2) .die.roll { animation-delay: .06s; }
 #board .tile:nth-of-type(3) .die.roll { animation-delay: .12s; }
 #board .tile:nth-of-type(4) .die.roll { animation-delay: .18s; }
 #board .tile:nth-of-type(5) .die.roll { animation-delay: .24s; }
-#board .slip { fill: #fffbe6; stroke: var(--ink); stroke-width: 2.6; }
+#board .slip { fill: var(--n99-slip); stroke: var(--ink); stroke-width: 2.6; }
 #board .tile-num { font: 700 36px var(--hand); }
 #board .tile.fresh { animation: pop .3s ease-out; transform-box: fill-box; transform-origin: center; }
 #board .tile.sel { transform: translateY(-3px); }
@@ -36,29 +51,29 @@
 #board .op.off { opacity: .35; }
 #board .op:not(.off):hover path { stroke-width: 3.6; }
 
-#board .work { font: 600 23px var(--hand); fill: #555; }
-#board .work.pending { fill: #999; }
+#board .work { font: 600 23px var(--hand); fill: var(--muted); }
+#board .work.pending { fill: var(--muted-2); }
 #board .work.err { fill: var(--red-dark); }
 #board .bestline { font: 700 22px var(--hand); }
-#board .bestline:not([fill]) { fill: #888; }
-#board .bestline.good { fill: #2a9d48; }
+#board .bestline:not([fill]) { fill: var(--muted-2); }
+#board .bestline.good { fill: var(--ok); }
 
 #board .sbtn .btn-txt { font: 700 24px var(--hand); }
 #board .sbtn.off { opacity: .35; }
 #board .sbtn:not(.off):hover path { stroke-width: 3.4; }
 #board .sbtn:not(.off):active { transform: translateY(1px); }
 
-#board .cell path { fill: #fff; stroke: var(--pencil); stroke-width: 2; }
+#board .cell path { fill: var(--card); stroke: var(--pencil); stroke-width: 2; }
 #board .cell .cell-num { font: 700 22px var(--hand); }
-#board .cell:hover path { fill: #eaf7fc; stroke: var(--blue); }
+#board .cell:hover path { fill: color-mix(in srgb, var(--blue) 10%, var(--card)); stroke: var(--blue); }
 #board .cell:active path { fill: var(--blue); }
 
-#board .rowbox { fill: #fff; stroke-width: 2.4; }
+#board .rowbox { fill: var(--card); stroke-width: 2.4; }
 #board .rname { font: 700 22px var(--hand); text-anchor: start; }
 #board .rval { font: 700 22px var(--hand); text-anchor: end; }
 #board .rpts { font: 700 26px var(--hand); text-anchor: end; }
 #board .rtotal { font: 700 24px var(--hand); text-anchor: end; }
-#board .rexpr { font: 600 18px var(--hand); fill: #666; text-anchor: start; }
+#board .rexpr { font: 600 18px var(--hand); fill: var(--muted); text-anchor: start; }
 
 @keyframes roll { 0% { transform: translate(-30px, -40px) rotate(calc(var(--rot) * 9)); opacity: 0; } 70% { transform: rotate(var(--rot)); opacity: 1; } }
 @keyframes pop { from { transform: scale(.4); opacity: 0; } }
@@ -95,9 +110,9 @@
 .board-wrap .result { place-items: end center; background: none; pointer-events: none; }
 .board-wrap .result-card { pointer-events: auto; padding: 8px 18px 12px; margin-bottom: 2%; }
 .board-wrap .result-text { font-size: clamp(28px, 6.5vw, 40px); margin-bottom: 2px; }
-.result-sub { font-size: 21px; margin: 0 0 8px; color: #555; }
+.result-sub { font-size: 21px; margin: 0 0 8px; color: var(--muted); }
 .result-sub[hidden] { display: none; }
-.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+.settings-note { font-size: 19px; color: var(--muted); margin: 6px 0 0; }
 
 @media (min-width: 900px) {
   #board, .arena.many #board { width: min(100%, calc((100dvh - 190px) * 400 / 450)); }
@@ -115,5 +130,5 @@
 .player.me .name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 .player.me .fig-wrap::before {
   content: attr(data-me); position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
-  font: 700 15px/1 var(--hand); color: #fff; background: var(--ink); border-radius: 8px; padding: 1px 6px 2px; z-index: 1;
+  font: 700 15px/1 var(--hand); color: var(--paper); background: var(--ink); border-radius: 8px; padding: 1px 6px 2px; z-index: 1;
 }

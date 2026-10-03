@@ -81,10 +81,10 @@ function boxPath(k, x, y, w, h, amp = 1.2) {
     line(x + w, y + h, x, y + h, amp).replace('M', 'L') + ' ' + line(x, y + h, x, y, amp).replace('M', 'L'));
 }
 function button(k, act, x, y, w, h, label, color = null, disabled = false) {
-  const fill = color ? color.main : '#fff';
+  const fill = color ? color.main : 'var(--card)';
   return `<g class="sbtn${disabled ? ' off' : ''}" data-act="${act}">
-    <path d="${boxPath(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.dark : 'var(--ink)'}" stroke-width="2.6" stroke-linejoin="round"/>
-    ${txt(x + w / 2, y + h / 2 + 1, label, { size: 23, color: color ? '#fff' : 'var(--ink)', max: w - 14 })}</g>`;
+    <path d="${boxPath(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.text : 'var(--ink)'}" stroke-width="2.6" stroke-linejoin="round"/>
+    ${txt(x + w / 2, y + h / 2 + 1, label, { size: 23, color: color ? 'var(--on-accent)' : 'var(--ink)', max: w - 14 })}</g>`;
 }
 const cellXY = (i) => [GX + (i % N) * CS, GY + Math.floor(i / N) * CS];
 const miniXY = (i) => [MX + (i % N) * MS, MY + Math.floor(i / N) * MS];
@@ -101,8 +101,8 @@ function gridLines(key, x0, y0, cs, amp) {
 function labels() {
   let s = '';
   for (let k = 0; k < N; k++) {
-    s += txt(GX + k * CS + CS / 2, GY - 9, COLS[k], { size: 16, color: '#8a8a92', weight: 600 });
-    s += txt(GX - 11, GY + k * CS + CS / 2 + 1, k + 1, { size: 16, color: '#8a8a92', weight: 600 });
+    s += txt(GX + k * CS + CS / 2, GY - 9, COLS[k], { size: 16, color: 'var(--bs-label)', weight: 600 });
+    s += txt(GX - 11, GY + k * CS + CS / 2 + 1, k + 1, { size: 16, color: 'var(--bs-label)', weight: 600 });
   }
   return s;
 }
@@ -131,7 +131,7 @@ function setupView(p, editable) {
   });
   if (drag && drag.moved && drag.cand) {
     const ok = BS.canPlace(f, drag.k, drag.cand);
-    s += shipShape('d', drag.cand, GX, GY, CS, { color: ok ? COLORS[p] : { fill: '#ddd', main: '#999' }, cls: ok ? 'drag' : 'drag bad' });
+    s += shipShape('d', drag.cand, GX, GY, CS, { color: ok ? COLORS[p] : { fill: 'var(--bs-bad-fill)', main: 'var(--bs-bad)' }, cls: ok ? 'drag' : 'drag bad' });
   }
   return s;
 }
@@ -156,9 +156,9 @@ function targetView(v) {
   for (const [i, k] of where) {
     const [x, y] = cellXY(i), cx = x + CS / 2, cy = y + CS / 2;
     const isFresh = fresh && fresh.p === v && fresh.t === k ? ' pop' : '';
-    if (known[i] === 1) s += cross('tx' + i, cx, cy, 8, c.dark, isFresh);
-    else if (known[i] === -1) s += `<circle class="${isFresh}" cx="${cx}" cy="${cy}" r="3.6" fill="#8a8a92"/>`;
-    else s += txt(cx, cy + 1, k + 1, { size: k + 1 >= 10 ? 16 : 18, color: '#6d6d78', weight: 700, cls: 'sn' + isFresh });
+    if (known[i] === 1) s += cross('tx' + i, cx, cy, 8, c.text, isFresh);
+    else if (known[i] === -1) s += `<circle class="${isFresh}" cx="${cx}" cy="${cy}" r="3.6" fill="var(--bs-label)"/>`;
+    else s += txt(cx, cy + 1, k + 1, { size: k + 1 >= 10 ? 16 : 18, color: 'var(--bs-num)', weight: 700, cls: 'sn' + isFresh });
   }
   if (inspect >= 0 && salvos[inspect]) {
     for (const i of salvos[inspect].cells) {
@@ -179,7 +179,7 @@ function targetView(v) {
     const [x, y] = cellXY(i), cx = x + CS / 2, cy = y + CS / 2;
     s += `<path class="aim" d="${shapeFor('sel' + i, () => circle(cx, cy, 11.5, 11.5, 0.08))}" stroke="${c.main}"/>` +
       `<path class="aim" d="M${cx - 15} ${cy}h7M${cx + 8} ${cy}h7M${cx} ${cy - 15}v7M${cx} ${cy + 8}v7" stroke="${c.main}"/>` +
-      txt(cx, cy + 1, n + 1, { size: 15, color: c.dark });
+      txt(cx, cy + 1, n + 1, { size: 15, color: c.text });
   });
   if (canShoot()) {
     const fired = BS.firedBy(st, v);
@@ -202,9 +202,9 @@ function coverView(p) {
   }
   s += `<path class="hatch" d="${d}" stroke="${c.main}"/>` + gridLines('g', GX, GY, CS, 1);
   const cx = GX + n / 2;
-  s += `<rect x="${cx - 130}" y="${GY + 88}" width="260" height="150" rx="16" fill="#fffefb" opacity=".93"/>`;
-  s += txt(cx, GY + 118, t('bs.cover.title', { name: name(p) }), { size: 28, color: c.dark, max: 240 });
-  s += txt(cx, GY + 150, t('bs.cover.note'), { size: 20, color: '#777', weight: 600, max: 240 });
+  s += `<rect x="${cx - 130}" y="${GY + 88}" width="260" height="150" rx="16" fill="var(--paper)" opacity=".93"/>`;
+  s += txt(cx, GY + 118, t('bs.cover.title', { name: name(p) }), { size: 28, color: c.text, max: 240 });
+  s += txt(cx, GY + 150, t('bs.cover.note'), { size: 20, color: 'var(--bs-note)', weight: 600, max: 240 });
   s += button('cov', 'uncover', cx - 70, GY + 172, 140, 46, t('bs.cover.btn'), c);
   return s;
 }
@@ -212,12 +212,12 @@ function coverView(p) {
 // ---------- strip under the grid ----------
 function miniFleet(v) {
   const c = COLORS[v], o = 1 - v;
-  let s = txt(MX, MY - 11, hotSeat() ? t('bs.mine.of', { name: name(v) }) : t('bs.mine'), { size: 17, color: '#777', anchor: 'start', weight: 600, max: 126 });
+  let s = txt(MX, MY - 11, hotSeat() ? t('bs.mine.of', { name: name(v) }) : t('bs.mine'), { size: 17, color: 'var(--bs-note)', anchor: 'start', weight: 600, max: 126 });
   s += `<rect class="sea" x="${MX}" y="${MY}" width="${N * MS}" height="${N * MS}"/>`;
   const f = st.fleets[v] || drafts[v];
   if (f) {
     const sunk = st.fleets[v] ? BS.sunkFlags(st, v) : [];
-    f.forEach((sh, k) => (s += shipShape('m' + k, sh, MX, MY, MS, { color: sunk[k] ? { fill: '#cfcfd4', main: '#8a8a92' } : c, inset: 1.6, cls: 'mini' })));
+    f.forEach((sh, k) => (s += shipShape('m' + k, sh, MX, MY, MS, { color: sunk[k] ? { fill: 'var(--bs-sunk-fill)', main: 'var(--bs-label)' } : c, inset: 1.6, cls: 'mini' })));
   }
   s += gridLines('m', MX, MY, MS, 0.4);
   const occ = f ? BS.occupancy(f) : [];
@@ -225,8 +225,8 @@ function miniFleet(v) {
   inc.forEach((x, k) => x.cells.forEach((i) => {
     const [px, py] = miniXY(i), cx = px + MS / 2, cy = py + MS / 2;
     const last = k === inc.length - 1;
-    if (occ[i] >= 0) s += cross('mx' + i, cx, cy, 3.6, COLORS[o].dark, 'mini' + (last ? ' pop' : ''));
-    else s += `<circle cx="${cx}" cy="${cy}" r="${last ? 2.4 : 1.7}" fill="${last ? COLORS[o].main : '#8a8a92'}" class="${last ? 'pop' : ''}"/>`;
+    if (occ[i] >= 0) s += cross('mx' + i, cx, cy, 3.6, COLORS[o].text, 'mini' + (last ? ' pop' : ''));
+    else s += `<circle cx="${cx}" cy="${cy}" r="${last ? 2.4 : 1.7}" fill="${last ? COLORS[o].main : 'var(--bs-label)'}" class="${last ? 'pop' : ''}"/>`;
     if (last) s += `<rect class="lastin" x="${px + 0.5}" y="${py + 0.5}" width="${MS - 1}" height="${MS - 1}" stroke="${COLORS[o].main}"/>`;
   }));
   return s;
@@ -249,7 +249,7 @@ function tally(v) {
   for (const len of BS.SHIPS) {
     const k = sunk.indexOf(len), isSunk = k >= 0;
     if (isSunk) sunk.splice(k, 1);
-    const col = isSunk ? { fill: '#d9d9de', main: '#9a9aa4' } : COLORS[o];
+    const col = isSunk ? { fill: 'var(--bs-tal-fill)', main: 'var(--bs-tal)' } : COLORS[o];
     s += `<rect class="tal" x="${x}" y="${y}" width="${len * u}" height="${u + 2}" rx="${(u + 2) / 2}" fill="${col.fill}" stroke="${col.main}"/>`;
     if (isSunk) s += `<path class="strike" d="${shapeFor('st' + x, () => line(x - 2, y + u / 2 + 3, x + len * u + 2, y + u / 2 - 1, 0.8))}"/>`;
     x += len * u + gap;
@@ -259,20 +259,20 @@ function tally(v) {
 
 function strip() {
   const y = STRIP;
-  if (online() && !sess.connected) return txt(W / 2, y + 70, t('bs.online.wait'), { size: 24, color: '#777' });
+  if (online() && !sess.connected) return txt(W / 2, y + 70, t('bs.online.wait'), { size: 24, color: 'var(--bs-note)' });
   const cov = coverFor();
   if (cov >= 0) return '';
   const v = viewer();
   if (st.phase === 'setup') {
     const a = arranger();
     if (a >= 0 && a === v) {
-      return txt(W / 2, y + 16, flash || t('bs.setup.hint'), { size: 20, color: flash ? 'var(--red-dark)' : '#777', weight: 600 }) +
-        txt(W / 2, y + 40, t('bs.setup.hint2'), { size: 20, color: '#777', weight: 600 }) +
+      return txt(W / 2, y + 16, flash || t('bs.setup.hint'), { size: 20, color: flash ? 'var(--red-dark)' : 'var(--bs-note)', weight: 600 }) +
+        txt(W / 2, y + 40, t('bs.setup.hint2'), { size: 20, color: 'var(--bs-note)', weight: 600 }) +
         button('shuf', 'shuffle', 28, y + 66, 132, 46, t('bs.shuffle')) +
         button('rdy', 'ready', 180, y + 66, 132, 46, t('bs.ready'), COLORS[a]);
     }
     const other = [0, 1].find((p) => !st.ready[p]);
-    return other === undefined ? '' : txt(W / 2, y + 70, t('bs.setup.wait', { name: name(other) }), { size: 21, color: '#777', max: 320 });
+    return other === undefined ? '' : txt(W / 2, y + 70, t('bs.setup.wait', { name: name(other) }), { size: 21, color: 'var(--bs-note)', max: 320 });
   }
   let s = miniFleet(v);
   const mine = st.salvos[v], inc = st.salvos[1 - v];
@@ -284,13 +284,13 @@ function strip() {
     l1b = sunkText(x);
   } else if (mine.length) { l1 = reportText(v, mine.length - 1); l1b = sunkText(mine[mine.length - 1]); }
   else if (st.turn === v && st.phase === 'fire') l1 = t('bs.first');
-  if (l1) s += txt(RC, y + 8, l1, { size: 20, color: COLORS[v].dark, max: RW });
-  if (l1b) s += txt(RC, y + 29, l1b, { size: 18, color: COLORS[v].dark, weight: 600, max: RW });
+  if (l1) s += txt(RC, y + 8, l1, { size: 20, color: COLORS[v].text, max: RW });
+  if (l1b) s += txt(RC, y + 29, l1b, { size: 18, color: COLORS[v].text, weight: 600, max: RW });
   // line 2: last salvo at me
   if (inc.length) {
     const x = inc[inc.length - 1];
     const l2 = x.hits ? t('bs.inc.hits', { hits: plural(x.hits, 'bs.hits') }) : t('bs.inc.miss');
-    s += txt(RC, y + 51, l2, { size: 18, color: COLORS[1 - v].dark, weight: 600, max: RW });
+    s += txt(RC, y + 51, l2, { size: 18, color: COLORS[1 - v].text, weight: 600, max: RW });
   }
   s += tally(v);
   const by = y + 98;

@@ -9,12 +9,8 @@ import './strings.js';
 const SLUG = 'caveat-emptor';
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3aa655', dark: '#1f6e33', fill: '#93d6a3' },
-  { main: '#f08a24', dark: '#a8540a', fill: '#f8c48d' },
-  { main: '#8a5cc7', dark: '#5a3591', fill: '#c6aee8' },
-  { main: '#14a39a', dark: '#0b6b63', fill: '#86d6cf' },
-  { main: '#e05aa8', dark: '#9c2a6c', fill: '#f2a9d3' },
-  { main: '#9a6b3f', dark: '#5f3f20', fill: '#d4b391' },
+  ...['green', 'orange', 'violet', 'teal', 'pink', 'brown'].map((c) =>
+    ({ main: `var(--ce-${c})`, text: `var(--ce-${c}-text)`, fill: `var(--ce-${c}-fill)`, dark: `var(--ce-${c}-face)` })),
 ];
 const INK = PALETTE.ink;
 const EYE = '<svg class="eye" viewBox="0 0 24 16" aria-hidden="true"><path d="M2 8 Q12 -2 22 8 Q12 18 2 8 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="8" r="3.2" fill="currentColor"/></svg>';
@@ -194,40 +190,40 @@ function renderBoard(v) {
   let o = '';
 
   // --- the lot ---
-  o += `<path d="${shape('frame', () => circle(62, 62, 56, 54, 0.03))}" fill="#fffaf0" stroke="${PALETTE.pencil}" stroke-width="2.5"/>`;
+  o += `<path d="${shape('frame', () => circle(62, 62, 56, 54, 0.03))}" fill="var(--ce-frame)" stroke="${PALETTE.pencil}" stroke-width="2.5"/>`;
   o += itemSVG(v.items[round], 14, 12, 96);
   if (res) {
-    o += `<g transform="rotate(-14 62 66)"><rect x="12" y="50" width="100" height="32" rx="6" fill="rgba(255,255,255,.8)" stroke="${PALETTE.red.main}" stroke-width="3"/>` +
+    o += `<g transform="rotate(-14 62 66)"><rect x="12" y="50" width="100" height="32" rx="6" fill="color-mix(in srgb, var(--card) 80%, transparent)" stroke="${PALETTE.red.main}" stroke-width="3"/>` +
       txt(62, 74, t('ce.sold').toUpperCase(), { size: fitText(t('ce.sold'), 90, 24), color: PALETTE.red.main }) + '</g>';
   }
   o += txt(130, 24, `${t('ce.lot', { r: round + 1, n: v.rounds })} · ${t('ce.auctioneer', { name: name(v.auctioneer) })}`,
-    { size: fitText(t('ce.lot', { r: 9, n: 9 }) + ' · ' + t('ce.auctioneer', { name: name(v.auctioneer) }), 264, 17), color: '#777', weight: 600, anchor: 'start' });
+    { size: fitText(t('ce.lot', { r: 9, n: 9 }) + ' · ' + t('ce.auctioneer', { name: name(v.auctioneer) }), 264, 17), color: 'var(--ce-note)', weight: 600, anchor: 'start' });
   const iname = cap(itemName(v));
   o += txt(130, 52, iname, { size: fitText(iname, 262, 26), anchor: 'start' });
 
   // price tag
   const tag = shape('tag', () => line(130, 68, 236, 66, 1) + ' ' + line(236, 66, 256, 88, 1) + ' ' + line(256, 88, 236, 110, 1) + ' ' + line(236, 110, 130, 110, 1) + ' ' + line(130, 110, 130, 68, 1));
-  o += `<path d="M130 68 L236 66 L256 88 L236 110 L130 110 Z" fill="#fff6cf" filter="url(#mg-crayon)"/>`;
+  o += `<path d="M130 68 L236 66 L256 88 L236 110 L130 110 Z" fill="var(--ce-tag)" filter="url(#mg-crayon)"/>`;
   o += `<path d="${tag}" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  o += `<circle cx="240" cy="88" r="4" fill="#fff" stroke="${INK}" stroke-width="2"/>`;
+  o += `<circle cx="240" cy="88" r="4" fill="var(--card)" stroke="${INK}" stroke-width="2"/>`;
   if (v.bidder >= 0) {
     o += txt(184, 101, String(v.bid), { size: 38, color: COLORS[v.bidder].main });
     if (res) {
       o += txt(266, 84, `${t('ce.value')} ${res.value}`, { size: fitText(`${t('ce.value')} ${res.value}`, 128, 22), anchor: 'start' });
-      o += txt(266, 108, `${name(res.winner)} ${signed(res.profit)}`, { size: fitText(`${name(res.winner)} ${signed(res.profit)}`, 128, 21), color: res.profit < 0 ? PALETTE.red.dark : res.profit > 0 ? '#2a8a3f' : '#777', anchor: 'start' });
+      o += txt(266, 108, `${name(res.winner)} ${signed(res.profit)}`, { size: fitText(`${name(res.winner)} ${signed(res.profit)}`, 128, 21), color: res.profit < 0 ? PALETTE.red.text : res.profit > 0 ? 'var(--ce-gain)' : 'var(--ce-note)', anchor: 'start' });
     } else {
       o += txt(266, 96, name(v.bidder), { size: fitText(name(v.bidder), 128, 22), color: COLORS[v.bidder].main, anchor: 'start' });
     }
   } else {
-    o += txt(184, 96, v.phase === 'pick' ? '?' : '…', { size: 34, color: '#aaa' });
-    o += txt(266, 96, t('ce.nobid'), { size: fitText(t('ce.nobid'), 128, 19), color: '#999', weight: 600, anchor: 'start' });
+    o += txt(184, 96, v.phase === 'pick' ? '?' : '…', { size: 34, color: 'var(--ce-faint)' });
+    o += txt(266, 96, t('ce.nobid'), { size: fitText(t('ce.nobid'), 128, 19), color: 'var(--muted-2)', weight: 600, anchor: 'start' });
   }
 
   // --- ledger ---
   const y0 = L.top, yr = y0 + L.head;
   o += `<path d="${shape('box' + v.n + v.M, () => line(4, y0 - 4, W - 4, y0 - 3, 1.2) + ' ' + line(W - 4, y0 - 3, W - 5, L.H - 4, 1.2) + ' ' + line(W - 5, L.H - 4, 5, L.H - 5, 1.2) + ' ' + line(5, L.H - 5, 4, y0 - 4, 1.2))}" stroke="${INK}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
   o += `<path d="${shape('hd' + v.n + v.M, () => line(8, yr - 2, W - 8, yr - 1, 1))}" stroke="${PALETTE.pencil}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
-  const hs = { size: 15, color: '#888', weight: 600 };
+  const hs = { size: 15, color: 'var(--ce-head)', weight: 600 };
   o += txt(L.x0 + (v.M * L.cw) / 2, y0 + 14, t('ce.col.cards'), hs);
   ['now', 'bid', 'score'].forEach((k, i) => (o += txt(L.cols[i], y0 + 14, t('ce.col.' + k), { ...hs, size: fitText(t('ce.col.' + k), L.cols[1] - L.cols[0] - 2, 15) })));
 
@@ -235,7 +231,7 @@ function renderBoard(v) {
     const y = yr + p * L.rowH, cy = y + L.rowH / 2, col = COLORS[p];
     const isTurn = v.phase === 'bid' && v.turn === p, isBuyer = res && res.winner === p;
     if (isTurn || isBuyer) {
-      o += `<path d="${shape('hl' + p + v.n, () => line(10, cy, W - 10, cy + 1, 1.5))}" stroke="${isTurn ? '#fff09a' : '#e3f6e6'}" stroke-width="${L.rowH - 4}" fill="none" stroke-linecap="round" opacity=".9"/>`;
+      o += `<path d="${shape('hl' + p + v.n, () => line(10, cy, W - 10, cy + 1, 1.5))}" stroke="${isTurn ? 'var(--ce-hl-turn)' : 'var(--ce-hl-buy)'}" stroke-width="${L.rowH - 4}" fill="none" stroke-linecap="round" opacity=".9"/>`;
     }
     if (p === v.auctioneer) o += gavel(18, cy, col.main);
     const nm = name(p), ns = L.rowH > 26 ? 20 : 18;
@@ -243,7 +239,7 @@ function renderBoard(v) {
     // cards 1..M
     for (let c = 1; c <= v.M; c++) {
       const x = L.x0 + (c - 0.5) * L.cw, used = v.used[p].includes(c), now = v.pick[p] === c;
-      o += txt(x, cy + 6, String(c), { size: L.rowH > 26 ? 20 : 18, color: used ? '#b5b5b5' : now ? INK : '#666', weight: now ? 700 : 600 });
+      o += txt(x, cy + 6, String(c), { size: L.rowH > 26 ? 20 : 18, color: used ? 'var(--ce-used)' : now ? INK : 'var(--muted)', weight: now ? 700 : 600 });
       if (used) o += `<path d="${shape(`x${p}_${c}`, () => line(x - 7, cy - 7, x + 7, cy + 7, 1) + ' ' + line(x + 7, cy - 7, x - 7, cy + 7, 1))}" stroke="${col.main}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
       if (now) o += `<path d="${shape(`o${p}_${c}_${v.round}`, () => circle(x, cy, 10.5, 11.5, 0.08))}" stroke="${col.main}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
     }
@@ -251,21 +247,21 @@ function renderBoard(v) {
     const cx = L.cols[0], ch = L.rowH - 7, cw2 = ch * 0.74;
     if (v.pick[p] !== 0) {
       const back = v.pick[p] < 0;
-      o += `<rect x="${cx - cw2 / 2}" y="${cy - ch / 2}" width="${cw2}" height="${ch}" rx="3" fill="${back ? col.fill : '#fff'}" stroke="${back ? col.dark : col.main}" stroke-width="2" ${back ? 'filter="url(#mg-crayon)"' : ''}/>`;
-      if (back) o += `<rect x="${cx - cw2 / 2}" y="${cy - ch / 2}" width="${cw2}" height="${ch}" rx="3" fill="none" stroke="${col.dark}" stroke-width="2"/>`;
-      o += txt(cx, cy + 6, back ? '?' : String(v.pick[p]), { size: L.rowH > 26 ? 19 : 17, color: back ? col.dark : INK });
+      o += `<rect x="${cx - cw2 / 2}" y="${cy - ch / 2}" width="${cw2}" height="${ch}" rx="3" fill="${back ? col.fill : 'var(--card)'}" stroke="${back ? col.text : col.main}" stroke-width="2" ${back ? 'filter="url(#mg-crayon)"' : ''}/>`;
+      if (back) o += `<rect x="${cx - cw2 / 2}" y="${cy - ch / 2}" width="${cw2}" height="${ch}" rx="3" fill="none" stroke="${col.text}" stroke-width="2"/>`;
+      o += txt(cx, cy + 6, back ? '?' : String(v.pick[p]), { size: L.rowH > 26 ? 19 : 17, color: back ? col.text : INK });
     } else if (v.phase === 'pick') {
-      o += `<rect x="${cx - cw2 / 2}" y="${cy - ch / 2}" width="${cw2}" height="${ch}" rx="3" fill="none" stroke="#bbb" stroke-width="1.6" stroke-dasharray="3 3"/>`;
+      o += `<rect x="${cx - cw2 / 2}" y="${cy - ch / 2}" width="${cw2}" height="${ch}" rx="3" fill="none" stroke="var(--line)" stroke-width="1.6" stroke-dasharray="3 3"/>`;
     }
     // bid (struck through once the player dropped out)
     if (v.phase !== 'pick') {
       const dropped = !v.active[p];
       if (v.bids[p]) {
-        o += txt(L.cols[1], cy + 6, String(v.bids[p]), { size: 19, color: v.bidder === p ? col.main : '#999', weight: v.bidder === p ? 700 : 600 });
-        if (dropped) o += `<path d="${shape('s' + p, () => line(L.cols[1] - 12, cy + 1, L.cols[1] + 12, cy - 1, 0.6))}" stroke="#999" stroke-width="2" fill="none"/>`;
-      } else if (dropped) o += txt(L.cols[1], cy + 6, t('ce.out'), { size: 17, color: '#999', weight: 600 });
+        o += txt(L.cols[1], cy + 6, String(v.bids[p]), { size: 19, color: v.bidder === p ? col.main : 'var(--muted-2)', weight: v.bidder === p ? 700 : 600 });
+        if (dropped) o += `<path d="${shape('s' + p, () => line(L.cols[1] - 12, cy + 1, L.cols[1] + 12, cy - 1, 0.6))}" stroke="var(--muted-2)" stroke-width="2" fill="none"/>`;
+      } else if (dropped) o += txt(L.cols[1], cy + 6, t('ce.out'), { size: 17, color: 'var(--muted-2)', weight: 600 });
     }
-    o += txt(L.cols[2], cy + 6, signed(v.scores[p]), { size: 20, color: v.scores[p] < 0 ? PALETTE.red.dark : col.main });
+    o += txt(L.cols[2], cy + 6, signed(v.scores[p]), { size: 20, color: v.scores[p] < 0 ? PALETTE.red.text : col.main });
   }
   svg.innerHTML = o;
 }
@@ -296,7 +292,7 @@ function renderPanel(v) {
       if (uncovered !== pk) {
         h = `<div class="cover" style="--c:${COLORS[pk].main}"><div class="cover-t">${esc(t('ce.cover', { name: name(pk) }))}</div>
           <div class="cover-n">${esc(t('ce.cover.note'))}</div>
-          <button class="btn primary" data-act="uncover" style="background:${COLORS[pk].main};border-color:${COLORS[pk].dark}">${esc(t('ce.cover.btn', { name: name(pk) }))}</button></div>`;
+          <button class="btn primary" data-act="uncover" style="background:${COLORS[pk].main};border-color:${COLORS[pk].text}">${esc(t('ce.cover.btn', { name: name(pk) }))}</button></div>`;
       } else {
         h = `<div class="ptitle" style="color:${COLORS[pk].main}">${esc(t('ce.pick.name', { name: name(pk) }))}</div>` + cardsRow(v, pk);
       }
@@ -334,7 +330,7 @@ function renderPanel(v) {
     const r = v.results[v.results.length - 1];
     const cards = r.picks.map((c, q) => `<b style="color:${COLORS[q].main}">${c}</b>`).join(' + ');
     h += `<div class="pinfo">${t('ce.sum', { cards, v: r.value })}</div>`;
-    h += `<div class="pinfo deal" style="color:${r.profit < 0 ? PALETTE.red.dark : r.profit > 0 ? '#2a8a3f' : '#666'}">${esc(t('ce.deal', { name: name(r.winner), v: r.value, p: r.price, d: signed(r.profit) }))}</div>`;
+    h += `<div class="pinfo deal" style="color:${r.profit < 0 ? PALETTE.red.text : r.profit > 0 ? 'var(--ce-gain)' : 'var(--muted)'}">${esc(t('ce.deal', { name: name(r.winner), v: r.value, p: r.price, d: signed(r.profit) }))}</div>`;
     if (v.phase === 'reveal' && ready() && (!online() || kind(me()) === 'local')) h += `<button class="btn primary nextbtn" data-act="next">${esc(t('ce.next'))}</button>`;
   }
   const note = seatNote();

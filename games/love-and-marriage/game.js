@@ -7,7 +7,7 @@ import './strings.js';
 
 const SLUG = 'love-and-marriage';
 const COLORS = [PALETTE.blue, PALETTE.red];
-const INK = PALETTE.ink, GREY = '#8a8a92';
+const INK = PALETTE.ink, GREY = 'var(--lm-grey)';
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
 
@@ -98,8 +98,8 @@ function render() {
       const g = pair ? pair[j] : -1;
       const pc = g >= 0 && g < 2 ? COLORS[g] : null;
       const cls = 'lm-slot' + (g >= 0 ? ' full' : '') + (pair && fresh.has('row' + i) ? ' fresh' : '');
-      out += `<path class="${cls}" d="${shapeFor('s' + i + j, () => rectPath(x, yy, w, h, 0.8))}" ${pc ? `style="fill:${pc.fill};stroke:${pc.dark}"` : ''}/>`;
-      if (g >= 0) out += `<text class="lm-slotnum${fresh.has('row' + i) ? ' fresh' : ''}" x="${x + w / 2}" y="${yy + h / 2 + 1}" ${pc ? `style="fill:${pc.dark}"` : ''}>${st.card[g]}</text>`;
+      out += `<path class="${cls}" d="${shapeFor('s' + i + j, () => rectPath(x, yy, w, h, 0.8))}" ${pc ? `style="fill:color-mix(in srgb, ${pc.fill} var(--lm-slot-mix), var(--card));stroke:${pc.text}"` : ''}/>`;
+      if (g >= 0) out += `<text class="lm-slotnum${fresh.has('row' + i) ? ' fresh' : ''}" x="${x + w / 2}" y="${yy + h / 2 + 1}" ${pc ? `style="fill:${pc.text}"` : ''}>${st.card[g]}</text>`;
     }
   }
 
@@ -131,13 +131,13 @@ function render() {
     // head
     const hd = shapeFor('h' + g + '_' + st.round, () => withSeed(g * 13 + st.round, () => circle(cx, y + 13, 9.5, 9.5, 0.08)));
     out += `<path d="${hd}" class="lm-head" ${pc ? `style="fill:${pc.main}"` : ''} filter="url(#mg-crayon)"/>`;
-    out += `<path d="${hd}" class="lm-head-o" ${pc ? `style="stroke:${pc.dark}"` : ''}/>`;
+    out += `<path d="${hd}" class="lm-head-o" ${pc ? `style="stroke:${pc.text}"` : ''}/>`;
     // card
     const cw = 48, chh = 32, x0 = cx - cw / 2, y0 = y + 25;
     const cp = shapeFor('c' + g + '_' + st.round, () => rectPath(x0, y0, cw, chh, 1.1));
     const ring = isSuitor ? COLORS[active] : pc;
     out += `<path class="lm-card${known ? '' : ' back'}${isSuitor ? ' suitor' : ''}${fresh.has('k' + g) ? ' fresh' : ''}" d="${cp}" ${ring ? `style="stroke:${ring.main}"` : ''}/>`;
-    out += `<text class="lm-num${known ? '' : ' q'}" x="${cx}" y="${y0 + chh / 2 + 1}" ${pc ? `style="fill:${pc.dark}"` : ''}>${known ? st.card[g] : '?'}</text>`;
+    out += `<text class="lm-num${known ? '' : ' q'}" x="${cx}" y="${y0 + chh / 2 + 1}" ${pc ? `style="fill:${pc.text}"` : ''}>${known ? st.card[g] : '?'}</text>`;
     // whom this guest is courting
     const tg = st.target[g];
     if (tg >= 0 && LAM.free(st, tg)) {

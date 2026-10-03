@@ -8,20 +8,20 @@
 #board text { text-anchor: middle; dominant-baseline: central; }
 #board [data-act]:not([data-act='']) { cursor: pointer; }
 
-#board .paper { fill: #fffdf4; stroke: var(--ink); stroke-width: 2.6; }
+#board .paper { fill: var(--arp-sheet); stroke: var(--ink); stroke-width: 2.6; }
 #board .dir { font: 700 23px var(--hand); text-anchor: start; }
-#board .reset { font: 600 17px var(--hand); text-anchor: end; fill: #777; }
-#board .reset.used { fill: #aaa; }
+#board .reset { font: 600 17px var(--hand); text-anchor: end; fill: var(--arp-reset); }
+#board .reset.used { fill: var(--arp-reset-used); }
 #board .num { font: 700 25px var(--hand); }
 #board .num.fresh { animation: pop .35s ease-out; transform-box: fill-box; transform-origin: center; }
 #board .stucktag { font: 700 17px var(--hand); opacity: .8; }
 #board .ghost { opacity: 0; pointer-events: none; transition: opacity .12s; }
 #board .ghost.on { opacity: .4; }
 
-#board .die-body { fill: #fff; stroke: var(--ink); stroke-width: 2.6; }
+#board .die-body { fill: var(--card); stroke: var(--ink); stroke-width: 2.6; }
 #board .pip { fill: var(--ink); }
-#board .die-q { font: 700 30px var(--hand); fill: #bbb; }
-#board .die.empty .die-body { stroke: #bbb; stroke-dasharray: 5 5; }
+#board .die-q { font: 700 30px var(--hand); fill: var(--line); }
+#board .die.empty .die-body { stroke: var(--line); stroke-dasharray: 5 5; }
 #board .die.can .die-body { stroke: var(--ink); stroke-dasharray: none; }
 #board .die.roll, #board .die.roll2 { animation: roll .5s ease-out backwards; transform-box: fill-box; transform-origin: center; }
 #board .die.roll2 { animation-delay: .07s; }
@@ -38,7 +38,14 @@
 @keyframes pop { from { opacity: 0; transform: scale(.3); } }
 @keyframes roll { from { transform: rotate(-200deg) scale(.4); opacity: 0; } }
 @keyframes pick { 50% { transform: scale(1.12); } }
-.result-sub { font-size: 21px; color: #666; margin: 0 0 8px; }
+.result-sub { font-size: 21px; color: var(--muted); margin: 0 0 8px; }
 #board .sbtn.off.chosen { opacity: 1; }
 /* keep the finished columns readable: the result card sits over the dice area */
-#result { place-items: end center; padding-bottom: 3%; background: rgba(255, 254, 251, .35); }
+#result { place-items: end center; padding-bottom: 3%; background: color-mix(in srgb, var(--paper) 35%, transparent); }
+
+/* local tokens: the score sheet is a slightly warmer card; the reset token label greys */
+:root { --arp-sheet: #fffdf4; --arp-reset: #777; --arp-reset-used: #aaa; }
+:root[data-theme=dark] { --arp-sheet: var(--card); --arp-reset: var(--muted); --arp-reset-used: var(--muted-2); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) { --arp-sheet: var(--card); --arp-reset: var(--muted); --arp-reset-used: var(--muted-2); }
+}

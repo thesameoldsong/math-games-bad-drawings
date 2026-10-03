@@ -195,7 +195,7 @@ function renderCompass() {
     const isLast = st.last && st.last.t === 'w' && st.last.d === d;
     const hl = armed === d || (hover && hover.t === 'w' && hover.d === d && canMove());
     const skipped = over && used < 0;
-    const color = used >= 0 ? '#9a9aa2' : wc;
+    const color = used >= 0 ? 'var(--dan-used)' : wc;
     const body = shapeFor('ar' + d, () => line(x1, y1, x2, y2, 1.5));
     const hx = Math.cos(a + 2.6) * 11, hy = Math.sin(a + 2.6) * 11, hx2 = Math.cos(a - 2.6) * 11, hy2 = Math.sin(a - 2.6) * 11;
     const head = `M${(x2 + hx).toFixed(1)} ${(y2 + hy).toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)} L${(x2 + hx2).toFixed(1)} ${(y2 + hy2).toFixed(1)}`;
@@ -206,7 +206,7 @@ function renderCompass() {
       const mx = (x1 + x2) / 2 + Math.cos(a) * 6, my = (y1 + y2) / 2 + Math.sin(a) * 6;
       out += `<path class="xout" d="${shapeFor('x' + d, () => line(mx - 7, my - 7, mx + 7, my + 7, 0.8) + ' ' + line(mx + 7, my - 7, mx - 7, my + 7, 0.8))}" stroke="${isLast ? wc : ink}"/>`;
       const tx = RC.x + Math.cos(a) * (r2 + 14), ty = RC.y + Math.sin(a) * (r2 + 14);
-      out += `<text class="ord" x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="${isLast ? wc : '#888'}">${used + 1}</text>`;
+      out += `<text class="ord" x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="${isLast ? wc : 'var(--dan-ord)'}">${used + 1}</text>`;
     }
     out += '</g>';
   }

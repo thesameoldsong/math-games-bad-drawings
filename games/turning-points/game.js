@@ -84,8 +84,8 @@ function render() {
   const y0 = M - 6, y1 = M + n * S + 6;
   out += `<path class="shore" d="${shapeFor('shore0', () => line(M - 14, y0, M - 14, y1, 3))}" stroke="${COLORS[0].main}"/>`;
   out += `<path class="shore" d="${shapeFor('shore1', () => line(W - M + 14, y0, W - M + 14, y1, 3))}" stroke="${COLORS[1].main}"/>`;
-  out += `<text class="shore-lbl" x="${M - 28}" y="${W / 2}" fill="${COLORS[0].dark}" transform="rotate(-90 ${M - 28} ${W / 2})">${t('tp.side0')}</text>`;
-  out += `<text class="shore-lbl" x="${W - M + 28}" y="${W / 2}" fill="${COLORS[1].dark}" transform="rotate(90 ${W - M + 28} ${W / 2})">${t('tp.side1')}</text>`;
+  out += `<text class="shore-lbl" x="${M - 28}" y="${W / 2}" fill="${COLORS[0].text}" transform="rotate(-90 ${M - 28} ${W / 2})">${t('tp.side0')}</text>`;
+  out += `<text class="shore-lbl" x="${W - M + 28}" y="${W / 2}" fill="${COLORS[1].text}" transform="rotate(90 ${W - M + 28} ${W / 2})">${t('tp.side1')}</text>`;
 
   // grid
   for (let k = 0; k <= n; k++) {
@@ -144,7 +144,7 @@ function renderOverlay() {
     for (let d = 0; d < 4; d++) {
       const x = cx + TP.DC[d] * PAD, y = cy + TP.DR[d] * PAD;
       out += `<g class="pad" data-d="${d}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">` +
-        `<circle r="${PAD_R}" fill="#fff" stroke="${col.main}"/>` +
+        `<circle r="${PAD_R}" fill="var(--card)" stroke="${col.main}"/>` +
         `<path d="M0 -11 L9 1 L3.5 1 L3.5 11 L-3.5 11 L-3.5 1 L-9 1 Z" fill="${col.main}" transform="rotate(${d * 90})"/></g>`;
     }
   }

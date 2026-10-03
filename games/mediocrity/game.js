@@ -6,8 +6,7 @@ import { MED } from './engine.js';
 import './strings.js';
 
 const SLUG = 'mediocrity';
-const GREEN = { main: '#3aa655', dark: '#1f7a37', fill: '#97d9a8' };
-const COLORS = [PALETTE.blue, PALETTE.red, GREEN];
+const COLORS = [PALETTE.blue, PALETTE.red, PALETTE.green];
 const P3 = [0, 1, 2];
 const W = 360, H = 430;
 const NAP = [60, 180, 300];               // napkin centres
@@ -78,10 +77,10 @@ function box(k, x, y, w, h) {
 }
 function button(k, act, x, y, w, h, label, color = null, disabled = false) {
   const c = color ? color.main : 'var(--ink)';
-  const fill = color ? color.main : '#fff';
+  const fill = color ? color.main : 'var(--card)';
   return `<g class="sbtn${disabled ? ' off' : ''}" data-act="${act}">
-    <path d="${box(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.dark : c}" stroke-width="2.6" stroke-linejoin="round"/>
-    ${txt(x + w / 2, y + h / 2 + 1, label, { size: 24, color: color ? '#fff' : c, max: w - 14 })}</g>`;
+    <path d="${box(k, x, y, w, h)}" fill="${fill}" stroke="${color ? color.text : c}" stroke-width="2.6" stroke-linejoin="round"/>
+    ${txt(x + w / 2, y + h / 2 + 1, label, { size: 24, color: color ? 'var(--on-accent)' : c, max: w - 14 })}</g>`;
 }
 
 // ---------- napkins (one per player) ----------
@@ -93,11 +92,11 @@ function napkin(p, mode, value, star) {
     s += txt(cx, y + 40, '…', { size: 30, color: 'var(--pencil)' });
   } else if (mode === 'folded') {
     // a folded corner + question mark
-    s += `<path d="M${x + w - 26} ${y} L${x + w} ${y + 26} L${x + w - 26} ${y + 26} Z" fill="#f2efe6" stroke="var(--pencil)" stroke-width="2" stroke-linejoin="round"/>`;
+    s += `<path d="M${x + w - 26} ${y} L${x + w} ${y + 26} L${x + w - 26} ${y + 26} Z" fill="var(--med-fold)" stroke="var(--pencil)" stroke-width="2" stroke-linejoin="round"/>`;
     s += txt(cx - 6, y + 42, value === null ? '?' : value, { size: value === null ? 38 : 30, color: c.main, cls: value === null ? '' : 'mine' });
   } else {
     s += txt(cx, y + 41, value, { size: 44, color: c.main, cls: 'num pop' });
-    if (star) s += `<path class="ring" d="${shapeFor('ring' + p, () => circle(cx, y + 40, 31, 27, 0.08))}" stroke="${c.dark}"/>`;
+    if (star) s += `<path class="ring" d="${shapeFor('ring' + p, () => circle(cx, y + 40, 31, 27, 0.08))}" stroke="${c.text}"/>`;
   }
   return s;
 }
@@ -128,14 +127,14 @@ function numberLine(picks, hi, y = PANEL + 60) {
   let s = `<path class="axis" d="${shapeFor('axis', () => line(x0, y, x1, y, 1.2))}"/>`;
   for (let v = 0; v <= st.max; v += 5) {
     s += `<path class="tick" d="M${X(v)} ${y - 5} L${X(v)} ${y + 5}"/>`;
-    s += txt(X(v), y + 24, v, { size: 17, color: '#888', weight: 600 });
+    s += txt(X(v), y + 24, v, { size: 17, color: 'var(--muted-2)', weight: 600 });
   }
   const seen = {};
   for (const p of P3) {
     const v = picks[p], k = (seen[v] = (seen[v] || 0) + 1) - 1;
     const cy = y - 14 - k * 22, c = COLORS[p];
-    s += `<circle cx="${X(v)}" cy="${cy}" r="9" fill="${c.main}" stroke="${c.dark}" stroke-width="2"/>`;
-    if (hi.includes(p)) s += `<path class="ring" d="${circle(X(v), cy, 14, 14, 0.06)}" stroke="${c.dark}"/>`;
+    s += `<circle cx="${X(v)}" cy="${cy}" r="9" fill="${c.main}" stroke="${c.text}" stroke-width="2"/>`;
+    if (hi.includes(p)) s += `<path class="ring" d="${circle(X(v), cy, 14, 14, 0.06)}" stroke="${c.text}"/>`;
   }
   return s;
 }
@@ -147,8 +146,8 @@ function gridPanel(p) {
     const r = Math.floor(v / COLS), c = v % COLS, x = GRID_X + c * STEP, y = PANEL + 2 + r * STEP;
     const on = v === sel, col = COLORS[p];
     s += `<g class="cell${on ? ' on' : ''}" data-num="${v}">
-      <path d="${box('c' + v, x, y, CELL, CELL)}" fill="${on ? col.main : '#fff'}" stroke="${on ? col.dark : 'var(--pencil)'}" stroke-width="2"/>
-      ${txt(x + CELL / 2, y + CELL / 2 + 1, v, { size: 24, color: on ? '#fff' : 'var(--ink)' })}</g>`;
+      <path d="${box('c' + v, x, y, CELL, CELL)}" fill="${on ? col.main : 'var(--card)'}" stroke="${on ? col.text : 'var(--pencil)'}" stroke-width="2"/>
+      ${txt(x + CELL / 2, y + CELL / 2 + 1, v, { size: 24, color: on ? 'var(--on-accent)' : 'var(--ink)' })}</g>`;
   }
   const label = sel === null ? t('med.choose') : t('med.confirm', { x: sel });
   s += button('ok', 'lock', 80, PANEL + 178, 200, 44, label, sel === null ? null : COLORS[p], sel === null);
@@ -156,9 +155,9 @@ function gridPanel(p) {
 }
 
 function coverPanel(p) {
-  return txt(180, PANEL + 52, t('med.cover.title'), { size: 26, color: '#666' }) +
+  return txt(180, PANEL + 52, t('med.cover.title'), { size: 26, color: 'var(--muted)' }) +
     txt(180, PANEL + 104, name(p), { size: 48, color: COLORS[p].main }) +
-    txt(180, PANEL + 140, t('med.cover.note'), { size: 21, color: '#888', weight: 600 }) +
+    txt(180, PANEL + 140, t('med.cover.note'), { size: 21, color: 'var(--muted-2)', weight: 600 }) +
     button('cov', 'uncover', 70, PANEL + 178, 220, 44, t('med.cover.btn'), COLORS[p]);
 }
 
@@ -181,7 +180,7 @@ function choicePanel() {
   if (!crown) s += numberLine(st.picks, tied);
   else s += crownBars();
   const [a, b] = tied;
-  s += txt(180, PANEL + 120, t(crown ? 'med.crown.line' : 'med.tie.line', { a: name(a), b: name(b), v: value }), { size: 22, color: '#555' });
+  s += txt(180, PANEL + 120, t(crown ? 'med.crown.line' : 'med.tie.line', { a: name(a), b: name(b), v: value }), { size: 22, color: 'var(--muted)' });
   const me = localChooser() === chooser;
   s += txt(180, PANEL + 152, t(me ? (crown ? 'med.crown.you' : 'med.assign.you') : (crown ? 'med.crown.wait' : 'med.assign.wait'), { name: name(chooser), v: value }),
     { size: 25, color: COLORS[chooser].main });
@@ -209,9 +208,9 @@ function waitPanel() {
   const mine = P3.find((p) => isLocal(p) && st.picks[p] !== null && st.picks[p] >= 0);
   if (mine !== undefined && !hotSeat()) s += txt(180, PANEL + 70, t('med.mine', { x: st.picks[mine] }), { size: 30, color: COLORS[mine].main });
   const waiting = MED.waitingFor(st);
-  if (waiting.length) s += txt(180, PANEL + 120, t('med.pick.wait', { names: waiting.map(name).join(', ') }), { size: 23, color: '#777', weight: 600 });
+  if (waiting.length) s += txt(180, PANEL + 120, t('med.pick.wait', { names: waiting.map(name).join(', ') }), { size: 23, color: 'var(--muted)', weight: 600 });
   const gone = waiting.find((p) => online() && ctl[p] && !live[p]);
-  if (gone !== undefined) s += txt(180, PANEL + 180, t('med.away.wait', { name: name(gone) }), { size: 20, color: '#999', weight: 600 });
+  if (gone !== undefined) s += txt(180, PANEL + 180, t('med.away.wait', { name: name(gone) }), { size: 20, color: 'var(--muted-2)', weight: 600 });
   s += `<g class="dots">${[0, 1, 2].map((i) => `<circle cx="${165 + i * 15}" cy="${PANEL + 150}" r="4" fill="var(--pencil)" style="animation-delay:${i * 0.2}s"/>`).join('')}</g>`;
   return s;
 }
@@ -223,16 +222,16 @@ function table() {
   let s = `<path class="rule" d="${shapeFor('rule' + n, () => line(x0, y0 + 15, W - x0, y0 + 15, 0.8))}"/>`;
   for (let r = 0; r < n; r++) {
     const cx = x0 + labW + r * cw + cw / 2, cur = r === st.round && st.phase !== 'over' && st.phase !== 'crown';
-    s += txt(cx, y0, r + 1, { size: 17, color: cur ? 'var(--ink)' : '#aaa', weight: cur ? 700 : 600 });
+    s += txt(cx, y0, r + 1, { size: 17, color: cur ? 'var(--ink)' : 'var(--muted-2)', weight: cur ? 700 : 600 });
     if (cur) s += `<path class="cur" d="${shapeFor('cur' + r + '_' + n, () => circle(cx, y0, 11, 11, 0.08))}"/>`;
   }
-  s += txt(x0 + labW + n * cw + totalW / 2, y0, 'Σ', { size: 18, color: '#888' });
+  s += txt(x0 + labW + n * cw + totalW / 2, y0, 'Σ', { size: 18, color: 'var(--muted-2)' });
   for (const p of P3) {
     const y = y0 + 16 + (p + 1) * rh - 4;
     s += `<circle cx="${x0 + 8}" cy="${y}" r="6" fill="${COLORS[p].main}"/>`;
     st.log.forEach((e, r) => {
       const cx = x0 + labW + r * cw + cw / 2, got = e.to === p;
-      s += txt(cx, y, e.picks[p], { size: got ? 21 : 18, color: got ? COLORS[p].main : '#999', weight: got ? 700 : 500 });
+      s += txt(cx, y, e.picks[p], { size: got ? 21 : 18, color: got ? COLORS[p].main : 'var(--muted-2)', weight: got ? 700 : 500 });
       if (got) s += `<path d="${shapeFor(`u${r}_${p}`, () => line(cx - 10, y + 11, cx + 10, y + 11, 0.8))}" stroke="${COLORS[p].main}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
     });
     s += txt(x0 + labW + n * cw + totalW / 2, y, st.scores[p], { size: 22, color: COLORS[p].main });

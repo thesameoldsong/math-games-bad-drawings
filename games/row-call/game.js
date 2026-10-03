@@ -89,7 +89,7 @@ function render(animateLast) {
 
   // the called line (or the last one, faintly)
   if (placing) out += bandSVG(st.line, 'called' + (animateLast ? ' fresh' : ''), COLORS[caller].fill);
-  else if (st.line && st.last >= 0) out += bandSVG(st.line, 'prev', '#e9e6dc');
+  else if (st.line && st.last >= 0) out += bandSVG(st.line, 'prev', 'var(--rc-prev)');
   out += '<g id="hover"></g>';
   if (st.last >= 0) {
     const [x, y] = cellXY(st.last);
@@ -132,12 +132,12 @@ function render(animateLast) {
     if (pickable && free && canMove()) cls += ' live';
     if (on) cls += ' on';
     const ring = shapeFor('h' + tt + i, () => circle(cx, cy, 17, 17, 0.07));
-    const fill = on ? callerCol.main : '#fff';
-    const stroke = on ? callerCol.dark : pickable && free && canMove() ? callerCol.main : PALETTE.ink;
+    const fill = on ? callerCol.main : 'var(--card)';
+    const stroke = on ? callerCol.text : pickable && free && canMove() ? callerCol.main : PALETTE.ink;
     out += `<g class="${cls}" data-t="${tt}" data-i="${i}">
       <rect x="${cx - B / 2 + 1}" y="${cy - B / 2 + 1}" width="${B - 2}" height="${B - 2}" fill="transparent"/>
       <path d="${ring}" fill="${fill}" stroke="${stroke}" stroke-width="2.6"/>
-      <text x="${cx}" y="${cy + 1}" fill="${on ? '#fff' : stroke}">${tt === 'c' ? colName(i) : i + 1}</text></g>`;
+      <text x="${cx}" y="${cy + 1}" fill="${on ? 'var(--on-accent)' : stroke}">${tt === 'c' ? colName(i) : i + 1}</text></g>`;
   }
 
   // winning row

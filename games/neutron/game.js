@@ -81,9 +81,9 @@ function token(i, v, fresh) {
     return `<g class="${cls} neutron"${style}><g transform="translate(${x} ${y})">
       <path d="${d}" fill="${INK}" filter="url(#mg-crayon)"/>
       <path d="${d}" fill="none" stroke="${INK}" stroke-width="3.5"/>
-      <path d="${orbit}" fill="none" stroke="#fff" stroke-width="2.4" transform="rotate(-30)"/>
-      <path d="${orbit}" fill="none" stroke="#fff" stroke-width="2.4" transform="rotate(35)"/>
-      <circle r="3.2" fill="#fff"/></g></g>`;
+      <path d="${orbit}" fill="none" stroke="var(--card)" stroke-width="2.4" transform="rotate(-30)"/>
+      <path d="${orbit}" fill="none" stroke="var(--card)" stroke-width="2.4" transform="rotate(35)"/>
+      <circle r="3.2" fill="var(--card)"/></g></g>`;
   }
   const col = COLORS[v];
   const d = shapeFor(k + 'p' + v, () => circle(0, 0, 22, 22, 0.07));

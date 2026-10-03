@@ -1,5 +1,24 @@
 /* Win, Lose, Banana: three player cards in a row above the table. */
-.green { color: #3aa655; }
+:root {
+  --wlb-gold: #c58a00; --wlb-trophy: #b98a12; --wlb-trophy-fill: #f4bf3a;
+  --wlb-banana: #f7d23e; --wlb-banana-edge: #c99a10; --wlb-stem: #6b4a1e;
+  --wlb-cloud: #b7bac6; --wlb-cloud-edge: #6c7080; --wlb-drop: #9fdcf2;
+  --wlb-hint: #777; --wlb-faint: #888; --wlb-cover: #f6f5f0; --wlb-chip-hover: #fdf6d8;
+}
+:root[data-theme=dark] {
+  --wlb-gold: #f2c14e; --wlb-trophy: #e3b23c; --wlb-trophy-fill: #d9a42c;
+  --wlb-banana: #e8c536; --wlb-banana-edge: #f2d66a; --wlb-stem: #c89a64;
+  --wlb-cloud: #6f7584; --wlb-cloud-edge: #b4b9c6; --wlb-drop: #5fb9da;
+  --wlb-hint: #aba59a; --wlb-faint: #948e84; --wlb-cover: #20252c; --wlb-chip-hover: #3a3628;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --wlb-gold: #f2c14e; --wlb-trophy: #e3b23c; --wlb-trophy-fill: #d9a42c;
+    --wlb-banana: #e8c536; --wlb-banana-edge: #f2d66a; --wlb-stem: #c89a64;
+    --wlb-cloud: #6f7584; --wlb-cloud-edge: #b4b9c6; --wlb-drop: #5fb9da;
+    --wlb-hint: #aba59a; --wlb-faint: #948e84; --wlb-cover: #20252c; --wlb-chip-hover: #3a3628;
+  }
+}
 
 #board {
   width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
@@ -8,13 +27,13 @@
 #board .t { font-family: var(--hand); }
 #board [data-act] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 #board .sbtn:active, #board .chip:active, #board .card.pickable:active { opacity: .75; }
-#board .chip:hover > path { fill: #fdf6d8; }
+#board .chip:hover > path { fill: var(--wlb-chip-hover); }
 #board .card.pickable:hover > path:first-child { stroke-width: 3.4; }
 #board .pop { animation: wlb-pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
 @keyframes wlb-pop { from { opacity: 0; transform: scale(.5); } }
 
 .wlb-arena .player.away .fig { opacity: .35; }
-.result-sub { font-size: 22px; color: #666; margin: 0 0 8px; }
+.result-sub { font-size: 22px; color: var(--muted); margin: 0 0 8px; }
 
 .wlb-arena {
   grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 4px;
@@ -40,7 +59,7 @@
   }
 }
 /* the result card sits low on the table so the revealed cards stay visible */
-.wlb-arena .result { place-items: end center; padding-bottom: 6px; background: rgba(255, 254, 251, .35); }
+.wlb-arena .result { place-items: end center; padding-bottom: 6px; background: color-mix(in srgb, var(--paper) 35%, transparent); }
 
 @media (min-width: 900px) {
   #board { max-height: calc(100dvh - 260px); }

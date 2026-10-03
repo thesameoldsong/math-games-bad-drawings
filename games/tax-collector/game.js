@@ -298,11 +298,11 @@ function howPic() {
       const cx = 22 + (x - 1) * 38, cy = 26;
       if (x === 8) s += `<path d="${circle(cx, cy, 16, 16, 0.06)}" fill="${PALETTE.blue.fill}" filter="url(#mg-crayon)"/><path d="${circle(cx, cy, 16, 16, 0.06)}" fill="none" stroke="${PALETTE.blue.main}" stroke-width="3" stroke-linecap="round"/>`;
       if ([1, 2, 4].includes(x)) s += `<path d="${boxPath(cx, cy, 14)}" fill="none" stroke="${PALETTE.red.main}" stroke-width="3" stroke-linecap="round"/>`;
-      const col = x === 8 ? PALETTE.blue.dark : [1, 2, 4].includes(x) ? PALETTE.red.dark : PALETTE.ink;
+      const col = x === 8 ? PALETTE.blue.text : [1, 2, 4].includes(x) ? PALETTE.red.text : PALETTE.ink;
       s += `<text x="${cx}" y="${cy + 1}" fill="${col}">${x}</text>`;
     }
-    s += `<text x="288" y="66" fill="${PALETTE.blue.dark}" class="lbl">${t('tc.p0')} +8</text>`;
-    s += `<text x="58" y="66" fill="${PALETTE.red.dark}" class="lbl">${t('tc.p1')} +1+2+4</text>`;
+    s += `<text x="288" y="66" fill="${PALETTE.blue.text}" class="lbl">${t('tc.p0')} +8</text>`;
+    s += `<text x="58" y="66" fill="${PALETTE.red.text}" class="lbl">${t('tc.p1')} +1+2+4</text>`;
     return s;
   });
   el.innerHTML = `<svg viewBox="0 0 312 80">${pic}</svg>`;

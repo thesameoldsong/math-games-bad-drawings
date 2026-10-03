@@ -2,6 +2,7 @@
 import { line, circle, curve, withSeed, PALETTE } from '../../shared/sketch.js';
 
 const INK = PALETTE.ink;
+const EYE = 'var(--ce-eye)'; // eyes / print on a coloured fill: stays dark in both themes
 const S = (d, w = 3.2, c = INK) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
 const F = (d, c) => `<path d="${d}" fill="${c}" filter="url(#mg-crayon)"/>`;
 const FS = (d, c, w) => F(d, c) + S(d, w);
@@ -14,8 +15,8 @@ const DRAW = [
     return FS(circle(30, 22, 10), brown) + FS(circle(70, 22, 10), brown) +
       FS(circle(50, 76, 24, 20), brown) + FS(circle(26, 88, 9, 7), brown) + FS(circle(74, 88, 9, 7), brown) +
       FS(circle(50, 38, 22, 20), brown) + FS(circle(50, 76, 12, 10), light) + FS(circle(50, 45, 9, 7), light) +
-      `<circle cx="42" cy="34" r="2.6" fill="${INK}"/><circle cx="58" cy="34" r="2.6" fill="${INK}"/><circle cx="50" cy="42" r="2.8" fill="${INK}"/>` +
-      S(line(46, 48, 50, 50, 0.3), 2.2) + S(line(50, 50, 54, 48, 0.3), 2.2);
+      `<circle cx="42" cy="34" r="2.6" fill="${EYE}"/><circle cx="58" cy="34" r="2.6" fill="${EYE}"/><circle cx="50" cy="42" r="2.8" fill="${EYE}"/>` +
+      S(line(46, 48, 50, 50, 0.3), 2.2, EYE) + S(line(50, 50, 54, 48, 0.3), 2.2, EYE);
   },
   // 1 pencil stub
   () => {
@@ -36,8 +37,8 @@ const DRAW = [
   () => {
     const t = 'M10 30 L90 26 L90 42 Q83 50 90 58 L90 74 L10 76 L10 60 Q17 52 10 44 Z';
     return FS(t, '#9fdc9a') + S(line(66, 30, 66, 72, 0.5) , 2, INK).replace('stroke-width', 'stroke-dasharray="4 5" stroke-width') +
-      `<text x="38" y="61" font-family="Caveat, cursive" font-weight="700" font-size="30" text-anchor="middle" fill="${INK}">−20%</text>` +
-      `<path d="${circle(79, 51, 5)}" stroke="${INK}" stroke-width="2" fill="#fff"/>`;
+      `<text x="38" y="61" font-family="Caveat, cursive" font-weight="700" font-size="30" text-anchor="middle" fill="${EYE}">−20%</text>` +
+      `<path d="${circle(79, 51, 5)}" stroke="${INK}" stroke-width="2" fill="var(--ce-frame)"/>`;
   },
   // 4 paperclip
   () => {
@@ -52,8 +53,8 @@ const DRAW = [
   },
   // 6 rubber duck
   () => FS(circle(52, 66, 32, 20), '#f8d23a') + FS(circle(36, 36, 16, 15), '#f8d23a') +
-    FS('M20 36 L6 40 L20 44 Z', '#f28a1e') + `<circle cx="33" cy="32" r="2.8" fill="${INK}"/>` +
-    S(curve([[48, 62], [60, 54], [72, 60]]), 2.4),
+    FS('M20 36 L6 40 L20 44 Z', '#f28a1e') + `<circle cx="33" cy="32" r="2.8" fill="${EYE}"/>` +
+    S(curve([[48, 62], [60, 54], [72, 60]]), 2.4, EYE),
   // 7 chipped mug
   () => {
     const body = 'M20 24 L56 22 L60 30 L68 24 L72 26 L70 84 L24 86 Z';
@@ -64,7 +65,7 @@ const DRAW = [
   () => FS(circle(50, 28, 15, 20), '#d4d9e0') + S(line(50, 48, 52, 92, 1), 7, INK) + S(line(50, 48, 52, 92, 1), 3, '#d4d9e0') +
     S(curve([[44, 20], [46, 14], [52, 12]]), 2, '#fff'),
   // 9 mystery key
-  () => FS(circle(28, 50, 17), '#e7c34a') + `<path d="${circle(28, 50, 6)}" fill="#fff" stroke="${INK}" stroke-width="2.4"/>` +
+  () => FS(circle(28, 50, 17), '#e7c34a') + `<path d="${circle(28, 50, 6)}" fill="var(--ce-frame)" stroke="${INK}" stroke-width="2.4"/>` +
     S(line(44, 50, 90, 50, 0.6), 7, INK) + S(line(44, 50, 90, 50, 0.6), 3, '#e7c34a') +
     S(line(80, 52, 80, 64, 0.3), 5) + S(line(70, 52, 70, 60, 0.3), 5) +
     `<text x="66" y="34" font-family="Caveat, cursive" font-weight="700" font-size="26" fill="${INK}">?</text>`,

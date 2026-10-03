@@ -8,7 +8,6 @@ import './strings.js';
 const SLUG = 'sim';
 const W = 300, H = 268;
 const COLORS = [PALETTE.blue, PALETTE.red];
-const INK = PALETTE.ink;
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
 

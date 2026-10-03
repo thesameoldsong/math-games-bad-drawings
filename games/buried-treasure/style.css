@@ -1,6 +1,26 @@
+/* local colours: gold, wooden chest, faded headers (light = original look; dark = chalk on slate) */
+:root {
+  --bt-gold: #f2b51b; --bt-gold-fill: #ffd95a;
+  --bt-lid: #c47a2c; --bt-wood: #a8621f; --bt-wood-ink: #6b3f12;
+  --bt-off: #a8a8a8; --bt-legend: #777; --bt-sub: #555; --bt-shade: .5;
+}
+:root[data-theme=dark] {
+  --bt-gold: #f6c843; --bt-gold-fill: #a8802a;
+  --bt-lid: #c9843a; --bt-wood: #a5672a; --bt-wood-ink: #f0d9b5;
+  --bt-off: #6a707b; --bt-legend: var(--muted); --bt-sub: var(--muted); --bt-shade: .35;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --bt-gold: #f6c843; --bt-gold-fill: #a8802a;
+    --bt-lid: #c9843a; --bt-wood: #a5672a; --bt-wood-ink: #f0d9b5;
+    --bt-off: #6a707b; --bt-legend: var(--muted); --bt-sub: var(--muted); --bt-shade: .35;
+  }
+}
+
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board .t { font-family: var(--hand); dominant-baseline: central; }
 #board .grid { fill: none; stroke: var(--dot); stroke-width: 1.6; stroke-linecap: round; opacity: .75; }
+#board .shade { opacity: var(--bt-shade); }
 #board .scrap { fill: none; stroke-width: 2.4; stroke-linejoin: round; }
 #board .ring { fill: none; stroke-width: 2.4; }
 #board .strike { fill: none; stroke-width: 3; stroke-linecap: round; }
@@ -14,12 +34,12 @@
 @keyframes bt-spin { to { transform: rotate(360deg); } }
 
 /* hot-seat hand-over cover */
-.cover { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 254, 251, .8); z-index: 3; }
+.cover { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--paper) 80%, transparent); z-index: 3; }
 .cover[hidden] { display: none; }
 .cover-card {
   background: var(--paper); text-align: center; max-width: 92%; padding: 18px 20px; border: 3px dashed var(--pencil); border-radius: var(--sketchy);
 }
 .cover-title { font-size: 34px; font-weight: 700; line-height: 1.1; }
-.cover-note { font-size: 16px; color: #666; margin: 6px 0 14px; }
-.cover-last { margin-top: 16px; font-size: 20px; line-height: 1.25; color: #666; }
-.result-sub { font-size: 22px; color: #555; margin: -4px 0 10px; }
+.cover-note { font-size: 16px; color: var(--muted); margin: 6px 0 14px; }
+.cover-last { margin-top: 16px; font-size: 20px; line-height: 1.25; color: var(--muted); }
+.result-sub { font-size: 22px; color: var(--bt-sub); margin: -4px 0 10px; }

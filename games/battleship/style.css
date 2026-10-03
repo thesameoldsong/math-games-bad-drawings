@@ -1,8 +1,28 @@
+:root {
+  --bs-sea: #f3fafd; --bs-grid: #b9c6cc;
+  --bs-label: #8a8a92; --bs-num: #6d6d78; --bs-note: #777;
+  --bs-bad-fill: #ddd; --bs-bad: #999;
+  --bs-sunk-fill: #cfcfd4; --bs-tal-fill: #d9d9de; --bs-tal: #9a9aa4;
+}
+:root[data-theme=dark] {
+  --bs-sea: #1f2a33; --bs-grid: #455868;
+  --bs-label: #9a948a; --bs-num: #b3ada2; --bs-note: #b3ada2;
+  --bs-bad-fill: #3a3f47; --bs-bad: #7a7f88;
+  --bs-sunk-fill: #3d434c; --bs-tal-fill: #3d434c; --bs-tal: #7d838c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --bs-sea: #1f2a33; --bs-grid: #455868;
+    --bs-label: #9a948a; --bs-num: #b3ada2; --bs-note: #b3ada2;
+    --bs-bad-fill: #3a3f47; --bs-bad: #7a7f88;
+    --bs-sunk-fill: #3d434c; --bs-tal-fill: #3d434c; --bs-tal: #7d838c;
+  }
+}
 #board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #board.arranging { touch-action: none; }
 #board .t { font-family: var(--hand); dominant-baseline: central; }
-#board .sea { fill: #f3fafd; }
-#board .grid { fill: none; stroke: #b9c6cc; stroke-width: 1.3; stroke-linecap: round; }
+#board .sea { fill: var(--bs-sea); }
+#board .grid { fill: none; stroke: var(--bs-grid); stroke-width: 1.3; stroke-linecap: round; }
 #board .frame { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 #board .hatch { fill: none; stroke-width: 2; stroke-linecap: round; opacity: .3; }
 #board .ship-line { fill: none; stroke-width: 2.6; }
@@ -29,9 +49,9 @@
 #board .dots circle { animation: bs-blink 1.2s infinite; }
 @keyframes bs-pop { from { opacity: 0; transform: scale(.3); } }
 @keyframes bs-blink { 50% { opacity: .2; } }
-@media (hover: hover) { #board .cell:hover { fill: rgba(30, 165, 207, .14); } }
+@media (hover: hover) { #board .cell:hover { fill: color-mix(in srgb, var(--blue) 14%, transparent); } }
 
-.result-sub { font-size: 22px; color: #666; margin: -4px 0 8px; }
+.result-sub { font-size: 22px; color: var(--muted); margin: -4px 0 8px; }
 /* keep the tall board (grid + strip) on screen next to the toolbar columns */
 @media (min-width: 900px) {
   .arena .board-wrap { max-width: min(600px, calc((100dvh - 190px) * 340 / 488)); }

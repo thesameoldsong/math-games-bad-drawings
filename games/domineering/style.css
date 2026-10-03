@@ -8,7 +8,7 @@
 #board .piece .mid { fill: none; stroke-width: 2.4; stroke-linecap: round; opacity: .55; }
 #board .piece.fresh { animation: dom-drop .3s ease-out; }
 #board .ghost { stroke-width: 3; stroke-dasharray: 7 6; fill-opacity: .35; pointer-events: none; }
-.result-why { font-size: 21px; color: #666; margin: -4px 0 10px; }
+.result-why { font-size: 21px; color: var(--muted); margin: -4px 0 10px; }
 @keyframes dom-drop { from { opacity: 0; transform: scale(1.25); } }
 .arena > .player { min-width: 0; }
 .player .score { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

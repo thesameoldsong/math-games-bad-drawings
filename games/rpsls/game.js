@@ -9,7 +9,7 @@ const SLUG = 'rpsls';
 const W = 360, H = 466;
 const COLORS = [PALETTE.blue, PALETTE.red];
 const INK = PALETTE.ink;
-const GREY = { main: '#9a9aa3', dark: '#6d6d77', fill: '#d9d9de' };
+const GREY = { main: "var(--rps-grey)", text: "var(--rps-grey-text)", fill: "var(--rps-grey-fill)" };
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
 
@@ -61,7 +61,7 @@ const txt = (x, y, s, { size = 22, color = INK, weight = 700, anchor = 'middle',
 // ---------- drawing: the five gestures (our own little pictures, ~70 units across, centred at 0,0) ----------
 const SW = 'fill="none" stroke-linecap="round" stroke-linejoin="round"';
 const gestureCache = new Map();
-const SKIN = '#f3cba5', GREEN = '#63b347', GREEN_D = '#2f7a2a', STONE = '#a3a3ad', STEEL = '#cfd3da', HANDLE = '#e8902e';
+const SKIN = 'var(--rps-skin)', GREEN = 'var(--rps-lizard)', GREEN_D = 'var(--rps-lizard-spot)', STONE = 'var(--rps-stone)', STEEL = 'var(--rps-steel)', HANDLE = 'var(--rps-handle)';
 
 function gestureSVG(g, seed = 1) {
   const k = g + seed;
@@ -76,14 +76,14 @@ function gestureSVG(g, seed = 1) {
     let o = '';
     if (g === 'rock') {
       const b = circle(0, 4, 32, 25, 0.13);
-      o += `<path d="${b}" fill="#fff"/>` + fill(b, STONE) + ink(b);
+      o += `<path d="${b}" fill="var(--rps-stone-bg)"/>` + fill(b, STONE) + ink(b);
       o += ink(line(-14, -8, -4, 1, 0.6) + ' ' + line(-4, 1, -8, 13, 0.6) + ' ' + line(11, -12, 17, -1, 0.6), 2.4);
-      o += `<path d="${line(-21, -6, -13, -14, 0.5)}" stroke="#fff" stroke-width="3" opacity=".8" ${SW}/>`;
+      o += `<path d="${line(-21, -6, -13, -14, 0.5)}" stroke="var(--rps-shine)" stroke-width="3" opacity=".8" ${SW}/>`;
     } else if (g === 'paper') {
       const b = poly([[-23, -31], [12, -31], [23, -20], [23, 31], [-23, 31]]);
-      o += `<g transform="rotate(-8)"><path d="${b}" fill="#fff"/>` + ink(b);
-      for (const y of [-12, -3, 6, 15, 24]) o += `<path d="${line(-15, y, 15, y, 0.5)}" stroke="#8cc0dc" stroke-width="2" ${SW}/>`;
-      o += `<path d="M12 -31 L12 -20 L23 -20 Z" fill="#ebe8df" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/></g>`;
+      o += `<g transform="rotate(-8)"><path d="${b}" fill="var(--rps-sheet)"/>` + ink(b);
+      for (const y of [-12, -3, 6, 15, 24]) o += `<path d="${line(-15, y, 15, y, 0.5)}" stroke="var(--rps-rule)" stroke-width="2" ${SW}/>`;
+      o += `<path d="M12 -31 L12 -20 L23 -20 Z" fill="var(--rps-fold)" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/></g>`;
     } else if (g === 'scissors') {
       const blade = (d) => {
         const p = `M${f1(d * 2)} 5 L${f1(-d * 19)} -33 Q${f1(-d * 15)} -36 ${f1(-d * 11)} -32 L${f1(-d * 3)} 3 Z`;
@@ -110,7 +110,7 @@ function gestureSVG(g, seed = 1) {
       for (const d of [-1, 1]) o += `<path d="M${d * 17} -4 L${d * 29} -24 L${d * 19} 10 Z" fill="${SKIN}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
       const face = circle(0, 3, 20, 25, 0.04);
       o += `<path d="${face}" fill="${SKIN}"/>` + ink(face);
-      o += `<path d="M-21 4 L-21 -9 Q-21 -29 0 -29 Q21 -29 21 -9 L21 4 L17 4 L17 -7 L-17 -7 L-17 4 Z" fill="#2b2b33" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>`;
+      o += `<path d="M-21 4 L-21 -9 Q-21 -29 0 -29 Q21 -29 21 -9 L21 4 L17 4 L17 -7 L-17 -7 L-17 4 Z" fill="var(--rps-hair)" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>`;
       o += ink(line(-4, 0, -14, -4, 0.3) + ' ' + line(4, 0, 14, -4, 0.3), 3);
       o += `<circle cx="-8" cy="5" r="2.4" fill="${INK}"/><circle cx="8" cy="5" r="2.4" fill="${INK}"/>`;
       o += ink(line(0, 6, -2, 12, 0.3), 2.2) + ink(line(-6, 18, 6, 18, 0.4), 2.6);
@@ -142,7 +142,7 @@ function renderHistory() {
       const y = 12 + p * 23;
       const won = r.win === p;
       s += `<g transform="translate(${f1(x)} ${y})"><g class="mini${fresh && idx === st.rounds.length - 1 ? ' pop' : ''}">`;
-      s += `<path d="${shapeFor('hc' + idx + p, () => circle(0, 0, 11, 11, 0.06))}" fill="${won ? COLORS[p].fill : '#fff'}" stroke="${won ? COLORS[p].main : PALETTE.pencil}" stroke-width="${won ? 2.6 : 1.6}" ${won ? 'fill-opacity=".45"' : ''}/>`;
+      s += `<path d="${shapeFor('hc' + idx + p, () => circle(0, 0, 11, 11, 0.06))}" fill="${won ? COLORS[p].fill : "var(--card)"}" stroke="${won ? COLORS[p].main : PALETTE.pencil}" stroke-width="${won ? 2.6 : 1.6}" ${won ? 'fill-opacity=".45"' : ''}/>`;
       s += `<g transform="scale(.25)">${gestureSVG(r.picks[p], 3)}</g></g></g>`;
     }
   });
@@ -154,8 +154,8 @@ function renderArena() {
   const last = lastRound();
   const showing = revealing ? null : last;
   // centre labels
-  s += txt(W / 2, 72, t('rps.round', { n: Math.max(1, st.rounds.length) }), { size: 17, color: '#888', weight: 600 });
-  s += txt(W / 2, 90, t('rps.upto', { n: plural(st.target, 'rps.wins.gen') }), { size: 15, color: '#aaa', weight: 600 });
+  s += txt(W / 2, 72, t('rps.round', { n: Math.max(1, st.rounds.length) }), { size: 17, color: "var(--rps-dim)", weight: 600 });
+  s += txt(W / 2, 90, t('rps.upto', { n: plural(st.target, 'rps.wins.gen') }), { size: 15, color: "var(--rps-faint)", weight: 600 });
   for (const p of [0, 1]) {
     const x = ARENA.x[p], y = ARENA.y, c = COLORS[p];
     const lost = showing && showing.win === 1 - p;
@@ -183,15 +183,15 @@ function renderArena() {
     const tip = W / 2 + dir * 24;
     s += `<path d="${a} M${tip - dir * 11} ${cy - 9} L${tip} ${cy} L${tip - dir * 11} ${cy + 9}" stroke="${COLORS[w].main}" stroke-width="5" ${SW}/>`;
   } else if (showing) {
-    s += txt(W / 2, cy + 10, '=', { size: 40, color: '#999' });
+    s += txt(W / 2, cy + 10, '=', { size: 40, color: "var(--muted-2)" });
   } else {
-    s += txt(W / 2, cy + 6, t('rps.vs'), { size: 24, color: '#bbb' });
+    s += txt(W / 2, cy + 6, t('rps.vs'), { size: 24, color: "var(--rps-vs)" });
   }
   // verb line
   if (showing) {
     const rule = showing.win >= 0 ? RPS.rule(showing.picks[showing.win], showing.picks[1 - showing.win]) : null;
     const text = rule ? t('v.' + rule[2]) : t('rps.tie');
-    s += txt(W / 2, 176, text, { size: 24, color: rule ? COLORS[showing.win].main : '#888', cls: fresh ? 'verb pop' : 'verb' });
+    s += txt(W / 2, 176, text, { size: 24, color: rule ? COLORS[showing.win].main : "var(--rps-dim)", cls: fresh ? 'verb pop' : 'verb' });
   }
   return s;
 }
@@ -210,13 +210,13 @@ function renderPicker() {
   let s = '';
   if (p >= 0 && hotSeat() && uncovered !== p) {
     const c = COLORS[p], y0 = 196;
-    s += `<path d="${shapeFor('cover', () => `M10 ${y0 + 4} L${W - 10} ${y0} L${W - 8} ${H - 6} L8 ${H - 8} Z`)}" fill="#f6f5f0" stroke="${PALETTE.pencil}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    s += `<path d="${shapeFor('cover', () => `M10 ${y0 + 4} L${W - 10} ${y0} L${W - 8} ${H - 6} L8 ${H - 8} Z`)}" fill="var(--rps-cover)" stroke="${PALETTE.pencil}" stroke-width="2.5" stroke-linejoin="round"/>`;
     s += `<g transform="translate(${W / 2} ${y0 + 70}) scale(.9)" opacity=".5">${gestureSVG('rock', 9)}</g>`;
     s += txt(W / 2, y0 + 140, t('rps.cover.title', { name: name(p) }), { size: 30, color: c.main });
-    s += txt(W / 2, y0 + 170, t('rps.cover.note'), { size: 20, color: '#777', weight: 600 });
+    s += txt(W / 2, y0 + 170, t('rps.cover.note'), { size: 20, color: "var(--rps-note)", weight: 600 });
     s += `<g class="btn-svg" data-act="uncover" role="button">`;
-    s += `<path d="${shapeFor('covbtn', () => `M60 ${y0 + 192} Q180 ${y0 + 187} 300 ${y0 + 193} L298 ${y0 + 240} Q180 ${y0 + 244} 62 ${y0 + 239} Z`)}" fill="${c.main}" stroke="${c.dark}" stroke-width="3" stroke-linejoin="round"/>`;
-    s += txt(W / 2, y0 + 225, t('rps.cover.btn'), { size: 25, color: '#fff' });
+    s += `<path d="${shapeFor('covbtn', () => `M60 ${y0 + 192} Q180 ${y0 + 187} 300 ${y0 + 193} L298 ${y0 + 240} Q180 ${y0 + 244} 62 ${y0 + 239} Z`)}" fill="${c.main}" stroke="${c.text}" stroke-width="3" stroke-linejoin="round"/>`;
+    s += txt(W / 2, y0 + 225, t('rps.cover.btn'), { size: 25, color: "var(--on-accent)" });
     s += '</g>';
     return s;
   }
@@ -237,12 +237,12 @@ function renderPicker() {
     const [x, y] = pkPos(g);
     const chosen = mine === g;
     s += `<g class="pk${enabled ? ' on' : ''}${chosen ? ' chosen' : ''}" data-g="${g}" ${enabled ? `data-act="pick" role="button"` : ''} transform="translate(${f1(x)} ${f1(y)})">`;
-    s += `<g class="lift"><path class="pk-bg" d="${shapeFor('pkb' + g, () => circle(0, 0, PK.r, PK.r, 0.05))}" fill="#fff" stroke="${chosen ? color.main : enabled ? INK : PALETTE.pencil}" stroke-width="${chosen ? 4.5 : 2.6}" style="--pc:${color.main}"/>`;
+    s += `<g class="lift"><path class="pk-bg" d="${shapeFor('pkb' + g, () => circle(0, 0, PK.r, PK.r, 0.05))}" fill="var(--card)" stroke="${chosen ? color.main : enabled ? INK : PALETTE.pencil}" stroke-width="${chosen ? 4.5 : 2.6}" style="--pc:${color.main}"/>`;
     s += `<g transform="scale(.66)" opacity="${enabled || chosen ? 1 : 0.45}">${gestureSVG(g, 2)}</g></g>`;
     // label: above the top button, beside the upper side ones, below the rest
     const top = y < PK.cy - PK.R + 1, side = !top && y < PK.cy, right = x > PK.cx;
     const [lx, ly, anchor] = top ? [0, -PK.r - 7, 'middle'] : side ? [(right ? 1 : -1) * (PK.r + 5), 5, right ? 'start' : 'end'] : [0, PK.r + 17, 'middle'];
-    s += txt(lx, ly, t('g.' + g), { size: 17, color: enabled || chosen ? color.dark : '#999', weight: 700, cls: 'lbl', anchor });
+    s += txt(lx, ly, t('g.' + g), { size: 17, color: enabled || chosen ? color.text : "var(--muted-2)", weight: 700, cls: 'lbl', anchor });
     s += '</g>';
   }
   return s;

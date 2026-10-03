@@ -17,7 +17,7 @@
 .player .score { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .player .hand-dots { width: 62px; height: 15px; flex: none; }
 .result-why { font-size: 24px; margin: 0 0 2px; color: var(--ink); }
-.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+.result-next { font-size: 20px; margin: 0 0 8px; color: var(--muted); }
 @keyframes tk-slide { from { transform: translate(var(--dx), var(--dy)); } }
 @keyframes tk-drop { from { transform: scale(1.6); opacity: 0; } }
 @keyframes tk-pulse { 50% { opacity: .35; } }

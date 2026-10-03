@@ -8,13 +8,13 @@ import './strings.js';
 const SLUG = 'pennywise';
 const COLORS = [
   PALETTE.blue, PALETTE.red,
-  { main: '#3da84a', dark: '#22702c', fill: '#9fd8a5' },
-  { main: '#f08c22', dark: '#b05a08', fill: '#f8c58c' },
-  { main: '#8d5bd0', dark: '#5a3494', fill: '#c9b0ef' },
-  { main: '#e0569f', dark: '#a12a6c', fill: '#f2acd2' },
+  { main: 'var(--pw-green)', text: 'var(--pw-green-text)', fill: 'var(--pw-green-fill)', dark: 'var(--pw-green-face)' },
+  { main: 'var(--pw-orange)', text: 'var(--pw-orange-text)', fill: 'var(--pw-orange-fill)', dark: 'var(--pw-orange-face)' },
+  { main: 'var(--pw-violet)', text: 'var(--pw-violet-text)', fill: 'var(--pw-violet-fill)', dark: 'var(--pw-violet-face)' },
+  { main: 'var(--pw-pink)', text: 'var(--pw-pink-text)', fill: 'var(--pw-pink-fill)', dark: 'var(--pw-pink-face)' },
 ];
-const COPPER = { fill: '#eaa46c', edge: '#9a5527', text: '#6b330f' };
-const SILVER = { fill: '#d9dce2', edge: '#7a7f89', text: '#43464f' };
+const COPPER = { fill: 'var(--pw-copper)', edge: 'var(--pw-copper-edge)', text: 'var(--pw-copper-text)' };
+const SILVER = { fill: 'var(--pw-silver)', edge: 'var(--pw-silver-edge)', text: 'var(--pw-silver-text)' };
 const W = 360;
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
@@ -182,7 +182,7 @@ function render() {
       out += `<path d="${shapeFor('ini' + p, () => circle(24, y + h / 2, 14, 14, 0.05))}" fill="${col.main}" class="ini"/>`;
       out += `<text class="initial" x="24" y="${y + h / 2 + 1}">${esc(initial(p))}</text>`;
     }
-    if (!alive) { out += `<text class="brokeT" x="${(x0 + W) / 2}" y="${y + h / 2 + 2}" fill="${col.dark}">${esc(t('pw.broke'))}</text></g>`; continue; }
+    if (!alive) { out += `<text class="brokeT" x="${(x0 + W) / 2}" y="${y + h / 2 + 2}" fill="${col.text}">${esc(t('pw.broke'))}</text></g>`; continue; }
     const hand = shownHand(p), sw = (W - 12 - x0) / k, liveRow = cur && myMove;
     for (let i = 0; i < k; i++) {
       const r = coinR(i, L.many ? 0.72 : 0.9), cx = x0 + sw * i + Math.max(r + 4, sw * 0.36), cy = y + h / 2 + (L.many ? 3 : 4);
@@ -234,13 +234,13 @@ function renderTray(L) {
     const got = PW.value(st, pend.take), lim = PW.limit(st, pend.give);
     const cap = pend.give === 0 ? t('pw.tray.small', { v: st.denoms[0] })
       : lim === Infinity ? t('pw.tray.more', { got }) : t('pw.tray.lim', { got, lim });
-    s += `<text class="cap" x="12" y="${y + 13}" fill="${COLORS[st.turn].dark}">${esc(cap)}</text>`;
+    s += `<text class="cap" x="12" y="${y + 13}" fill="${COLORS[st.turn].text}">${esc(cap)}</text>`;
     s += changeRow(pend.give, pend.take, 262, true, st.turn);
-    s += `<g class="okbtn" data-act="ok"><path d="${box('ok', 272, cy - 19, 80, 38)}" fill="${COLORS[st.turn].main}" stroke="${COLORS[st.turn].dark}"/>`;
+    s += `<g class="okbtn" data-act="ok"><path d="${box('ok', 272, cy - 19, 80, 38)}" fill="${COLORS[st.turn].main}" stroke="${COLORS[st.turn].text}"/>`;
     s += `<text x="312" y="${cy + 1}">${esc(t('pw.ok'))}</text></g>`;
   } else if (st.last) {
     const { p, give, take } = st.last;
-    s += `<text class="cap" x="12" y="${y + 13}" fill="${COLORS[p].dark}">${esc(t('pw.last', { name: name(p), give: st.denoms[give], got: PW.value(st, take) }))}</text>`;
+    s += `<text class="cap" x="12" y="${y + 13}" fill="${COLORS[p].text}">${esc(t('pw.last', { name: name(p), give: st.denoms[give], got: PW.value(st, take) }))}</text>`;
     s += changeRow(give, take, W - 10, false, p);
   } else {
     s += `<text class="hint" x="${W / 2}" y="${cy}">${esc(t(canMove() ? 'pw.tray.hint' : 'pw.tray.start'))}</text>`;

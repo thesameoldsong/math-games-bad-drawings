@@ -87,7 +87,7 @@ function gallows(nWrong, maxWrong) {
   ];
   // spread the 8 drawing steps over maxWrong misses
   const shown = Math.min(parts.length, Math.round((Math.min(nWrong, maxWrong) * parts.length) / maxWrong));
-  for (let i = 0; i < shown; i++) s += P(parts[i](), PALETTE.red.dark, i >= 6 ? 2.4 : 3.6, i === shown - 1 && grew ? 'class="fresh-part" pathLength="1"' : '');
+  for (let i = 0; i < shown; i++) s += P(parts[i](), PALETTE.red.text, i >= 6 ? 2.4 : 3.6, i === shown - 1 && grew ? 'class="fresh-part" pathLength="1"' : '');
   return s;
 }
 
@@ -110,20 +110,20 @@ function renderBoard() {
   const rows = Math.max(2, Math.ceil(nWrong / 4));
   const bx = 160, by = 6, bw = 234, bh = 40 + rows * 42;
   s += P(shape('box' + rows, () => box(bx, by, bw, bh)), INK, 2.6);
-  s += txt(bx + 14, by + 28, `${t('qh.wrongbox')}  ${nWrong}/${maxWrong}`, { size: 22, color: '#777', anchor: 'start', weight: 600 });
+  s += txt(bx + 14, by + 28, `${t('qh.wrongbox')}  ${nWrong}/${maxWrong}`, { size: 22, color: 'var(--muted)', anchor: 'start', weight: 600 });
   for (let i = 0; i < Math.max(maxWrong, nWrong); i++) {
     const r = Math.floor(i / 4), c = i % 4, x = bx + 16 + c * 54, y = by + 70 + r * 42;
-    s += P(shape('wl' + i, () => line(x, y + 4, x + 40, y + 4, 1)), '#9a9aa4', 2.2);
+    s += P(shape('wl' + i, () => line(x, y + 4, x + 40, y + 4, 1)), 'var(--muted-2)', 2.2);
     const w = v && v.wrong[i];
     if (w) {
       s += txt(x + 20, y, w.c, { size: 34, color: PALETTE.red.main, cls: freshKey === 'x' + w.c ? 'pop' : '' });
-      if (w.retro) s += P(`M${x + 2} ${y + 9} q4 -4 8 0 t8 0 t8 0 t8 0 t8 0`, PALETTE.red.dark, 1.8);
+      if (w.retro) s += P(`M${x + 2} ${y + 9} q4 -4 8 0 t8 0 t8 0 t8 0 t8 0`, PALETTE.red.text, 1.8);
     }
   }
   let top = by + bh + 8;
   if (v && v.words && M.phase !== 'over') {
-    const parts = v.words.map((w, i) => (v.aliveMask[i] ? w : `<tspan text-decoration="line-through" fill="#aaa">${w}</tspan>`));
-    s += `<text x="${bx + 4}" y="${top + 18}" font-size="21" fill="#666" font-weight="600">${esc(t('qh.yourwords'))} ${parts.join(' · ')}</text>`;
+    const parts = v.words.map((w, i) => (v.aliveMask[i] ? w : `<tspan text-decoration="line-through" fill="var(--muted-2)">${w}</tspan>`));
+    s += `<text x="${bx + 4}" y="${top + 18}" font-size="21" fill="var(--muted)" font-weight="600">${esc(t('qh.yourwords'))} ${parts.join(' · ')}</text>`;
     top += 46;
   }
   top = Math.max(top, 154);
@@ -144,16 +144,16 @@ function renderBoard() {
         s += `<g class="keep${act ? ' live' : ''}" data-keep="${i}:${c}">`;
         s += P(shape(`cc${L}_${i}_${k}_${c}_${yb}`, () => circle(cx, y - fs * 0.34, sw * 0.46, fs * 0.6, 0.08)), PALETTE.red.main, 2.6, 'class="ring"');
         s += `<rect x="${x}" y="${y - fs - 2}" width="${sw}" height="${fs + 6}" fill="transparent"/>`;
-        s += txt(cx, y, c, { size: fs, color: PALETTE.red.dark });
+        s += txt(cx, y, c, { size: fs, color: PALETTE.red.text });
         s += '</g>';
       });
     } else if (cell.length) {
-      s += txt(cx, yb - 8, cell[0], { size: fs, color: COLORS[guesser()].dark, cls: freshKey === 'b' + cell[0] ? 'pop' : '' });
+      s += txt(cx, yb - 8, cell[0], { size: fs, color: COLORS[guesser()].text, cls: freshKey === 'b' + cell[0] ? 'pop' : '' });
     }
     v.ghosts[i].forEach((c, k) => {
       const gy = yb + 26 + k * 22;
-      s += txt(cx, gy, c, { size: 22, color: '#b0b0b8', weight: 600 });
-      s += P(`M${cx - 9} ${gy - 6} L${cx + 9} ${gy - 10}`, '#b0b0b8', 2);
+      s += txt(cx, gy, c, { size: 22, color: 'var(--muted-2)', weight: 600 });
+      s += P(`M${cx - 9} ${gy - 6} L${cx + 9} ${gy - 10}`, 'var(--muted-2)', 2);
     });
   }
 
@@ -169,10 +169,10 @@ function renderBoard() {
     const x = (W - inRow * kw) / 2 + (i % cols) * kw + 2, y = ky + r * (kh + 6);
     const used = G.has(c), miss = wrongSet.has(c);
     const live = act && v.status === 'play' && !used;
-    const fill = !used ? '#fff' : miss ? '#ededf0' : COLORS[guesser()].fill;
+    const fill = !used ? 'var(--card)' : miss ? 'var(--qh-miss)' : `var(--qh-key-${guesser() ? 'red' : 'blue'})`;
     s += `<g class="key${live ? ' live' : ''}${used ? ' used' : ''}" data-key="${c}">`;
-    s += `<path d="${shape(`k${alpha}${i}_${ky}`, () => box(x, y, kw - 4, kh, 0.9))}" fill="${fill}" stroke="${used && miss ? '#b8b8c0' : INK}" stroke-width="2" stroke-linejoin="round"/>`;
-    s += txt(x + (kw - 4) / 2, y + kh / 2 + 10, c, { size: 28, color: miss ? '#a8a8b0' : used ? COLORS[guesser()].dark : INK });
+    s += `<path d="${shape(`k${alpha}${i}_${ky}`, () => box(x, y, kw - 4, kh, 0.9))}" fill="${fill}" stroke="${used && miss ? 'var(--line)' : INK}" stroke-width="2" stroke-linejoin="round"/>`;
+    s += txt(x + (kw - 4) / 2, y + kh / 2 + 10, c, { size: 28, color: miss ? 'var(--muted-2)' : used ? COLORS[guesser()].text : INK });
     if (miss) s += P(shape(`kx${alpha}${i}_${ky}`, () => line(x + 6, y + kh - 6, x + kw - 10, y + 6, 1)), PALETTE.red.main, 2.4);
     s += '</g>';
   });
@@ -194,7 +194,7 @@ function renderPanel() {
     } else if (cover === 'setter') {
       key = 'cs' + S;
       html = `<div class="panel-card"><p class="panel-title" style="color:${COLORS[S].main}">${esc(t('qh.cover.setter', { name: name(S) }))}</p>
-        <button class="btn primary" data-act="uncover" style="background:${COLORS[S].main};border-color:${COLORS[S].dark}">${esc(t('qh.cover.setter.btn'))}</button></div>`;
+        <button class="btn primary" data-act="uncover" style="background:${COLORS[S].main};border-color:${COLORS[S].text}">${esc(t('qh.cover.setter.btn'))}</button></div>`;
     } else {
       const n = cfg.nwords;
       key = 'setup' + S + n + M.round;
@@ -205,14 +205,14 @@ function renderPanel() {
         ${inputs}
         <p class="setup-err"></p>
         <div class="setup-actions"><button type="button" class="btn" data-act="rand">${esc(t('qh.setup.rand'))}</button>
-        <button type="submit" class="btn primary" style="background:${COLORS[S].main};border-color:${COLORS[S].dark}">${esc(t('qh.setup.ok'))}</button></div>
+        <button type="submit" class="btn primary" style="background:${COLORS[S].main};border-color:${COLORS[S].text}">${esc(t('qh.setup.ok'))}</button></div>
         <p class="setup-note">${esc(t('qh.setup.note'))}${hotSeat() ? ' ' + esc(t('qh.setup.peek', { name: name(Gp) })) : ''}</p>
       </form>`;
     }
   } else if (M.phase === 'play' && cover === 'guesser') {
     key = 'cg' + Gp;
     html = `<div class="panel-card"><p class="panel-title" style="color:${COLORS[Gp].main}">${esc(t('qh.cover.guesser', { name: name(Gp) }))}</p>
-      <button class="btn primary" data-act="uncover" style="background:${COLORS[Gp].main};border-color:${COLORS[Gp].dark}">${esc(t('qh.cover.guesser.btn'))}</button></div>`;
+      <button class="btn primary" data-act="uncover" style="background:${COLORS[Gp].main};border-color:${COLORS[Gp].text}">${esc(t('qh.cover.guesser.btn'))}</button></div>`;
   }
   key += getLang();
   if (!html) { panel.hidden = true; panel.innerHTML = ''; panelKey = ''; $('.board-wrap').classList.remove('with-panel'); return; }
@@ -272,7 +272,7 @@ function renderPlayers() {
   else if (cover) msg = t('qh.st.cover');
   else if (v && v.status === 'conflict') {
     msg = isLocal(Gp) ? t('qh.st.conflict') : t(isAI(Gp) ? 'qh.st.think' : 'qh.st.conflict.them', { name: name(Gp) });
-    if (isLocal(Gp)) col = PALETTE.red.dark;
+    if (isLocal(Gp)) col = PALETTE.red.text;
   } else if (isAI(Gp)) msg = t('qh.st.think', { name: name(Gp) });
   else if (isRemote(Gp)) msg = isLocal(S) ? t('qh.st.watch', { name: name(Gp) }) : t('qh.st.them', { name: name(Gp) });
   else if (online() || vsAI()) msg = t('qh.st.you');
@@ -418,7 +418,7 @@ function showResult() {
   txtEl.textContent = t(won ? 'qh.res.won' : 'qh.res.lost');
   txtEl.style.color = COLORS[w].main;
   $('#result-who').textContent = t('qh.res.winner', { name: name(w) });
-  $('#result-who').style.color = COLORS[w].dark;
+  $('#result-who').style.color = COLORS[w].text;
   const ws = (v.words || []).map((x, i) => `<span class="${v.aliveMask[i] ? 'alive' : 'dead'}">${esc(x)}</span>`).join(' ');
   $('#result-words').innerHTML = ws ? `<span class="lbl">${esc(t('qh.res.words'))}</span> ${ws}` : '';
   setTimeout(() => { if (M.phase === 'over') $('#result').hidden = false; }, 1100);
