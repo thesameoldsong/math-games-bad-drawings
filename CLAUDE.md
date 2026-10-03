@@ -29,7 +29,9 @@
 - Toolbar: info group (how, tips, origin) + play group (settings, online, undo, restart).
 
 ## Visual style (match the book's look, draw everything ourselves)
-- White paper, two players = blue `#1ea5cf` vs red `#ec3a4a`, dark ink `#3b3b44`.
+- Two themes: light (white paper, marker) and dark (chalk on a slate board). Default follows the system; `shared/theme.js` (classic script in every page's <head>) + `.theme-toggle` button inside `.lang-toggle`.
+- **Never hardcode colours** in games — use the tokens from `shared/style.css` `:root`: `--paper`, `--card` (cards, popups, cells that were #fff), `--ink`, `--dot`, `--pencil`, `--muted`, `--muted-2`, `--line`, `--shadow`, `--veil`, `--backdrop`, `--on-accent` (text on a coloured button), `--eye`, `--ok`; players `--blue|--red|--green|--violet` + `-dark` (coloured text on paper), `-fill` (crayon tint), `-face` (eyes/mouth on the head). Translucent tints: `color-mix(in srgb, var(--blue) 25%, transparent)`.
+- `PALETTE.<colour>` = `{main, text, fill, dark}` as `var(--…)` strings: `main` for strokes/marks, `text` for coloured text, `dark` only for facial features. Never do string maths on them (no `${c.main}33`). Check both themes: `node tools/check-page.mjs <slug> --theme dark`.
 - Marker-like wobbly strokes (`line`, round caps), crayon-textured fills (`filter="url(#mg-crayon)"`), handwritten Caveat font.
 - Stick-figure players react to events (mood/pose + speech bubbles).
 - Cache random wobble per element so redraws don't jitter.

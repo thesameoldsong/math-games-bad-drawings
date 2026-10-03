@@ -77,13 +77,15 @@ function injectDefs() {
 }
 
 const PALETTE = {
-  blue: { main: '#1ea5cf', dark: '#0b6f94', fill: '#7fd0ea' },
-  red: { main: '#ec3a4a', dark: '#b3172b', fill: '#f58b95' },
+  // CSS custom properties, so drawings follow the light/dark theme (see :root in shared/style.css).
+  // main = strokes, text = coloured text on paper, fill = crayon tint, dark = eyes/mouth drawn on the head.
+  blue: { main: 'var(--blue)', text: 'var(--blue-dark)', fill: 'var(--blue-fill)', dark: 'var(--blue-face)' },
+  red: { main: 'var(--red)', text: 'var(--red-dark)', fill: 'var(--red-fill)', dark: 'var(--red-face)' },
   // extra seats for 3+ player games
-  green: { main: '#3aa655', dark: '#24753a', fill: '#8fd19e' },
-  violet: { main: '#8e5cc4', dark: '#5f3590', fill: '#c3a5e3' },
-  ink: '#3b3b44',
-  pencil: '#bdbdbd',
+  green: { main: 'var(--green)', text: 'var(--green-dark)', fill: 'var(--green-fill)', dark: 'var(--green-face)' },
+  violet: { main: 'var(--violet)', text: 'var(--violet-dark)', fill: 'var(--violet-fill)', dark: 'var(--violet-face)' },
+  ink: 'var(--dot)',
+  pencil: 'var(--pencil)',
 };
 
 // Stick figure in the book's spirit (our own drawing).
@@ -119,7 +121,7 @@ function figure({ color = PALETTE.blue, mood = 'neutral', pose = 'down', face = 
     const ex = [hx - 15 + d * 7, hx + 15 + d * 7], ey = hy - 8, rx = 14.5, ry = 17;
     const look = { happy: [d * 3, -5], sad: [d * 1, 6], smug: [d * 6, 4], worried: [-d * 4, 1], neutral: [d * 6, 0] }[mood] || [d * 6, 0];
     for (const x of ex) {
-      s += `<path d="${circle(x, ey, rx, ry, 0.04)}" fill="#fff" stroke="${color.dark}" stroke-width="3" ${sw.replace('fill="none"', '')}/>`;
+      s += `<path d="${circle(x, ey, rx, ry, 0.04)}" fill="var(--eye)" stroke="${color.dark}" stroke-width="3" ${sw.replace('fill="none"', '')}/>`;
       s += `<circle cx="${f(x + look[0])}" cy="${f(ey + look[1])}" r="5.8" fill="${color.dark}"/>`;
       if (mood === 'sad' || mood === 'smug') {
         const lid = `M${f(x - rx - 1)} ${f(ey + 1)} Q${f(x)} ${f(ey - ry - 6)} ${f(x + rx + 1)} ${f(ey + 1)} Z`;

@@ -1,6 +1,6 @@
 // Smoke check for a game page: console errors, screenshots (mobile + desktop, every popup), online handshake.
 //
-//   node tools/check-page.mjs <slug> [--out /tmp/mg-<slug>] [--lang ru|en] [--no-online]
+//   node tools/check-page.mjs <slug> [--out /tmp/mg-<slug>] [--lang ru|en] [--theme light|dark] [--no-online]
 //
 // Needs the dev server: uv run --no-project python tools/serve.py
 // Prints a JSON summary; look at the screenshots with the Read tool.
@@ -13,13 +13,14 @@ if (!slug) { console.error('usage: node tools/check-page.mjs <slug>'); process.e
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const out = opt('--out', `/tmp/mg-${slug}`);
 const lang = opt('--lang', 'ru');
+const theme = opt('--theme', 'light');
 mkdirSync(out, { recursive: true });
 const url = `${BASE}/games/${slug}/index.html`;
 const summary = { url, shots: [], errors: {}, online: null };
 
 async function fresh(b) {
   await b.nav(url, 400);
-  await b.ev(`localStorage.clear(); sessionStorage.clear(); localStorage.setItem('mg-lang', '${lang}')`);
+  await b.ev(`localStorage.clear(); sessionStorage.clear(); localStorage.setItem('mg-lang', '${lang}'); localStorage.setItem('mg-theme', '${theme}')`);
   await b.nav(url, 1800);
 }
 

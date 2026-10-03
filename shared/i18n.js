@@ -28,7 +28,7 @@ export function applyI18n(root = document) {
   root.querySelectorAll('[data-i18n-html]').forEach((el) => (el.innerHTML = t(el.dataset.i18nHtml)));
   root.querySelectorAll('[data-i18n-placeholder]').forEach((el) => (el.placeholder = t(el.dataset.i18nPlaceholder)));
   root.querySelectorAll('[data-i18n-title]').forEach((el) => (el.title = t(el.dataset.i18nTitle)));
-  document.querySelectorAll('.lang-toggle button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
+  document.querySelectorAll('.lang-toggle button[data-lang]').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
 }
 
 // Fires 'mg:lang' on document so pages can re-render dynamic text.
@@ -40,7 +40,7 @@ export function setLang(l) {
 }
 
 document.addEventListener('click', (e) => {
-  const b = e.target.closest('.lang-toggle button');
+  const b = e.target.closest('.lang-toggle button[data-lang]');
   if (b) setLang(b.dataset.lang);
 });
 

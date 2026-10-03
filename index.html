@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+  <script src="shared/theme.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Math Games with Bad Drawings — interactive</title>
   <link rel="stylesheet" href="shared/style.css">
@@ -14,20 +15,20 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
     .card {
       position: relative; display: block; padding: 12px 16px 10px; text-decoration: none; color: var(--ink);
-      background: #fff; border: 2.5px solid var(--ink); border-radius: var(--sketchy);
+      background: var(--card); border: 2.5px solid var(--ink); border-radius: var(--sketchy);
       transition: transform .12s; min-height: 84px;
     }
     .card:nth-child(odd) { transform: rotate(-.6deg); }
     .card:nth-child(even) { transform: rotate(.5deg); }
     .card:hover { transform: rotate(-1.5deg) scale(1.03); }
     .card .name { font: 700 27px/1.05 var(--hand); padding-right: 34px; }
-    .card .players { font: 600 18px var(--hand); color: #888; margin-top: 2px; }
+    .card .players { font: 600 18px var(--hand); color: var(--muted-2); margin-top: 2px; }
     .card.ready .players { color: var(--red); }
-    .card.ready { border-color: var(--blue); box-shadow: 3px 4px 0 rgba(30,165,207,.25); }
+    .card.ready { border-color: var(--blue); box-shadow: 3px 4px 0 color-mix(in srgb, var(--blue) 25%, transparent); }
     .card.ready .name { color: var(--blue-dark); }
-    .card.soon { border-style: dashed; border-color: #bbb; color: #999; pointer-events: none; }
-    .card.soon .name { color: #999; }
-    .card .tag { position: absolute; right: 10px; top: 6px; font: 700 18px var(--hand); color: #bbb; }
+    .card.soon { border-style: dashed; border-color: var(--line); color: var(--muted-2); pointer-events: none; }
+    .card.soon .name { color: var(--muted-2); }
+    .card .tag { position: absolute; right: 10px; top: 6px; font: 700 18px var(--hand); color: var(--line); }
     .card .tag.go { color: var(--red); }
     .card.minor .name { font-size: 23px; }
     @media (max-width: 640px) {
@@ -48,13 +49,13 @@
   <div class="page">
     <nav class="topbar">
       <span></span>
-      <div class="lang-toggle"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+      <div class="lang-toggle"><button class="theme-toggle" type="button"></button><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
     </nav>
     <header class="hero">
       <div class="fig" id="hero0"></div>
       <div class="titles">
         <h1 data-i18n="site.title"></h1>
-        <svg class="underline" viewBox="0 0 520 14" preserveAspectRatio="none"><path d="M4 8 Q130 2 260 7 T516 6" stroke="#1ea5cf" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+        <svg class="underline" viewBox="0 0 520 14" preserveAspectRatio="none"><path d="M4 8 Q130 2 260 7 T516 6" stroke="var(--blue)" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
         <p class="subtitle" data-i18n="site.subtitle"></p>
       </div>
       <div class="fig" id="hero1"></div>
