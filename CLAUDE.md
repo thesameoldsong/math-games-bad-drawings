@@ -17,7 +17,7 @@
 - `shared/i18n.js` — `addStrings(lang, {...})`, `t(key, vars)` (array value → random pick), `plural(n, key)`, `getLang()`, `applyI18n()`, `data-i18n` / `data-i18n-html` / `data-i18n-placeholder`, `mg:lang` event. RU + EN required for every string. Shared UI labels: `ui.*`.
 - `shared/ui.js` — `icon(name)`, `mountTools()` (fills `.tool[data-icon][data-label]`), `mountSheets()` (`[data-sheet=x]` opens `dialog#sheet-x`), `showOnce('how', slug)`.
 - `shared/net.js` — `mountOnline({slug, button, onSession, onEnd})`; session: `seat` (host 0 / guest 1), `host`, `connected`, `send(type, payload)`, `on(type, fn)`; events `status`, `peer-join`, `peer-leave`.
-- `shared/games.js` — registry of the book's featured + short games (54); the orchestrator adds slugs to `READY` (game agents don't edit it).
+- `shared/games.js` — registry of the book's featured + short games (54); the orchestrator maintains `NOT_READY` (game agents don't edit it).
 - `games/<slug>/` — one folder per game: `index.html`, `strings.js`, `engine.js` (pure logic + AI, no DOM, `export const X = {...}`), `game.js` (UI, module entry), `style.css` (board-only styles).
   **`games/dots-and-boxes/` is the reference implementation — copy its page structure, toolbar, dialogs and online wiring.**
 

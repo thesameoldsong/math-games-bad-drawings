@@ -68,9 +68,6 @@ export const GAMES = [
   g('information', 'win-lose-banana', 'Win, Lose, Banana', 'Победа, поражение, банан'),
   g('information', 'franco-prussian-labyrinth', 'Franco-Prussian Labyrinth', 'Франко-прусский лабиринт'),
 ];
-// Slugs whose games/<slug>/ page is playable.
-const READY = [
-  'dots-and-boxes', 'sprouts', 'ultimate-tic-tac-toe', 'dandelions', 'quantum-tic-tac-toe',
-  'bunch-of-grapes', 'neutron', 'order-and-chaos', 'splatter', '3d-tic-tac-toe',
-];
-for (const x of GAMES) if (READY.includes(x.slug)) x.status = 'ready';
+// Games still in progress (everything else in GAMES is playable).
+const NOT_READY = ['amazons'];
+for (const x of GAMES) if (!NOT_READY.includes(x.slug)) x.status = 'ready';

@@ -29,7 +29,18 @@
     .card .tag { position: absolute; right: 10px; top: 6px; font: 700 18px var(--hand); color: #bbb; }
     .card .tag.go { color: var(--red); }
     .card.minor .name { font-size: 23px; }
-    @media (max-width: 640px) { .hero .fig { width: 64px; } }
+    @media (max-width: 640px) {
+      .hero .fig { width: 54px; }
+      .hero h1 { font-size: 40px; }
+      .subtitle { font-size: 21px; }
+      .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .card { min-height: 0; padding: 8px 10px 6px; }
+      .card .name, .card.minor .name { font-size: 21px; padding-right: 14px; }
+      .card .orig { font-size: 12px; }
+      .card .tag { right: 6px; top: 2px; font-size: 16px; }
+      .card.soon .tag { display: none; }
+      h2.section-title { font-size: 30px; margin-top: 28px; }
+    }
   </style>
 </head>
 <body>
