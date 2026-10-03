@@ -166,7 +166,7 @@ function render(animate) {
     if (p !== 0 && p !== 1) continue;
     if (pend && i === pend.from) continue;
     const fresh = animate && !slideShown && last && last.to === i ? last.from : null;
-    out += amazon(i, p, { fresh, dead: !canStepAt(i) });
+    out += amazon(i, p, { fresh, dead: !AMZ.canStep(st.b, N, i) });
   }
   if (pend) {
     out += trail(pend.from, pend.to, COLORS[st.turn].main, 'p', 'trail', false);
@@ -193,14 +193,6 @@ function render(animate) {
   svg.classList.toggle('busy', !mine);
   hoverCell = -1;
   renderPlayers();
-}
-function canStepAt(i) {
-  const N = st.N, r = Math.floor(i / N), c = i % N;
-  for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-    const rr = r + dr, cc = c + dc;
-    if ((dr || dc) && rr >= 0 && rr < N && cc >= 0 && cc < N && st.b[rr * N + cc] === AMZ.EMPTY) return true;
-  }
-  return false;
 }
 
 function renderPlayers() {
@@ -372,6 +364,7 @@ function sendState() {
 function onSession(s) {
   sess = s;
   clearTimeout(aiTimer);
+  sel = -1; pend = null;              // drop a half-played local / computer turn
   for (const k in shapes) delete shapes[k];
   s.on('status', () => render(false));
   s.on('peer-join', () => {

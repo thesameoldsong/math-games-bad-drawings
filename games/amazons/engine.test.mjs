@@ -185,3 +185,47 @@ test('stronger levels beat weaker ones most of the time', () => {
   assert.ok(hard >= 4, `hard won ${hard}/6`);
   assert.ok(normal >= 4, `normal won ${normal}/6`);
 });
+
+test('opening move counts match the known values', () => {
+  // 2176 is the well-known number of first moves in classic 10 × 10 Amazons
+  assert.equal(AMZ.legalMoves(AMZ.create({ N: 10 })).length, 2176);
+  assert.ok(AMZ.legalMoves(AMZ.create({ N: 8 })).length > 1000);
+});
+
+test('in random games "has a move" agrees with the move list, and isLegal with legalMoves', () => {
+  for (const N of [6, 8]) {
+    for (let g = 0; g < 10; g++) {
+      const s = AMZ.create({ N, first: g % 2 });
+      while (!AMZ.isOver(s)) {
+        const ms = AMZ.legalMoves(s);
+        assert.equal(AMZ.hasMove(s), ms.length > 0);
+        // a random triple is legal exactly when it is in the list
+        const keys = new Set(ms.map((m) => `${m.from},${m.to},${m.arrow}`));
+        const NN = N * N, r = () => Math.floor(Math.random() * NN);
+        const mine = AMZ.amazons(s, s.turn);
+        for (let k = 0; k < 30; k++) {
+          const m = { from: mine[k % mine.length], to: r(), arrow: r() };
+          assert.equal(AMZ.isLegal(s, m), keys.has(`${m.from},${m.to},${m.arrow}`));
+        }
+        AMZ.apply(s, ms[Math.floor(Math.random() * ms.length)]);
+      }
+      assert.equal(AMZ.legalMoves(s).length, 0);
+      assert.equal(s.winner, 1 - s.turn);
+      // a finished game accepts no more moves
+      assert.ok(!AMZ.isLegal(s, { from: 0, to: 1, arrow: 2 }));
+    }
+  }
+});
+
+test('every computer level clearly beats random play', () => {
+  const rnd = (s) => { const ms = AMZ.legalMoves(s); return ms[Math.floor(Math.random() * ms.length)]; };
+  for (const level of ['easy', 'normal', 'hard']) {
+    let won = 0;
+    for (let g = 0; g < 8; g++) {
+      const s = AMZ.create({ N: 8, first: g % 2 });
+      while (!AMZ.isOver(s)) AMZ.apply(s, s.turn === 1 ? AMZ.aiMove(s, level) : rnd(s));
+      if (s.winner === 1) won++;
+    }
+    assert.ok(won >= 7, `${level} won ${won}/8 against random`);
+  }
+});

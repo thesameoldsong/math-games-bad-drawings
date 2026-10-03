@@ -248,5 +248,5 @@ function aiMove(s, level = 'normal', { budget = 1500 } = {}) {
 
 export const AMZ = {
   EMPTY, BURNT, SIZES, START, create, clone, reach, targets, arrowTargets, legalMoves, isLegal, apply, isOver,
-  amazons, freeCount, hasMove, evaluate, outlook, aiMove,
+  amazons, canStep, freeCount, hasMove, evaluate, outlook, aiMove,
 };

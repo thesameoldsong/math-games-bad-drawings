@@ -54,11 +54,11 @@ addStrings('ru', {
   'amz.h.tips': 'Хитрости',
   'amz.tips': `
     <ul>
-      <li>Партия — это борьба за <b>территорию</b>. Ближе к концу поле распадается на закрытые «комнаты», и в каждой хозяйничает одна сторона. Чья суммарная площадь больше — тот и сделает последний ход.</li>
+      <li>Партия — это борьба за <b>территорию</b>. Ближе к концу поле распадается на закрытые «комнаты», и в каждой хозяйничает одна сторона. Чья суммарная площадь больше — тот, как правило, и сделает последний ход.</li>
       <li>Оказавшись в своей комнате, обходите её <b>по клетке</b> и сжигайте ту, с которой ушли. Не отрезайте стрелой кусок собственной комнаты.</li>
       <li>Держите амазонок <b>подвижными</b> и в центре. Фигура, прижатая к краю, легко оказывается в тесной клетке.</li>
       <li>Стрела — оружие: ставьте её прямо перед носом чужой амазонки, чтобы перекрыть ей выход.</li>
-      <li>Вперёд не загадывайте слишком далеко: вариантов хода в начале партии — больше тысячи, и неожиданные повороты здесь обычное дело.</li>
+      <li>Не пытайтесь просчитать всё далеко вперёд: в начале партии у каждого хода больше тысячи вариантов, и неожиданные повороты здесь обычное дело.</li>
     </ul>
     <p class="tip"><b>Варианты.</b> Поле 6 × 6 с двумя амазонками — быстрая партия, 10 × 10 с четырьмя — классическая версия автора игры. Оба можно выбрать в настройках.</p>
     <p class="tip"><b>Родственники.</b> В «Квадрафаге» одна фигура пытается сбежать с доски, а соперник загораживает ей путь фишками; потом роли меняются. В «Конских яблоках» два коня скачут по доске и оставляют за собой непроходимые метки. А в «Коллекционере» на поле 6 × 6 каждый ход отмечают любую клетку и вычёркивают пустую соседнюю — побеждает самая большая связная группа отметок.</p>`,
@@ -123,7 +123,7 @@ addStrings('en', {
   'amz.h.tips': 'Tricks',
   'amz.tips': `
     <ul>
-      <li>It’s a fight for <b>territory</b>. Late in the game the board breaks into closed “rooms”, each owned by one side. Whoever owns more squares in total makes the last move.</li>
+      <li>It’s a fight for <b>territory</b>. Late in the game the board breaks into closed “rooms”, each owned by one side. Whoever owns more squares in total will usually make the last move.</li>
       <li>Once you’re alone in a room, walk it <b>one square at a time</b>, burning each square as you leave it. Don’t let your own arrow cut off part of your room.</li>
       <li>Keep your amazons <b>mobile</b> and central. A piece pushed against the edge is easy to wall in.</li>
       <li>The arrow is a weapon: drop it right in front of an enemy amazon to shut its door.</li>

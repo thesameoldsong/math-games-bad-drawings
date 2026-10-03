@@ -69,5 +69,5 @@ export const GAMES = [
   g('information', 'franco-prussian-labyrinth', 'Franco-Prussian Labyrinth', 'Франко-прусский лабиринт'),
 ];
 // Games still in progress (everything else in GAMES is playable).
-const NOT_READY = ['amazons'];
+const NOT_READY = [];
 for (const x of GAMES) if (!NOT_READY.includes(x.slug)) x.status = 'ready';
