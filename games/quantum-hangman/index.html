@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Quantum Hangman · Math Games with Bad Drawings</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game">
+  <div class="page">
+    <header class="game-top">
+      <a class="back" href="../../index.html" data-i18n-title="site.home" aria-label="back">←</a>
+      <h1 data-i18n="qh.title"></h1>
+      <div class="lang-toggle"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    </header>
+
+    <main class="arena">
+      <div class="player p0" data-p="0">
+        <div class="fig-wrap"><div class="bubble blue"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="board-wrap">
+        <svg id="board" role="img"></svg>
+        <div class="panel" id="panel" hidden></div>
+        <div class="result" id="result" hidden>
+          <div class="result-card">
+            <div class="result-text" id="result-text"></div>
+            <div class="result-who hand" id="result-who"></div>
+            <div class="result-words" id="result-words"></div>
+            <p class="result-wait hand" id="result-wait" hidden></p>
+            <button class="btn primary" id="again" data-i18n="qh.again"></button>
+          </div>
+        </div>
+      </div>
+      <div class="player p1" data-p="1">
+        <div class="fig-wrap"><div class="bubble red"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="status" id="status"></div>
+
+      <nav class="toolbar">
+        <div class="tools tools-info">
+          <button class="tool" data-icon="how" data-label="ui.how" data-sheet="how"></button>
+          <button class="tool" data-icon="tips" data-label="ui.tips" data-sheet="tips"></button>
+          <button class="tool" data-icon="origin" data-label="ui.origin" data-sheet="origin"></button>
+        </div>
+        <div class="tools tools-play">
+          <button class="tool" data-icon="settings" data-label="ui.settings" data-sheet="settings"></button>
+          <button class="tool" data-icon="online" data-label="net.btn" id="online"></button>
+          <button class="tool" data-icon="undo" data-label="ui.undo" id="undo"></button>
+          <button class="tool" data-icon="restart" data-label="ui.restart" id="new"></button>
+        </div>
+      </nav>
+    </main>
+
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </div>
+
+  <dialog class="mg-dialog" id="sheet-how">
+    <h3 data-i18n="qh.h.how"></h3>
+    <div data-i18n-html="qh.how"></div>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-tips">
+    <h3 data-i18n="qh.h.tips"></h3>
+    <div data-i18n-html="qh.tips"></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-origin">
+    <h3 data-i18n="qh.h.origin"></h3>
+    <div data-i18n-html="qh.origin"></div>
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-settings">
+    <h3 data-i18n="ui.settings.title"></h3>
+    <label class="field"><span data-i18n="qh.mode"></span>
+      <select id="mode">
+        <option value="pvp" data-i18n="qh.mode.pvp"></option>
+        <option value="easy" data-i18n="qh.mode.easy"></option>
+        <option value="normal" data-i18n="qh.mode.normal"></option>
+        <option value="hard" data-i18n="qh.mode.hard"></option>
+      </select>
+    </label>
+    <label class="field" id="you-field"><span data-i18n="qh.you"></span>
+      <select id="you">
+        <option value="alt" data-i18n="qh.you.alt"></option>
+        <option value="guess" data-i18n="qh.you.guess"></option>
+        <option value="set" data-i18n="qh.you.set"></option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="qh.nwords"></span>
+      <select id="nwords">
+        <option value="2" data-i18n="qh.nwords.2"></option>
+        <option value="3" data-i18n="qh.nwords.3"></option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="qh.len"></span>
+      <select id="len">
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+      </select>
+    </label>
+    <p class="hand settings-note" data-i18n="qh.len.note"></p>
+    <p class="hand settings-note" id="settings-note"></p>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

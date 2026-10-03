@@ -1,0 +1,44 @@
+/* Arpeggios — board styles. One SVG (viewBox 400 × 470): the score sheet on top, dice and choices below. */
+.arena .board-wrap { display: flex; flex-direction: column; align-items: center; }
+#board {
+  width: min(100%, calc((100dvh - 262px) * 400 / 470)); min-width: 280px; display: block;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; font-family: var(--hand);
+}
+@media (min-width: 900px) { #board { width: min(100%, calc((100dvh - 190px) * 400 / 470)); } }
+#board text { text-anchor: middle; dominant-baseline: central; }
+#board [data-act]:not([data-act='']) { cursor: pointer; }
+
+#board .paper { fill: #fffdf4; stroke: var(--ink); stroke-width: 2.6; }
+#board .dir { font: 700 23px var(--hand); text-anchor: start; }
+#board .reset { font: 600 17px var(--hand); text-anchor: end; fill: #777; }
+#board .reset.used { fill: #aaa; }
+#board .num { font: 700 25px var(--hand); }
+#board .num.fresh { animation: pop .35s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .stucktag { font: 700 17px var(--hand); opacity: .8; }
+#board .ghost { opacity: 0; pointer-events: none; transition: opacity .12s; }
+#board .ghost.on { opacity: .4; }
+
+#board .die-body { fill: #fff; stroke: var(--ink); stroke-width: 2.6; }
+#board .pip { fill: var(--ink); }
+#board .die-q { font: 700 30px var(--hand); fill: #bbb; }
+#board .die.empty .die-body { stroke: #bbb; stroke-dasharray: 5 5; }
+#board .die.can .die-body { stroke: var(--ink); stroke-dasharray: none; }
+#board .die.roll, #board .die.roll2 { animation: roll .5s ease-out backwards; transform-box: fill-box; transform-origin: center; }
+#board .die.roll2 { animation-delay: .07s; }
+
+#board .btn-txt { font: 700 30px var(--hand); }
+#board .small .btn-txt { font-size: 21px; }
+#board .btn-sub { font: 600 15px var(--hand); }
+#board .sbtn.off { opacity: .55; }
+#board .sbtn.bad { opacity: .4; }
+#board .sbtn.chosen { animation: pick .45s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .sbtn[data-act]:hover path { stroke-width: 3.6; }
+#board .sbtn[data-act]:active { transform: translateY(1px); }
+
+@keyframes pop { from { opacity: 0; transform: scale(.3); } }
+@keyframes roll { from { transform: rotate(-200deg) scale(.4); opacity: 0; } }
+@keyframes pick { 50% { transform: scale(1.12); } }
+.result-sub { font-size: 21px; color: #666; margin: 0 0 8px; }
+#board .sbtn.off.chosen { opacity: 1; }
+/* keep the finished columns readable: the result card sits over the dice area */
+#result { place-items: end center; padding-bottom: 3%; background: rgba(255, 254, 251, .35); }

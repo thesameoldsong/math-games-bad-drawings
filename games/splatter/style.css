@@ -1,0 +1,40 @@
+#board { width: 100%; max-height: min(600px, calc(100dvh - 330px)); display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; opacity: .8; }
+#board .hit { fill: transparent; }
+#board.placing .hit { cursor: pointer; }
+#board .blob { transition: transform .15s, opacity .15s; }
+#board .blob.sel { transform: scale(1.12); }
+#board .blob.doomed { opacity: .55; }
+#board .ring { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-dasharray: 5 6; stroke-linecap: round; pointer-events: none; }
+#board .ring.sel { stroke-width: 3.2; stroke-dasharray: none; }
+#board .splash { opacity: .6; }
+#board .splash.fresh { animation: splat .4s ease-out; }
+#board .blob.fresh { animation: plop .3s ease-out; }
+@keyframes splat { 0% { transform: scale(.2); opacity: 1; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: .6; } }
+@keyframes plop { from { transform: scale(.3); opacity: 0; } }
+@media (hover: hover) {
+  #board .blob.mine:hover { transform: scale(1.08); }
+}
+
+/* status line doubles as the splat picker */
+.arena .status { min-height: 52px; display: grid; place-items: center; }
+.picker { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.picker[hidden] { display: none; }
+.picker .pat {
+  display: flex; align-items: center; gap: 4px; font: 700 21px/1 var(--hand); color: var(--c);
+  background: #fff; border: 2.5px solid var(--c); border-radius: var(--sketchy); padding: 4px 10px 4px 6px;
+  cursor: pointer; box-shadow: 2px 3px 0 rgba(0,0,0,.1); -webkit-tap-highlight-color: transparent;
+}
+.picker .pat.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--c); }
+.picker .pat:active { transform: scale(.96); }
+.picker .pat-ico { width: 26px; height: 26px; }
+.result-sub { font-size: 22px; color: #555; margin: 0 0 8px; }
+.result-sub:empty { display: none; }
+
+@media (max-width: 899px) {
+  .picker .pat { font-size: 19px; padding: 3px 8px 3px 4px; }
+  .picker .pat-ico { width: 22px; height: 22px; }
+}
+@media (min-width: 900px) {
+  #board { max-height: min(600px, calc(100dvh - 190px)); }
+}

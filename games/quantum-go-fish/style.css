@@ -1,0 +1,124 @@
+/* Quantum Go Fish: a column of seats (figure, name, hand of cards) + a question panel. */
+.qgf-arena { grid-template-columns: minmax(0, 1fr); grid-template-areas: "board" "status"; }
+.qgf-arena .board-wrap { max-width: 560px; }
+.qgf-arena .status { font-size: 22px; min-height: 1.3em; line-height: 1.1; padding-top: 4px; }
+
+.seats { display: flex; flex-direction: column; gap: 2px; user-select: none; -webkit-user-select: none; }
+.seat {
+  position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; column-gap: 6px;
+  padding: 1px 8px 1px 4px; border: 2px solid transparent; border-radius: var(--sketchy); transition: background .2s, border-color .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.seat.turn { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 7%, #fff); }
+.seat.asked { border-color: var(--pc); border-style: dashed; }
+.seat.targetable { cursor: pointer; }
+.seat.targetable:hover { background: color-mix(in srgb, var(--pc) 10%, #fff); }
+.seat.sel { border-color: var(--pc); border-style: solid; background: color-mix(in srgb, var(--pc) 20%, #fff); transform: rotate(-.4deg); }
+.seat.empty { opacity: .55; }
+.seat.winner { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, #fff); }
+
+.seat .fig-wrap { position: relative; width: 46px; }
+.seat .fig .mg-figure { width: 100%; display: block; overflow: visible; }
+.seat-main { min-width: 0; }
+.seat-top { display: flex; align-items: baseline; gap: 6px; font-family: var(--hand); line-height: 1.05; min-width: 0; }
+.seat-top .nm { font-weight: 700; font-size: 21px; color: var(--pc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding-right: 3px; }
+.seat-top .cnt { font-size: 16px; color: #777; white-space: nowrap; }
+.seat-top .nots { margin-left: auto; display: flex; align-items: center; gap: 1px; font-size: 15px; color: #888; white-space: nowrap; }
+.seat-top .nots-l { margin-right: 2px; }
+.seat-top .nots .ico { width: 17px; height: 17px; }
+.seat .hand { display: block; width: 100%; height: 50px; overflow: visible; }
+.seats.n5 .hand { height: 42px; }
+
+.ico { display: inline-block; width: 21px; height: 21px; vertical-align: -5px; overflow: visible; }
+.ico .x { stroke: var(--red-dark); stroke-width: 2.6; stroke-linecap: round; fill: none; }
+.ink { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.ink.thin { stroke-width: 1.3; }
+.qmark { font: 700 26px var(--hand); text-anchor: middle; dominant-baseline: central; }
+.ico .qmark { font-size: 24px; fill: var(--ink); }
+
+/* cards */
+.card .cbg { fill: #fff; stroke: none; }
+.card .cbg.unk { fill: #fbfaf4; }
+.card .cedge { fill: none; stroke-width: 2; stroke-linecap: round; }
+.card .cedge.deduced { stroke-dasharray: 3 3.5; stroke: #8a8a94; }
+.card .sicon.deduced { opacity: .55; }
+.card.fresh { animation: qgf-pop .45s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes qgf-pop { from { transform: translateY(-14px) scale(.6); opacity: 0; } }
+
+/* speech bubble: to the right of the small figure, over the seat */
+.seat .bubble {
+  font-size: 18px; left: 36px; top: 50%; transform: translateY(-50%) scale(.6); transform-origin: left center;
+  white-space: normal; width: max-content; max-width: min(64vw, 260px); z-index: 6;
+}
+.seat .bubble.show { transform: translateY(-50%) scale(1); }
+.seat .bubble::after { left: -8px; bottom: auto; top: 50%; transform: translateY(-50%) rotate(135deg) skew(8deg, 8deg); }
+
+/* question panel under the table */
+.panel-wrap { position: relative; min-height: 96px; margin-top: 4px; }
+.panel { font-family: var(--hand); text-align: center; }
+.last { font-size: 18px; color: #666; margin: 0 0 6px; line-height: 1.2; }
+.last .ico { width: 18px; height: 18px; vertical-align: -4px; }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; font: 700 18px/1.1 var(--hand); color: var(--ink); background: #fff;
+  border: 2px solid var(--ink); border-radius: var(--sketchy); padding: 3px 9px 3px 6px; cursor: pointer;
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, .1); transition: transform .1s; -webkit-tap-highlight-color: transparent;
+}
+.chip:hover:not(:disabled) { transform: rotate(-1.5deg); }
+.chip.on { background: #fff1b8; border-color: var(--blue-dark); transform: rotate(-1.5deg) scale(1.05); }
+.chip:disabled { opacity: .3; cursor: default; box-shadow: none; }
+.chips.idle .chip:disabled { opacity: .55; }
+.chip-n { font-size: 14px; color: #888; font-weight: 600; }
+.question { font-size: 22px; line-height: 1.15; }
+.question .asks { display: block; font-size: 18px; font-weight: 700; }
+.question .q { font-weight: 700; }
+.answers { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+.answers .ans { min-width: 120px; line-height: 1.05; padding: 4px 14px; }
+.answers .ans small { display: block; font-size: 15px; }
+
+.panel-wrap .result { align-items: end; background: rgba(255, 254, 251, .82); }
+.panel-wrap .result-card { padding: 8px 20px 12px; }
+.panel-wrap .result-text { font-size: clamp(28px, 7vw, 38px); margin-bottom: 2px; }
+.result-why { font-size: 19px; color: #555; margin: 0 0 8px; line-height: 1.15; }
+
+/* many players: tighter rows (the figure is cropped at the hips) */
+.seats.n5 .seat, .seats.n6 .seat { grid-template-columns: 40px minmax(0, 1fr); }
+.seats.n5 .fig-wrap, .seats.n6 .fig-wrap { width: 40px; }
+.seats.compact { gap: 1px; }
+.seats.compact .seat { grid-template-columns: 36px minmax(0, 1fr); padding: 0 6px 0 2px; }
+.seats.compact .fig-wrap { width: 36px; }
+.seats.compact .fig { overflow: hidden; }
+.seats.compact .hand { height: 30px; }
+.seats.compact .seat-top .nm { font-size: 18px; }
+.seats.compact .seat-top .cnt { font-size: 14px; }
+.seats.compact .seat-top .nots .ico { width: 15px; height: 15px; }
+.seats.compact ~ .panel-wrap .chip { font-size: 16px; padding: 2px 7px 2px 4px; }
+.seats.compact ~ .panel-wrap .chips { gap: 4px; }
+
+.names { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.names input { width: 9em; font-weight: 700; }
+.mg-dialog .names-field { align-items: flex-start; }
+.settings-note { color: #666; font-size: 19px; line-height: 1.2; }
+
+@media (min-width: 900px) {
+  .qgf-arena {
+    grid-template-columns: 92px minmax(0, 640px) 92px;
+    grid-template-areas: "info board play" ". status .";
+  }
+  .qgf-arena .board-wrap { max-width: 640px; }
+  .seat { grid-template-columns: 64px minmax(0, 1fr); padding: 2px 12px 2px 6px; }
+  .seat .fig-wrap { width: 64px; }
+  .seat-top .nm { font-size: 26px; }
+  .seat-top .cnt { font-size: 19px; }
+  .seat .hand { height: 58px; }
+  .seats.n5 .hand { height: 50px; }
+  .seats.compact .hand { height: 36px; }
+  .seats.compact .seat { grid-template-columns: 42px minmax(0, 1fr); }
+  .seats.compact .fig-wrap { width: 42px; }
+  .seats.compact .seat-top .nm { font-size: 21px; }
+  .seats.compact .seat .bubble { left: 40px; }
+  .seat .bubble { font-size: 21px; left: 58px; }
+  .chip { font-size: 20px; }
+  .question { font-size: 26px; }
+  .qgf-arena .status { font-size: 26px; }
+}

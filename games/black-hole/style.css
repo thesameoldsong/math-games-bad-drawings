@@ -1,0 +1,47 @@
+.board-wrap { display: flex; flex-direction: column; align-items: center; }
+/* keep the pyramid inside the phone screen above the bottom toolbar */
+#board {
+  width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  max-height: calc(100dvh - 300px); min-height: 240px; overflow: visible;
+}
+@media (min-width: 900px) { #board { max-height: calc(100dvh - 190px); min-height: 380px; } }
+
+#board .ring { fill: none; stroke: var(--dot); stroke-width: 2.6; stroke-linecap: round; }
+#board .ring.empty { fill: #fff; fill-opacity: .01; }
+#board .tint { opacity: .38; filter: url(#mg-crayon); }
+#board .last { fill: none; stroke: #f2c230; stroke-width: 5; opacity: .75; }
+#board .num {
+  font-family: var(--hand); font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none;
+}
+#board .num.fresh { animation: bh-pop .32s ease-out; }
+#board .num.ghost { opacity: .35; }
+#board .num.doomed { opacity: .28; transition: opacity .3s; }
+#board .num.doomed.fresh { animation: bh-fade 1.8s ease-in both; }
+
+#board .hole { fill: #1b1b22; stroke: #1b1b22; stroke-width: 3; }
+#board .hole.fresh { animation: bh-grow .7s cubic-bezier(.3, 1.6, .5, 1) both; }
+#board .swirl { fill: none; stroke: #8d8da0; stroke-width: 2.2; stroke-linecap: round; pointer-events: none; }
+#board .swirl.fresh { animation: bh-spin 2.2s ease-out both; }
+#board .strike { fill: none; stroke: var(--ink); stroke-width: 3.2; stroke-linecap: round; opacity: .7; }
+#board .strike.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: bh-draw .3s 1.1s ease-out forwards; }
+#board .sucked { pointer-events: none; animation: bh-suck 1.1s .35s cubic-bezier(.55, 0, .8, .4) both; }
+
+@keyframes bh-pop { from { transform: scale(.3); opacity: 0; } }
+@keyframes bh-fade { 0%, 70% { opacity: 0; } 100% { opacity: .28; } }
+@keyframes bh-grow { from { transform: scale(.1); } }
+@keyframes bh-spin { from { transform: rotate(-540deg) scale(.2); opacity: 0; } }
+@keyframes bh-draw { to { stroke-dashoffset: 0; } }
+@keyframes bh-suck {
+  0% { transform: none; opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.15) rotate(220deg); opacity: 0; }
+}
+
+.player .score { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.player .pts { white-space: nowrap; }
+.player .pts.lost { font-weight: 700; color: var(--ink); }
+.player .wins { font-size: .85em; color: #888; white-space: nowrap; }
+@media (min-width: 900px) { .player .score { align-items: center; } }
+
+.result-why { font: 700 22px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
+.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0; }

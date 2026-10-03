@@ -1,0 +1,63 @@
+/* Win, Lose, Banana: three player cards in a row above the table. */
+.green { color: #3aa655; }
+
+#board {
+  width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  max-height: calc(100dvh - 250px); min-height: 300px;
+}
+#board .t { font-family: var(--hand); }
+#board [data-act] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#board .sbtn:active, #board .chip:active, #board .card.pickable:active { opacity: .75; }
+#board .chip:hover > path { fill: #fdf6d8; }
+#board .card.pickable:hover > path:first-child { stroke-width: 3.4; }
+#board .pop { animation: wlb-pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes wlb-pop { from { opacity: 0; transform: scale(.5); } }
+
+.result-sub { font-size: 22px; color: #666; margin: 0 0 8px; }
+
+.wlb-arena {
+  grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 4px;
+  grid-template-areas: "p0 p1 p2" "board board board" "status status status";
+}
+.wlb-arena .p2 { grid-area: p2; }
+.wlb-arena .board-wrap { max-width: 520px; }
+.wlb-arena .player { grid-template-columns: 36px minmax(0, 1fr); column-gap: 2px; }
+.wlb-arena .player .fig-wrap { width: 36px; }
+.wlb-arena .player .name { font-size: 18px; padding: 0; }
+.wlb-arena .player .score { font-size: 16px; padding-left: 0; white-space: nowrap; }
+/* phones: each figure speaks below its own card column, so three bubbles never pile up */
+@media (max-width: 899px) {
+  .wlb-arena .player { position: relative; }
+  .wlb-arena .player .fig-wrap { position: static; }
+  .wlb-arena .player .bubble, .wlb-arena .player.p2 .bubble {
+    left: 50%; right: auto; top: calc(100% + 8px); font-size: 17px; text-align: center;
+    width: max-content; max-width: calc(100% + 2px); transform: translate(-50%, 0) scale(.6); transform-origin: center top;
+  }
+  .wlb-arena .player .bubble.show { transform: translate(-50%, 0) scale(1); }
+  .wlb-arena .player .bubble::after, .wlb-arena .player.p2 .bubble::after {
+    left: 50%; right: auto; top: -9px; bottom: auto; transform: translateX(-50%) rotate(-135deg) skew(8deg, 8deg);
+  }
+}
+/* the result card sits low on the table so the revealed cards stay visible */
+.wlb-arena .result { place-items: end center; padding-bottom: 6px; background: rgba(255, 254, 251, .35); }
+
+@media (min-width: 900px) {
+  #board { max-height: calc(100dvh - 260px); }
+  .wlb-arena {
+    grid-template-columns: 92px repeat(3, minmax(0, 190px)) 92px; gap: 8px 14px;
+    grid-template-areas: "info p0 p1 p2 play" "info board board board play" ". status status status .";
+  }
+  .wlb-arena .tools { grid-row: 1 / 3; }
+  .wlb-arena .player { grid-template-columns: 64px minmax(0, 1fr); grid-template-rows: auto auto; justify-items: start; text-align: left; column-gap: 6px; }
+  .wlb-arena .player .fig-wrap { grid-row: 1 / 3; width: 64px; }
+  .wlb-arena .player .name { text-align: left; font-size: 24px; }
+  .wlb-arena .player .score { font-size: 20px; }
+  .wlb-arena .player .bubble {
+    font-size: 20px; left: 60px; top: 0; transform: translateY(-15%) scale(.6); transform-origin: left center; max-width: 128px;
+  }
+  .wlb-arena .player .bubble.show { transform: translateY(-15%) scale(1); }
+  .wlb-arena .player .bubble::after { left: -8px; top: 50%; bottom: auto; transform: translateY(-50%) rotate(135deg) skew(8deg, 8deg); }
+  /* every bubble opens to the right inside its own column, so neighbours never collide */
+  .wlb-arena .player.p2 .bubble { max-width: 200px; }
+  .wlb-arena .board-wrap { max-width: 500px; }
+}

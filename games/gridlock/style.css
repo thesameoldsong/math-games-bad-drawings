@@ -1,0 +1,60 @@
+.arena .board-wrap { display: flex; flex-direction: column; align-items: center; max-width: 640px; }
+#board { width: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+#board .paper { fill: #fff; }
+#board .paper.on { fill: var(--c); fill-opacity: .1; }
+#board .grid { fill: none; stroke: var(--pencil); stroke-width: 1.4; stroke-linecap: round; }
+#board .frame { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+#board .frame.on { stroke-width: 4.6; opacity: 1; }
+#board .piece .outline { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+#board .piece.spoil .outline { stroke-width: 3.8; }
+#board .piece.fresh { animation: stamp .35s ease-out; }
+#board .ghost { pointer-events: none; }
+#board .ghost rect { stroke-width: 2.6; stroke-dasharray: 6 5; fill-opacity: .55; }
+#board .ghost.ok rect { animation: breathe 1.2s ease-in-out infinite; }
+#board .ghost.bad rect { fill-opacity: 1; }
+#board .ghost .x { stroke: #8a8a92; stroke-width: 2.4; stroke-linecap: round; opacity: .7; }
+@keyframes stamp { from { transform: scale(1.25); opacity: 0; } }
+@keyframes breathe { 50% { fill-opacity: .3; } }
+
+/* dice + orientation + buttons under the grids */
+.ctrl { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; min-height: 50px; width: 100%; }
+.ctrl.idle .dice { opacity: .75; }
+.dice { display: flex; gap: 4px; background: none; border: none; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.dice .die { width: 42px; height: 42px; display: block; }
+.dice .die-edge { fill: none; stroke: var(--c, var(--ink)); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.dice .pip { fill: var(--ink); }
+.dice .q { font: 700 22px var(--hand); fill: #aaa; text-anchor: middle; dominant-baseline: central; }
+.dice.rolling .die:nth-child(1) { animation: tumble .18s linear infinite; }
+.dice.rolling .die:nth-child(2) { animation: tumble .2s linear infinite reverse; }
+@keyframes tumble { 0% { transform: rotate(-14deg); } 50% { transform: rotate(12deg) translateY(-3px); } 100% { transform: rotate(-14deg); } }
+
+.shape {
+  display: flex; align-items: center; gap: 2px; background: none; border: none; padding: 0; cursor: pointer;
+  font: 700 24px/1 var(--hand); color: var(--ink); min-width: 74px; -webkit-tap-highlight-color: transparent;
+}
+.shape svg { width: 36px; height: 36px; flex: none; }
+.shape:disabled { cursor: default; color: var(--ink); }
+.btn.small { font-size: 20px; padding: 1px 12px; white-space: nowrap; }
+.btn.small[hidden] { display: none; }
+.rot-ico { display: inline-block; font-weight: 700; }
+
+.arena .status { line-height: 1.1; }
+.arena .status.long { font-size: 21px; }
+.result-sub { font-size: 20px; color: #555; margin: 0 0 10px; max-width: 18em; }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+
+@media (max-width: 420px) {
+  .ctrl { gap: 5px; }
+  .dice .die { width: 36px; height: 36px; }
+  .shape { min-width: 62px; font-size: 21px; }
+  .shape svg { width: 30px; height: 30px; }
+  .btn.small { font-size: 18px; padding: 1px 8px; }
+}
+@media (max-width: 370px) {
+  #rotate span[data-i18n] { display: none; }
+}
+@media (min-width: 900px) {
+  .arena { grid-template-columns: 92px 140px minmax(0, 640px) 140px 92px; }
+  .arena .status.long { font-size: 24px; }
+}

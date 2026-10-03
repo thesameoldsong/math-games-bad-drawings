@@ -1,0 +1,17 @@
+#board {
+  width: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none;
+  max-height: min(560px, calc(100dvh - 300px)); min-height: 220px; margin: 0 auto;
+}
+#board .dot { fill: #8d8d96; }
+#board .dot.on { fill: var(--ink); }
+#board .seg { fill: none; stroke-width: 6; stroke-linecap: round; }
+#board .seg.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: htl-draw .35s ease-out forwards; }
+#board .end { fill: none; stroke-width: 2.6; }
+#board .end.grow { stroke-dasharray: 5 4; }
+#board .end.sel { stroke-width: 3.4; stroke-dasharray: none; animation: htl-pulse 1s ease-in-out infinite; }
+#board .target { stroke-width: 2.2; fill-opacity: .25; }
+#board .preview { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 2 10; opacity: .7; pointer-events: none; }
+.result-why { font-size: 21px; color: #666; margin: -4px 0 10px; }
+.arena > .player { min-width: 0; }
+@keyframes htl-draw { to { stroke-dashoffset: 0; } }
+@keyframes htl-pulse { 50% { opacity: .45; } }

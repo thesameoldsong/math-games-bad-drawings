@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pig · Math Games with Bad Drawings</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game">
+  <div class="page">
+    <header class="game-top">
+      <a class="back" href="../../index.html" data-i18n-title="site.home" aria-label="back">←</a>
+      <h1 data-i18n="pig.title"></h1>
+      <div class="lang-toggle"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    </header>
+
+    <main class="arena pig-arena" id="arena">
+      <!-- player cards (.player.p0 … .player.pN) are created by game.js -->
+      <div class="board-wrap">
+        <svg id="board" role="img"></svg>
+        <div class="pig-controls">
+          <button class="btn pig-roll" id="roll"></button>
+          <button class="btn pig-hold" id="hold"></button>
+        </div>
+        <div class="result" id="result" hidden>
+          <div class="result-card">
+            <div class="result-text" id="result-text"></div>
+            <p class="result-scores hand" id="result-scores"></p>
+            <p class="result-next hand" id="result-next"></p>
+            <p class="result-wait hand" id="result-wait" hidden></p>
+            <button class="btn primary" id="again" data-i18n="pig.again"></button>
+          </div>
+        </div>
+      </div>
+      <div class="status" id="status"></div>
+
+      <nav class="toolbar">
+        <div class="tools tools-info">
+          <button class="tool" data-icon="how" data-label="ui.how" data-sheet="how"></button>
+          <button class="tool" data-icon="tips" data-label="ui.tips" data-sheet="tips"></button>
+          <button class="tool" data-icon="origin" data-label="ui.origin" data-sheet="origin"></button>
+        </div>
+        <div class="tools tools-play">
+          <button class="tool" data-icon="settings" data-label="ui.settings" data-sheet="settings"></button>
+          <button class="tool" data-icon="online" data-label="net.btn" id="online"></button>
+          <button class="tool" data-icon="undo" data-label="ui.undo" id="undo"></button>
+          <button class="tool" data-icon="restart" data-label="ui.restart" id="new"></button>
+        </div>
+      </nav>
+    </main>
+
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </div>
+
+  <dialog class="mg-dialog" id="sheet-how">
+    <h3 data-i18n="pig.h.how"></h3>
+    <div data-i18n-html="pig.how"></div>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-tips">
+    <h3 data-i18n="pig.h.tips"></h3>
+    <div data-i18n-html="pig.tips"></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-origin">
+    <h3 data-i18n="pig.h.origin"></h3>
+    <div data-i18n-html="pig.origin"></div>
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-settings">
+    <h3 data-i18n="ui.settings.title"></h3>
+    <label class="field"><span data-i18n="pig.players"></span>
+      <select id="players">
+        <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+        <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="pig.dice"></span>
+      <select id="dice">
+        <option value="2" data-i18n="pig.dice.2"></option>
+        <option value="1" data-i18n="pig.dice.1"></option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="pig.mode"></span>
+      <select id="mode">
+        <option value="pvp" data-i18n="pig.mode.pvp"></option>
+        <option value="easy" data-i18n="pig.mode.easy"></option>
+        <option value="normal" data-i18n="pig.mode.normal"></option>
+        <option value="hard" data-i18n="pig.mode.hard"></option>
+      </select>
+    </label>
+    <p class="hand settings-note" id="settings-note"></p>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+/* The Con Game: 2–4 players; with 3–4 the player cards sit in a row above the board. */
+.green { color: #3aa655; }
+.violet { color: #8e5cc4; }
+.con-arena .player[hidden] { display: none; }
+
+#board {
+  width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  max-height: calc(100dvh - 248px); min-height: 330px;
+}
+#board .t { font-family: var(--hand); }
+#board [data-act] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#board .sbtn.off { cursor: default; opacity: .4; }
+#board .sbtn:active, #board .card[data-act]:active { opacity: .8; }
+#board .card[data-act]:hover > g > path:first-child { stroke-width: 3.2; }
+#board .pop { animation: con-pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes con-pop { from { opacity: 0; transform: scale(.5); } }
+
+.result-sub { font-size: 22px; color: #666; margin: 0 0 8px; }
+
+/* 3–4 players: compact cards in one row on mobile */
+.con-arena.multi { gap: 2px 4px; }
+.con-arena.np3 { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "p0 p1 p2" "board board board" "status status status"; }
+.con-arena.np4 { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: "p0 p1 p2 p3" "board board board board" "status status status status"; }
+.con-arena .p2 { grid-area: p2; }
+.con-arena .p3 { grid-area: p3; }
+.con-arena.multi .player { grid-template-columns: 36px minmax(0, 1fr); column-gap: 2px; }
+.con-arena.multi .player .fig-wrap { width: 36px; }
+.con-arena.multi .player .name { font-size: 18px; padding: 0; }
+.con-arena.multi .player .score { font-size: 16px; padding-left: 0; white-space: nowrap; }
+.con-arena.multi .player .bubble { left: 34px; font-size: 17px; max-width: min(40vw, 160px); }
+/* right-hand players talk to the left so their bubbles stay on screen */
+.con-arena.np3 .player.p2 .bubble, .con-arena.np4 .player.p2 .bubble, .con-arena.np4 .player.p3 .bubble {
+  left: auto; right: 34px; transform-origin: right center;
+}
+.con-arena.np3 .player.p2 .bubble::after, .con-arena.np4 .player.p2 .bubble::after, .con-arena.np4 .player.p3 .bubble::after {
+  left: auto; right: -8px; transform: translateY(-50%) rotate(-45deg) skew(8deg, 8deg);
+}
+.con-arena.multi .board-wrap { max-width: 520px; }
+
+@media (min-width: 900px) {
+  #board { max-height: calc(100dvh - 170px); }
+  .con-arena.multi #board { max-height: calc(100dvh - 262px); }
+  .con-arena.np3 {
+    grid-template-columns: 92px repeat(3, minmax(0, 190px)) 92px; gap: 8px 14px;
+    grid-template-areas: "info p0 p1 p2 play" "info board board board play" ". status status status .";
+  }
+  .con-arena.np4 {
+    grid-template-columns: 92px repeat(4, minmax(0, 150px)) 92px; gap: 8px 14px;
+    grid-template-areas: "info p0 p1 p2 p3 play" "info board board board board play" ". status status status status .";
+  }
+  .con-arena.multi .tools { grid-row: 1 / 3; }
+  .con-arena.multi .player { grid-template-columns: 64px minmax(0, 1fr); grid-template-rows: auto auto; justify-items: start; text-align: left; column-gap: 6px; }
+  .con-arena.multi .player .fig-wrap { grid-row: 1 / 3; width: 64px; }
+  .con-arena.multi .player .name { text-align: left; font-size: 24px; }
+  .con-arena.multi .player .score { font-size: 20px; }
+  .con-arena.multi .player .bubble {
+    font-size: 20px; left: 60px; top: 0; transform: translateY(-15%) scale(.6); transform-origin: left center; max-width: 200px;
+  }
+  .con-arena.multi .player .bubble.show { transform: translateY(-15%) scale(1); }
+  .con-arena.multi .player .bubble::after { left: -8px; top: 50%; bottom: auto; transform: translateY(-50%) rotate(135deg) skew(8deg, 8deg); }
+  .con-arena.np3 .player.p2 .bubble, .con-arena.np4 .player.p2 .bubble, .con-arena.np4 .player.p3 .bubble { left: auto; right: 60px; transform-origin: right center; }
+  .con-arena.np3 .player.p2 .bubble::after, .con-arena.np4 .player.p2 .bubble::after, .con-arena.np4 .player.p3 .bubble::after {
+    left: auto; right: -8px; transform: translateY(-50%) rotate(-45deg) skew(8deg, 8deg);
+  }
+  .con-arena.multi .board-wrap { max-width: 470px; }
+}
+
+/* four players on a phone: squeeze figures so names fit */
+@media (max-width: 899px) {
+  .con-arena.np4 .player { grid-template-columns: 28px minmax(0, 1fr); }
+  .con-arena.np4 .player .fig-wrap { width: 28px; }
+  .con-arena.np4 .player .name { font-size: 17px; }
+  .con-arena.np4 .player .score { font-size: 15px; }
+  .con-arena.np4 .player .bubble { left: 26px; }
+  .con-arena.np4 .player.p2 .bubble, .con-arena.np4 .player.p3 .bubble { left: auto; right: 26px; }
+}

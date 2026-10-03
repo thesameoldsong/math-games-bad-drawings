@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Saesara · Math Games with Bad Drawings</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game">
+  <div class="page">
+    <header class="game-top">
+      <a class="back" href="../../index.html" data-i18n-title="site.home" aria-label="back">←</a>
+      <h1 data-i18n="sae.title"></h1>
+      <div class="lang-toggle"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    </header>
+
+    <main class="arena sae-arena n2" id="arena">
+      <div class="player p0" data-p="0">
+        <div class="fig-wrap"><div class="bubble blue"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p1" data-p="1">
+        <div class="fig-wrap"><div class="bubble red"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p2" data-p="2">
+        <div class="fig-wrap"><div class="bubble green"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p3" data-p="3">
+        <div class="fig-wrap"><div class="bubble violet"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="board-wrap">
+        <svg id="board" role="img"></svg>
+        <div class="cover" id="cover" hidden>
+          <div class="result-card cover-card">
+            <div class="cover-title" id="cover-title"></div>
+            <p class="hand cover-text" data-i18n="sae.cover.text"></p>
+            <button class="btn primary" id="cover-btn"></button>
+          </div>
+        </div>
+        <div class="result" id="result" hidden>
+          <div class="result-card">
+            <div class="result-text" id="result-text"></div>
+            <p class="result-sub hand" id="result-sub"></p>
+            <p class="result-score hand" id="result-score" hidden></p>
+            <p class="result-rule" id="result-rule"></p>
+            <p class="result-wait hand" id="result-wait" hidden></p>
+            <button class="btn primary" id="again"></button>
+          </div>
+        </div>
+      </div>
+      <div class="status" id="status"></div>
+      <div class="sae-actions" id="actions">
+        <button class="btn primary" id="guess" data-i18n="sae.btn.guess"></button>
+        <button class="btn" id="pass"></button>
+        <button class="linkish" id="giveup"></button>
+        <button class="linkish" id="log"></button>
+      </div>
+
+      <nav class="toolbar">
+        <div class="tools tools-info">
+          <button class="tool" data-icon="how" data-label="ui.how" data-sheet="how"></button>
+          <button class="tool" data-icon="tips" data-label="ui.tips" data-sheet="tips"></button>
+          <button class="tool" data-icon="origin" data-label="ui.origin" data-sheet="origin"></button>
+        </div>
+        <div class="tools tools-play">
+          <button class="tool" data-icon="settings" data-label="ui.settings" data-sheet="settings"></button>
+          <button class="tool" data-icon="online" data-label="net.btn" id="online"></button>
+          <button class="tool" data-icon="undo" data-label="ui.undo" id="undo"></button>
+          <button class="tool" data-icon="restart" data-label="ui.restart" id="new"></button>
+        </div>
+      </nav>
+    </main>
+
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </div>
+
+  <dialog class="mg-dialog" id="sheet-how">
+    <h3 data-i18n="sae.h.how"></h3>
+    <div data-i18n-html="sae.how"></div>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-tips">
+    <h3 data-i18n="sae.h.tips"></h3>
+    <div data-i18n-html="sae.tips"></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-origin">
+    <h3 data-i18n="sae.h.origin"></h3>
+    <div data-i18n-html="sae.origin"></div>
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-settings">
+    <h3 data-i18n="ui.settings.title"></h3>
+    <label class="field"><span data-i18n="sae.mode"></span>
+      <select id="mode">
+        <option value="hot" data-i18n="sae.mode.hot"></option>
+        <option value="easy" data-i18n="sae.mode.easy"></option>
+        <option value="normal" data-i18n="sae.mode.normal"></option>
+        <option value="hard" data-i18n="sae.mode.hard"></option>
+      </select>
+    </label>
+    <label class="field" id="players-field"><span data-i18n="sae.players"></span>
+      <select id="players">
+        <option value="1" data-i18n="sae.players.1"></option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+    </label>
+    <label class="field" id="maker-field"><span data-i18n="sae.maker"></span>
+      <select id="maker">
+        <option value="cpu" data-i18n="sae.maker.cpu"></option>
+        <option value="players" data-i18n="sae.maker.players"></option>
+      </select>
+    </label>
+    <label class="field" id="tier-field"><span data-i18n="sae.tier"></span>
+      <select id="tier">
+        <option value="easy" data-i18n="sae.tier.easy"></option>
+        <option value="medium" data-i18n="sae.tier.medium"></option>
+        <option value="hard" data-i18n="sae.tier.hard"></option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="sae.board"></span>
+      <select id="size">
+        <option value="6" data-i18n="sae.board.6"></option>
+        <option value="8" data-i18n="sae.board.8"></option>
+        <option value="10" data-i18n="sae.board.10"></option>
+      </select>
+    </label>
+    <label class="field" id="rounds-field"><span data-i18n="sae.rounds"></span>
+      <select id="rounds">
+        <option value="1">1</option>
+        <option value="3">3</option>
+        <option value="5">5</option>
+      </select>
+    </label>
+    <p class="hand settings-note" id="settings-note"></p>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+
+  <dialog class="mg-dialog" id="sheet-guess">
+    <h3 id="g-title"></h3>
+    <p class="hand g-who" id="g-who"></p>
+    <div class="g-kind" role="radiogroup">
+      <button class="chip" data-kind="all" data-i18n="sae.g.kind.all"></button>
+      <button class="chip" data-kind="par" data-i18n="sae.g.kind.par"></button>
+    </div>
+    <div class="g-block" id="g-all">
+      <label class="g-field"><span data-i18n="sae.g.a"></span><select id="g-a" class="atom-select"></select></label>
+      <label class="g-field"><select id="g-op">
+        <option value="" data-i18n="sae.g.op.none"></option>
+        <option value="and" data-i18n="sae.g.op.and"></option>
+        <option value="or" data-i18n="sae.g.op.or"></option>
+      </select></label>
+      <label class="g-field" id="g-b-field"><select id="g-b" class="atom-select"></select></label>
+    </div>
+    <div class="g-block" id="g-par">
+      <label class="g-field"><span data-i18n="sae.g.odd"></span><select id="g-odd" class="atom-select"></select></label>
+      <label class="g-field"><span data-i18n="sae.g.even"></span><select id="g-even" class="atom-select"></select></label>
+    </div>
+    <p class="g-preview" id="g-preview"></p>
+    <p class="hand g-warn" id="g-warn"></p>
+    <div class="actions">
+      <button class="btn" data-close data-i18n="sae.g.cancel" id="g-cancel"></button>
+      <button class="btn primary" id="g-go"></button>
+    </div>
+  </dialog>
+
+  <dialog class="mg-dialog" id="sheet-cx">
+    <h3 data-i18n="sae.cx.title"></h3>
+    <p class="cx-guess" id="cx-guess"></p>
+    <svg id="cx-board" class="mini-board" role="img"></svg>
+    <p class="cx-text hand" id="cx-text"></p>
+    <div class="actions"><button class="btn primary" data-close data-i18n="sae.cx.ok"></button></div>
+  </dialog>
+
+  <dialog class="mg-dialog" id="sheet-log">
+    <h3 data-i18n="sae.log.title"></h3>
+    <div id="log-list"></div>
+  </dialog>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

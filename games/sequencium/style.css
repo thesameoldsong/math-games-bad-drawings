@@ -1,0 +1,19 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2; stroke-linecap: round; opacity: .55; }
+#board .block { fill: none; stroke: var(--dot); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: .8; filter: url(#mg-crayon); }
+#board .link { fill: none; stroke-width: 3.2; stroke-linecap: round; }
+#board .link.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .3s ease-out forwards; }
+#board .num { font-family: var(--hand); font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+#board .num.fresh { animation: pop .35s ease-out; }
+#board .top { fill: none; stroke-width: 2.6; stroke-linecap: round; opacity: .75; }
+#board .ring { fill: none; stroke-width: 4; stroke-linecap: round; animation: pulse 1.2s ease-in-out infinite; }
+#board .target { opacity: .55; animation: fade .25s ease-out; }
+#board #preview { opacity: .38; pointer-events: none; }
+#board.busy { cursor: default; }
+.result-why { font-size: 26px; margin: 0 0 2px; color: var(--ink); }
+.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; line-height: 1.25; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { opacity: 0; } 60% { opacity: 1; } }
+@keyframes pulse { 50% { opacity: .4; } }
+@keyframes fade { from { opacity: 0; } }

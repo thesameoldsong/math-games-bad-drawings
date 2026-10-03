@@ -1,0 +1,22 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; }
+#board .grid.big { stroke-width: 4.5; }
+#board .target { opacity: .32; filter: url(#mg-crayon); animation: glow 1.6s ease-in-out infinite alternate; }
+#board .target.free { opacity: .2; animation: none; }
+#board .lastbg { fill: #f3e9a8; opacity: .8; }
+#board .mark { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+#board .mark.fresh, #board .bigmark.fresh, #board .winline.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .3s ease-out forwards; }
+#board .bigmark.fresh { animation-duration: .5s; animation-delay: .15s; }
+#board .winline.fresh { animation-duration: .6s; animation-delay: .5s; }
+#board .mini.closed { opacity: .35; }
+#board .mini.dead { opacity: .3; }
+#board .miniline { fill: none; stroke-width: 3; stroke-linecap: round; }
+#board .bigmark { fill: none; stroke-width: 10; stroke-linecap: round; opacity: .9; }
+#board .winline { fill: none; stroke-width: 11; stroke-linecap: round; opacity: .75; }
+#board .preview { fill: none; stroke-width: 3.5; stroke-linecap: round; opacity: .4; pointer-events: none; }
+.player .score .mk { width: .8em; height: .8em; vertical-align: -.05em; fill: none; stroke-width: 3.2; stroke-linecap: round; }
+.result-sub { font-size: 21px; color: #555; margin: 0 0 8px; max-width: 16em; }
+.settings-hint { font-size: 19px; color: #666; margin: 2px 0 6px; line-height: 1.2; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes glow { from { opacity: .22; } to { opacity: .42; } }
+#shared-field[hidden] { display: none; }

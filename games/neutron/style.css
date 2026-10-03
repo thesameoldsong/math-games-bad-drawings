@@ -1,0 +1,19 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.6; stroke-linecap: round; }
+#board .home { opacity: .38; }
+#board .trail { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 7; opacity: .55; }
+#board .trail path + path { stroke-dasharray: none; }
+#board .ring { fill: none; stroke-width: 3; stroke-linecap: round; }
+#board .ring.can { stroke-dasharray: 3 7; opacity: .7; }
+#board .ring.sel { stroke-width: 4.5; }
+#board .ring.pulse { stroke-width: 4; animation: pulse 1.2s ease-in-out infinite; }
+#board .target { opacity: .85; animation: pop .25s ease-out; }
+#board .preview { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 2 9; opacity: .5; pointer-events: none; }
+#board .tok.fresh { animation: slide .42s cubic-bezier(.3, .1, .3, 1); }
+#board.busy { cursor: default; }
+.result-why { font-size: 24px; margin: 0 0 2px; color: var(--ink); }
+.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+@keyframes slide { from { transform: translate(var(--dx), var(--dy)); } }
+@keyframes pulse { 50% { opacity: .35; } }
+@keyframes pop { from { opacity: 0; } }
+#board .trail.old { opacity: .22; }

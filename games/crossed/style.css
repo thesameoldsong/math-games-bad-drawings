@@ -1,0 +1,30 @@
+#board {
+  width: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+.arena .board-wrap { max-width: min(600px, calc(100dvh - 260px)); min-width: min(100%, 280px); }
+@media (min-width: 900px) { .arena .board-wrap { max-width: min(600px, calc(100dvh - 170px)); } }
+
+#board .frame { fill: none; stroke: var(--pencil); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 7; }
+#board .corner { fill: var(--pencil); }
+#board .ln { fill: none; stroke-width: 4.2; stroke-linecap: round; opacity: .92; }
+#board .ln.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .4s ease-out forwards; }
+#board .pv { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 2 9; opacity: .75; pointer-events: none; }
+#board .pv.loose { opacity: .4; }
+#board .hit { fill: #fff; stroke-width: 2.4; pointer-events: none; }
+#board .hit.fresh { transform-box: fill-box; transform-origin: center; animation: pop .35s ease-out .35s backwards; }
+#board .gain {
+  font: 700 25px var(--hand); text-anchor: middle; dominant-baseline: central; pointer-events: none;
+  paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round;
+}
+#board .gain.fresh { animation: fade .3s ease-out .4s backwards; }
+#board .dot { fill: var(--dot); transition: opacity .2s; }
+#board .dot.used { opacity: .9; }
+#board .dot.off { opacity: .25; }
+#board .dot.target { stroke: var(--dot); stroke-width: 2; }
+#board .ring { fill: none; stroke-width: 2.4; stroke-dasharray: 4 4; pointer-events: none; animation: spin-ring 6s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { transform: scale(0); } 70% { transform: scale(1.5); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes spin-ring { to { transform: rotate(360deg); } }
+.result-sub { font-size: 21px; color: #555; margin: 0 0 10px; }

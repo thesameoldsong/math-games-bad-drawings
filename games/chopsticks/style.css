@@ -1,0 +1,76 @@
+#board {
+  width: 100%; max-height: calc(100dvh - 290px); display: block; margin: 0 auto;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: visible;
+}
+#board .divider { fill: none; stroke: var(--pencil); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 2 9; }
+#board .seat { fill: none; stroke-width: 2.6; stroke-linecap: round; opacity: .22; transition: opacity .3s; }
+#board .seat.on { opacity: .9; stroke-width: 3.2; }
+#board .seat.dead { stroke-dasharray: 3 8; }
+#board .hand { transition: transform .22s cubic-bezier(.5, -0.3, .6, 1.4); }
+#board .hand.lunge { transition: transform .2s ease-in; }
+#board .hand .lift { transition: transform .15s ease-out; }
+#board .hand.sel .lift { transform: translateY(-9px) rotate(-3deg); }
+#board .hand.pick, #board .hand.target { cursor: pointer; }
+#board .hand.fist { opacity: .75; }
+#board .hand.ghost { opacity: .6; }
+#board .hand.pop .lift { animation: pop .35s ease-out; }
+#board .hit { fill: transparent; }
+#board .ring { fill: none; stroke-width: 3; stroke-dasharray: 6 7; stroke-linecap: round; animation: spin-dash 1.2s linear infinite; pointer-events: none; }
+#board .ring.self { stroke-dasharray: none; animation: none; stroke-width: 3.5; opacity: .8; }
+#board .num {
+  font: 700 34px var(--hand); text-anchor: middle; dominant-baseline: central; pointer-events: none;
+  paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round;
+}
+#board .badge, #board .float {
+  font: 700 25px var(--hand); text-anchor: middle; dominant-baseline: central; pointer-events: none;
+  paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round;
+}
+#board .float { font-size: 30px; animation: float-up .9s ease-out forwards; }
+@media (hover: hover) {
+  #board .hand.pick:not(.sel):hover .lift { transform: translateY(-4px); }
+  #board .hand.target:hover .ring { stroke-width: 4.5; stroke-dasharray: none; }
+}
+@keyframes pop { 0% { transform: scale(1); } 35% { transform: scale(1.12) rotate(4deg); } 100% { transform: scale(1); } }
+@keyframes spin-dash { to { stroke-dashoffset: -26; } }
+@keyframes float-up { 0% { opacity: 0; transform: translateY(8px); } 20% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px); } }
+
+/* status line + split buttons */
+.arena .status { min-height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; }
+.splits { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.splits[hidden] { display: none; }
+.splits .lbl { font: 600 21px var(--hand); color: #666; }
+.splits .chip {
+  font: 700 24px/1 var(--hand); color: var(--c); background: #fff; cursor: pointer;
+  border: 2.5px solid var(--c); border-radius: var(--sketchy); padding: 3px 12px 4px; min-width: 62px;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, .1); -webkit-tap-highlight-color: transparent;
+}
+.splits .chip i { font-style: normal; color: #aaa; margin: 0 5px; }
+.splits .chip:hover { transform: rotate(-2deg) scale(1.04); }
+.splits .chip:active { transform: scale(.95); box-shadow: none; }
+
+.result-sub { font-size: 22px; color: #555; margin: 0 0 8px; }
+.result-sub:empty { display: none; }
+
+/* extra players */
+.bubble.green { color: #3aa655; }
+.bubble.purple { color: #8d5cc9; }
+.player[hidden] { display: none; }
+.player.out { opacity: .35; }
+.arena .p2 { grid-area: p2; }
+.arena .p3 { grid-area: p3; }
+.arena[data-n="3"], .arena[data-n="4"] { grid-template-areas: "p0 p1" "p2 p3" "board board" "status status"; }
+.arena[data-n="3"] .player .fig-wrap, .arena[data-n="4"] .player .fig-wrap { width: 46px; }
+.arena[data-n="3"] .player, .arena[data-n="4"] .player { grid-template-columns: 46px 1fr; }
+.arena[data-n="3"] #board, .arena[data-n="4"] #board { max-height: calc(100dvh - 330px); }
+
+@media (max-width: 899px) {
+  .arena .status { font-size: 24px; min-height: 76px; }
+  .splits .chip { font-size: 22px; min-width: 56px; padding: 2px 10px 3px; }
+}
+@media (min-width: 900px) {
+  #board { max-height: calc(100dvh - 230px); }
+  .arena[data-n="3"], .arena[data-n="4"] { grid-template-areas: "info p0 board p1 play" "info p2 board p3 play" ". . status . ."; }
+  .arena[data-n="3"] .player .fig-wrap, .arena[data-n="4"] .player .fig-wrap { width: 90px; }
+  .arena[data-n="3"] .player, .arena[data-n="4"] .player { grid-template-columns: 1fr; }
+  .arena[data-n="3"] #board, .arena[data-n="4"] #board { max-height: calc(100dvh - 200px); }
+}

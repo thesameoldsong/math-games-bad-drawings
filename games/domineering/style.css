@@ -1,0 +1,15 @@
+#board {
+  width: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none;
+  max-height: min(600px, calc(100dvh - 300px)); min-height: 220px; margin: 0 auto;
+}
+#board .grid { fill: none; stroke: var(--pencil); stroke-width: 1.6; stroke-linecap: round; }
+#board .grid.rim { stroke: var(--dot); stroke-width: 2.6; }
+#board .piece .outline { fill: none; stroke-width: 3.6; stroke-linejoin: round; }
+#board .piece .mid { fill: none; stroke-width: 2.4; stroke-linecap: round; opacity: .55; }
+#board .piece.fresh { animation: dom-drop .3s ease-out; }
+#board .ghost { stroke-width: 3; stroke-dasharray: 7 6; fill-opacity: .35; pointer-events: none; }
+.result-why { font-size: 21px; color: #666; margin: -4px 0 10px; }
+@keyframes dom-drop { from { opacity: 0; transform: scale(1.25); } }
+.arena > .player { min-width: 0; }
+.player .score { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player .score .role { height: .85em; width: auto; vertical-align: -0.06em; margin-right: 1px; }

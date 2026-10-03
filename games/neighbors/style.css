@@ -1,0 +1,115 @@
+/* Neighbors: board + layout tweaks for 1–4 player cards. */
+.arena .board-wrap { display: flex; justify-content: center; }
+/* The board shrinks on short screens so cards + board + status stay above the bottom toolbar. */
+#board {
+  width: min(100%, calc((100dvh - 300px) * 0.76)); min-width: 260px; display: block;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+
+#board .ink-line, #board .grid, #board .frame { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+#board .ink-line { stroke: var(--dot); stroke-width: 2.4; }
+#board .grid { stroke: var(--dot); }
+#board .frame { stroke-width: 3.6; }
+#board .die-fill { fill: #ffd76a; }
+#board .die-num { font: 700 34px var(--hand); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+#board .die-num.ten { font-size: 30px; }
+#board .card-corner { font: 700 14px var(--hand); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+#board .die.rolling { animation: roll .55s cubic-bezier(.3, 1.4, .5, 1); transform-box: fill-box; transform-origin: center; }
+#board .die.done { opacity: .35; }
+#board .round-txt { font: 600 17px var(--hand); fill: #666; text-anchor: middle; }
+#board .best-lbl { font: 600 22px var(--hand); fill: #777; text-anchor: middle; }
+#board .best-num { font: 700 46px var(--hand); fill: var(--blue-dark); text-anchor: middle; }
+#board .deck-num { font: 700 16px var(--hand); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+#board .pip { fill: none; stroke: var(--pencil); stroke-width: 1.2; }
+#board .pip.on { fill: var(--dot); stroke: var(--dot); }
+
+#board .free { fill: transparent; }
+#board .num { font: 700 42px var(--hand); text-anchor: middle; dominant-baseline: central; }
+#board .num.fresh { animation: pop .35s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .num.ghost { opacity: .3; pointer-events: none; }
+#board .oval { fill: none; stroke-width: 2.4; stroke-linecap: round; opacity: .55; }
+#board .mini-oval { stroke-width: 1.3; }
+#board .hint { fill: none; stroke: var(--pencil); stroke-width: 3; stroke-dasharray: 5 6; stroke-linecap: round; animation: breathe 1.6s ease-in-out infinite; }
+#board .hidden-mark { fill: none; stroke: var(--pencil); stroke-width: 2; stroke-linecap: round; }
+#board .float { font: 700 26px var(--hand); text-anchor: middle; pointer-events: none; opacity: 0; animation: float 1.2s ease-out; }
+#board .mini-num { font-family: var(--hand); font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+#board .mini-num.fresh { animation: pop .35s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .mini.pick { cursor: pointer; }
+#board .mini.pick:hover .grid { stroke-width: 2.4; }
+
+@keyframes pop { from { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.15); } }
+@keyframes roll { from { transform: rotate(-200deg) scale(.4); opacity: .2; } }
+@keyframes float { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
+@keyframes breathe { 50% { opacity: .45; } }
+
+/* pass-the-device cover for secret boards on one screen */
+.cover { position: absolute; inset: 0; display: grid; place-items: center; background: var(--paper); z-index: 2; }
+.cover[hidden] { display: none; }
+.cover-title { font-size: 24px; color: #666; margin: 0; }
+.result-sub { font: 700 24px/1.2 var(--hand); margin: 0 0 10px; }
+.result-sub:empty { display: none; }
+
+.bubble.green { color: #3aa655; }
+.bubble.orange { color: #f08c1e; }
+
+/* one player: a single centred card */
+.arena.n1 { grid-template-areas: "p0 p0" "board board" "status status"; }
+.arena.n1 .p0 { justify-self: center; min-width: 180px; }
+
+/* three or four players: compact cards in one row */
+.arena.n3 { grid-template-columns: repeat(3, 1fr); grid-template-areas: "p0 p1 p2" "board board board" "status status status"; }
+.arena.n4 { grid-template-columns: repeat(4, 1fr); grid-template-areas: "p0 p1 p2 p3" "board board board board" "status status status status"; }
+.arena .p2 { grid-area: p2; }
+.arena .p3 { grid-area: p3; }
+.arena.n3 .player, .arena.n4 .player {
+  grid-template-columns: 1fr; grid-template-rows: auto; justify-items: center; text-align: center; row-gap: 0; min-width: 0;
+}
+.arena.n3 .player .fig-wrap, .arena.n4 .player .fig-wrap { grid-row: auto; width: 34px; }
+.arena.n3 .player .name, .arena.n4 .player .name { font-size: 18px; text-align: center; line-height: 1.1; }
+.arena.n3 .player .score, .arena.n4 .player .score { font-size: 15px; white-space: nowrap; }
+/* bubbles hang below the little figures so the outer ones don't leave the screen */
+.arena.n3 .player .bubble, .arena.n4 .player .bubble {
+  top: auto; bottom: 2px; left: 50%; font-size: 16px; max-width: 130px; white-space: nowrap;
+  transform: translate(-50%, 100%) scale(.6); transform-origin: center top;
+}
+.arena.n3 .player .bubble.show, .arena.n4 .player .bubble.show { transform: translate(-50%, 100%) scale(1); }
+.arena.n3 .player .bubble::after, .arena.n4 .player .bubble::after {
+  left: 50%; top: -9px; bottom: auto; transform: translateX(-50%) rotate(225deg) skew(8deg, 8deg);
+}
+.arena.n3 .p0 .bubble, .arena.n4 .p0 .bubble { left: -4px; transform: translate(0, 100%) scale(.6); transform-origin: left top; }
+.arena.n3 .p0 .bubble.show, .arena.n4 .p0 .bubble.show { transform: translate(0, 100%) scale(1); }
+.arena.n3 .p0 .bubble::after, .arena.n4 .p0 .bubble::after { left: 20px; }
+.arena.n3 .p2 .bubble, .arena.n4 .p3 .bubble { left: auto; right: -4px; transform: translate(0, 100%) scale(.6); transform-origin: right top; }
+.arena.n3 .p2 .bubble.show, .arena.n4 .p3 .bubble.show { transform: translate(0, 100%) scale(1); }
+.arena.n3 .p2 .bubble::after, .arena.n4 .p3 .bubble::after { left: auto; right: 12px; transform: rotate(225deg) skew(8deg, 8deg); }
+.arena .player[hidden] { display: none; }
+
+@media (min-width: 900px) {
+  #board { width: min(100%, calc((100dvh - 190px) * 0.76)); }
+  .arena.n1 {
+    grid-template-columns: 92px 150px minmax(0, 600px) 150px 92px;
+    grid-template-areas: "info p0 board . play" ". . status . .";
+  }
+  .arena.n1 .p0 { min-width: 0; }
+  .arena.n3, .arena.n4 {
+    grid-template-columns: 92px 150px minmax(0, 600px) 150px 92px;
+    grid-template-areas: "info p0 board p1 play" "info p2 board p3 play" ". . status . .";
+  }
+  .arena.n3 .player, .arena.n4 .player { grid-template-columns: 1fr; align-self: start; margin-top: 40px; }
+  .arena.n3 .p2, .arena.n4 .p2, .arena.n4 .p3 { align-self: end; margin: 0 0 6px; }
+  .arena.n3 .player .fig-wrap, .arena.n4 .player .fig-wrap { width: 72px; }
+  .arena.n3 .player .name, .arena.n4 .player .name { font-size: 24px; }
+  .arena.n3 .player .score, .arena.n4 .player .score { font-size: 20px; }
+  .arena.n3 .player .bubble, .arena.n4 .player .bubble,
+  .arena.n3 .p0 .bubble, .arena.n4 .p0 .bubble, .arena.n3 .p2 .bubble, .arena.n4 .p3 .bubble {
+    top: -6px; bottom: auto; left: 50%; right: auto; font-size: 20px; max-width: 200px;
+    transform: translate(-50%, -100%) scale(.6); transform-origin: center bottom;
+  }
+  .arena.n3 .player .bubble.show, .arena.n4 .player .bubble.show,
+  .arena.n3 .p0 .bubble.show, .arena.n4 .p0 .bubble.show, .arena.n3 .p2 .bubble.show, .arena.n4 .p3 .bubble.show { transform: translate(-50%, -100%) scale(1); }
+  .arena.n3 .player .bubble::after, .arena.n4 .player .bubble::after,
+  .arena.n3 .p0 .bubble::after, .arena.n4 .p0 .bubble::after, .arena.n3 .p2 .bubble::after, .arena.n4 .p3 .bubble::after {
+    left: 50%; right: auto; top: auto; bottom: -10px; transform: translateX(-50%) rotate(45deg) skew(8deg, 8deg);
+  }
+  .arena.n3 .tools, .arena.n4 .tools { grid-row: 1 / 3; }
+}

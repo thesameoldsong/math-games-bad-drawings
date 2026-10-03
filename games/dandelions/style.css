@@ -1,0 +1,73 @@
+.arena .board-wrap { display: flex; flex-direction: column; align-items: center; }
+/* Board shrinks on short screens so board + compass + status fit above the bottom toolbar. */
+#board {
+  width: min(100%, calc(100dvh - 400px)); min-width: 230px; display: block;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+#compass { width: min(100%, 380px); height: auto; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; margin-top: 2px; }
+
+#board .meadow { fill: #fbfdf3; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.6; stroke-linecap: round; }
+#board .flower .spokes { fill: none; stroke-width: 2.6; stroke-linecap: round; }
+#board .flower .core { stroke-width: 2; }
+#board .flower.fresh { animation: bloom .45s ease-out; }
+#board .flower.ghost { opacity: .35; pointer-events: none; }
+#board .seed .fluff { fill: none; stroke-width: 1.5; stroke-linecap: round; opacity: .75; }
+#board .seed.fresh { animation: land .4s ease-out backwards; }
+#board .ghost-seed { opacity: .32; pointer-events: none; }
+#board .sure { fill: none; stroke: var(--pencil); stroke-width: 2.4; stroke-dasharray: 4 5; stroke-linecap: round; }
+#board .hole { fill: none; stroke-width: 3.2; stroke-linecap: round; animation: hole 1s ease-in-out .6s 2 alternate backwards; }
+#board .gust {
+  fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-dasharray: .35 1; stroke-dashoffset: .35; opacity: 0;
+  animation: gust .75s ease-out forwards; pointer-events: none;
+}
+@keyframes bloom { from { transform: scale(.2) rotate(-40deg); opacity: 0; } }
+@keyframes land { from { transform: translate(var(--gx, 0), -14px); opacity: 0; } }
+@keyframes hole { to { stroke-width: 5.5; } }
+@keyframes gust { 0% { opacity: .9; stroke-dashoffset: .35; } 100% { opacity: 0; stroke-dashoffset: -1; } }
+
+#compass .rose-ring { fill: none; stroke: var(--dot); stroke-width: 2.2; }
+#compass .arrow path { fill: none; stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+#compass .arrow.used path { stroke-width: 2.6; }
+#compass .arrow .xout { stroke-width: 2.6; }
+#compass .arrow.last path { stroke-width: 3.6; }
+#compass .arrow.skipped path { stroke-dasharray: 4 6; opacity: .6; }
+#compass .arrow.live { cursor: pointer; }
+#compass.active .arrow.live path:first-child { animation: breathe 1.6s ease-in-out infinite; }
+#compass.active .arrow.hl.live path:first-child { stroke-width: 6.5; animation: none; }
+#compass.armed .arrow.live:not(.hl) { opacity: .4; }
+#compass .ord { font: 700 17px var(--hand); text-anchor: middle; dominant-baseline: central; }
+#compass .side-txt text { font: 700 22px var(--hand); }
+@keyframes breathe { 50% { stroke-width: 5; } }
+
+.player .score { display: flex; align-items: center; gap: 4px; }
+.player .score .ricon { width: 20px; height: 20px; flex: none; }
+
+.result-sub { font-size: 22px; margin: 0 0 10px; color: #555; }
+.result-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.result-btns .btn[hidden] { display: none; }
+
+.mg-dialog .check { display: flex; align-items: center; gap: 10px; margin: 12px 0; font: 600 22px/1.15 var(--hand); cursor: pointer; }
+.mg-dialog .check input { width: 22px; height: 22px; flex: none; accent-color: var(--blue); }
+.mg-dialog .field[hidden] { display: none; }
+.mg-dialog .actions { flex-wrap: wrap; }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+
+@media (min-width: 900px) {
+  #board { width: min(100%, calc(100dvh - 330px)); min-width: 320px; }
+  .player .score .ricon { width: 24px; height: 24px; }
+  .player .score { justify-content: center; }
+}
+
+/* Keep the final meadow visible: the result card sits over the compass, not over the board. */
+.board-wrap .result { place-items: end center; background: none; pointer-events: none; }
+.board-wrap .result-card { pointer-events: auto; padding: 8px 18px 12px; margin-bottom: 4px; }
+.board-wrap .result-text { font-size: clamp(28px, 6.5vw, 40px); margin-bottom: 2px; }
+.board-wrap .result-sub { font-size: 20px; margin-bottom: 6px; }
+.board-wrap .result-btns .btn { font-size: 20px; }
+@media (max-width: 899px) {
+  .board-wrap .result-btns { flex-wrap: nowrap; gap: 6px; }
+  .board-wrap .result-btns .btn { font-size: 18px; padding: 1px 10px; white-space: nowrap; }
+  .board-wrap .result-sub { font-size: 18px; }
+}
+@media (max-width: 380px) { .player .name { font-size: 20px; } }

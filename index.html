@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Math Games with Bad Drawings — interactive</title>
+  <link rel="stylesheet" href="shared/style.css">
+  <style>
+    .hero { display: flex; align-items: flex-end; justify-content: center; gap: 10px; }
+    .hero .fig { width: 110px; flex: none; }
+    .hero .titles { flex: 0 1 640px; }
+    .section-title { display: flex; align-items: baseline; gap: 12px; }
+    .section-title .num { color: var(--red); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+    .card {
+      position: relative; display: block; padding: 12px 16px 10px; text-decoration: none; color: var(--ink);
+      background: #fff; border: 2.5px solid var(--ink); border-radius: var(--sketchy);
+      transition: transform .12s; min-height: 84px;
+    }
+    .card:nth-child(odd) { transform: rotate(-.6deg); }
+    .card:nth-child(even) { transform: rotate(.5deg); }
+    .card:hover { transform: rotate(-1.5deg) scale(1.03); }
+    .card .name { font: 700 27px/1.05 var(--hand); padding-right: 34px; }
+    .card .orig { font-size: 14px; color: #888; }
+    .card.ready { border-color: var(--blue); box-shadow: 3px 4px 0 rgba(30,165,207,.25); }
+    .card.ready .name { color: var(--blue-dark); }
+    .card.soon { border-style: dashed; border-color: #bbb; color: #999; pointer-events: none; }
+    .card.soon .name { color: #999; }
+    .card .tag { position: absolute; right: 10px; top: 6px; font: 700 18px var(--hand); color: #bbb; }
+    .card .tag.go { color: var(--red); }
+    .card.minor .name { font-size: 23px; }
+    @media (max-width: 640px) { .hero .fig { width: 64px; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="topbar">
+      <span></span>
+      <div class="lang-toggle"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    </nav>
+    <header class="hero">
+      <div class="fig" id="hero0"></div>
+      <div class="titles">
+        <h1 data-i18n="site.title"></h1>
+        <svg class="underline" viewBox="0 0 520 14" preserveAspectRatio="none"><path d="M4 8 Q130 2 260 7 T516 6" stroke="#1ea5cf" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+        <p class="subtitle" data-i18n="site.subtitle"></p>
+      </div>
+      <div class="fig" id="hero1"></div>
+    </header>
+    <main id="catalog"></main>
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </div>
+  <script type="module">
+    import { t, getLang, applyI18n } from './shared/i18n.js';
+    import { injectDefs, figureSVG, PALETTE } from './shared/sketch.js';
+    import { SECTIONS, GAMES } from './shared/games.js';
+    {
+      const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+      function render() {
+        const L = getLang();
+        document.getElementById('catalog').innerHTML = SECTIONS.map((s, i) => `
+          <h2 class="section-title"><span class="num">${ROMAN[i]}</span> ${s[L]}</h2>
+          <div class="grid">${GAMES.filter((g) => g.section === s.id).map((g) => {
+            const ready = g.status === 'ready';
+            return `<a class="card ${ready ? 'ready' : 'soon'}${g.featured ? '' : ' minor'}" ${ready ? `href="games/${g.slug}/index.html"` : ''}>
+              <span class="tag${ready ? ' go' : ''}">${ready ? '→' : t('site.soon')}</span>
+              <div class="name">${g[L]}</div>
+              ${L !== 'en' ? `<div class="orig">${g.en}</div>` : ''}
+            </a>`;
+          }).join('')}</div>`).join('');
+      }
+      injectDefs();
+      document.getElementById('hero0').innerHTML = figureSVG({ color: PALETTE.blue, mood: 'happy', pose: 'wave', face: 'right', seed: 5 });
+      document.getElementById('hero1').innerHTML = figureSVG({ color: PALETTE.red, mood: 'smug', pose: 'point', face: 'left', seed: 9 });
+      applyI18n();
+      render();
+      document.addEventListener('mg:lang', render);
+    }
+  </script>
+</body>
+</html>

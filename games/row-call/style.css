@@ -1,0 +1,51 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.4; stroke-linecap: round; opacity: .7; }
+#board .grid.outer { stroke-width: 3.2; opacity: .95; }
+#board .last { fill: #fff3c4; }
+#board .band { filter: url(#mg-crayon); }
+#board .band-under { opacity: 0; }
+#board .band-under.called { opacity: .28; }
+#board .band-under.hover { opacity: .12; }
+#board .band.called { opacity: 1; }
+#board .band.called.fresh { animation: band-in .3s ease-out; }
+#board .band.hover { opacity: .45; }
+#board .band.prev { opacity: .8; }
+#board .mark.fresh { animation: pop .3s ease-out; }
+#board .mark.ghost { opacity: .16; transition: opacity .12s; }
+#board .cand { cursor: pointer; }
+#board .cand.hot .mark.ghost { opacity: .5; }
+#board .winline { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; opacity: .85; }
+#board .winline.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s .15s ease-out forwards; }
+
+#board .handle text { font: 700 27px var(--hand); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+#board .handle.full { opacity: .28; }
+#board .handle.live { cursor: pointer; }
+#board .handle.live:hover path { stroke-width: 3.6; }
+#board .handle.on path { filter: none; }
+#board.nudge .handle.live { animation: nudge .45s ease-in-out 2; transform-box: fill-box; transform-origin: center; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { transform: scale(.3); opacity: 0; } }
+@keyframes band-in { from { opacity: 0; } }
+@keyframes nudge { 50% { transform: scale(1.18) rotate(-6deg); } }
+
+/* keep the square board inside the phone screen above the bottom toolbar */
+.board-wrap { display: flex; flex-direction: column; align-items: center; }
+#board { max-width: min(100%, calc(100dvh - 300px)); min-width: 270px; }
+
+.player .score { display: flex; align-items: center; gap: 3px; }
+.player .score .mini { width: 22px; height: 22px; flex: none; overflow: visible; }
+
+.result-why { font: 700 23px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
+.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+.result-text { font-size: clamp(28px, 6.5vw, 40px); }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+.settings-note:empty { display: none; }
+.arena .status { font-size: clamp(20px, 5.6vw, 26px); }
+
+@media (min-width: 900px) {
+  #board { max-width: min(100%, calc(100dvh - 200px)); }
+  .player .score { justify-content: center; }
+  .player .score .mini { width: 26px; height: 26px; }
+  .arena .status { font-size: 28px; }
+}

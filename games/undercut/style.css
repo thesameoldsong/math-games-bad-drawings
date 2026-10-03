@@ -1,0 +1,26 @@
+#board {
+  width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  max-height: calc(100dvh - 270px); min-height: 330px;
+}
+#board text { font-family: var(--hand); dominant-baseline: auto; }
+#board [data-act] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#board .pk .pk-bg { transition: fill .15s; }
+#board .pk.on:hover .pk-bg { fill: #f4f9fb; }
+#board .pk.on:active { transform-box: fill-box; transform-origin: center; transform: scale(.95); }
+#board .pk.chosen .pk-bg { fill: #fffbe6; }
+#board .btn-svg:active { transform-box: fill-box; transform-origin: center; transform: scale(.97); }
+#board .knot { transition: transform .5s cubic-bezier(.3, 1.4, .5, 1); }
+#board .hand { transform-box: fill-box; transform-origin: 50% 100%; }
+#board .hand.shake { animation: uc-shake .2s ease-in-out infinite alternate; }
+#board .hand.pop { animation: uc-pop .35s ease-out; }
+#board .pts.drop { animation: uc-drop .4s .15s ease-out backwards; }
+#board .cutmark.draw { animation: uc-fade .45s .25s ease-out backwards; }
+#board .cut { transform-box: fill-box; transform-origin: center; animation: uc-wiggle 1.6s ease-in-out infinite; }
+@keyframes uc-shake { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-10px) rotate(3deg); } }
+@keyframes uc-pop { from { transform: scale(.4); opacity: 0; } }
+@keyframes uc-drop { from { transform: translateY(-14px); opacity: 0; } }
+@keyframes uc-fade { from { opacity: 0; } }
+@keyframes uc-wiggle { 50% { transform: rotate(-4deg) scale(1.06); } }
+@media (min-width: 900px) {
+  #board { max-height: calc(100dvh - 190px); }
+}

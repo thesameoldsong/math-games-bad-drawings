@@ -1,0 +1,37 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+/* keep the tall board on screen: mobile leaves room for cards, status and the bottom bar */
+.arena .board-wrap { max-width: min(600px, calc((100dvh - 250px) * 0.762)); }
+@media (min-width: 900px) { .arena .board-wrap { max-width: min(600px, calc((100dvh - 150px) * 0.762)); } }
+
+#board .grid { fill: none; stroke: #d5e4ee; stroke-width: 1; }
+#board .outside { fill: url(#rt-hatch); }
+#board .wall { fill: none; stroke: var(--dot); stroke-width: 3.4; stroke-linejoin: round; }
+#board .checker { fill: var(--dot); }
+#board .chev { fill: none; stroke: #b4b4b4; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+#board .trail { fill: none; stroke-width: 2.6; stroke-linecap: round; opacity: .85; }
+#board .trail.tow { stroke-dasharray: 2 5; opacity: .6; }
+#board .trail.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .4s ease-out forwards; }
+#board .stop { opacity: .9; }
+#board .boom { fill: #ffd34d; stroke: #e0632a; stroke-width: 1.8; stroke-linejoin: round; }
+#board .boom.fresh { animation: bang .5s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .boom.pv { opacity: .75; }
+
+#board .car.fresh { animation: drive .42s cubic-bezier(.3, .1, .3, 1); }
+#board .car.crashed { animation: drive .3s ease-in, shake .35s .3s; }
+
+#board .box { fill: none; stroke: var(--pencil); stroke-width: 1.6; stroke-dasharray: 3 5; }
+#board .inertia { fill: none; stroke: var(--pencil); stroke-width: 2; stroke-dasharray: 2 5; stroke-linecap: round; }
+#board .opt { stroke-width: 2.4; }
+#board .opt.on { stroke-width: 3; }
+#board .no { fill: none; stroke: #9a9a9a; stroke-width: 2.4; stroke-linecap: round; }
+#board .no.on { stroke: var(--red-dark); stroke-width: 3; }
+#board .pv { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 3 6; opacity: .8; }
+
+.result-why { font-size: 22px; line-height: 1.15; margin: 0 0 8px; color: #555; max-width: 15em; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes drive { from { transform: translate(var(--dx), var(--dy)); } }
+@keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+@keyframes bang { from { transform: scale(.2); } 60% { transform: scale(1.4); } }
+.player .score { white-space: pre-line; }

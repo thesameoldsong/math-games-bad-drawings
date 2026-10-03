@@ -1,0 +1,29 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.6; stroke-linecap: round; }
+#board .trail { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: .5; }
+#board .trail path:first-child { stroke-dasharray: 2 7; }
+#board .ring { fill: none; stroke-width: 3; stroke-linecap: round; }
+#board .ring.can { stroke-dasharray: 3 7; opacity: .7; }
+#board .ring.sel { stroke-width: 4.5; }
+#board .target { opacity: .85; animation: tk-fade .25s ease-out; }
+#board .threat { animation: tk-pulse 1.1s ease-in-out infinite; }
+#board .threat path + path { stroke-width: 3; stroke-dasharray: 4 6; stroke-linecap: round; }
+#board .ghost { opacity: .4; stroke-width: 3; stroke-dasharray: 3 6; pointer-events: none; }
+#board .win { fill: none; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; opacity: .85; pointer-events: none; }
+#board .win.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: tk-draw .7s ease-out .25s forwards; }
+#board .tok.slide { animation: tk-slide .38s cubic-bezier(.3, .1, .3, 1); }
+#board .tok.drop .tok-in { animation: tk-drop .3s ease-out; }
+#board.busy { cursor: default; }
+.player .score { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.player .hand-dots { width: 62px; height: 15px; flex: none; }
+.result-why { font-size: 24px; margin: 0 0 2px; color: var(--ink); }
+.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+@keyframes tk-slide { from { transform: translate(var(--dx), var(--dy)); } }
+@keyframes tk-drop { from { transform: scale(1.6); opacity: 0; } }
+@keyframes tk-pulse { 50% { opacity: .35; } }
+@keyframes tk-fade { from { opacity: 0; } }
+@keyframes tk-draw { to { stroke-dashoffset: 0; } }
+@media (min-width: 900px) {
+  .player .score { justify-content: center; }
+  .player .hand-dots { width: 76px; height: 18px; }
+}

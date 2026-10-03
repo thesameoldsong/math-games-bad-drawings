@@ -1,0 +1,31 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.arena .board-wrap { max-width: min(600px, calc(100dvh - 290px)); min-width: min(300px, 100%); }
+#board .grid { fill: none; stroke-width: 4; stroke-linecap: round; }
+#board .big { fill: none; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+#board .bign { font: 700 17px var(--hand); text-anchor: end; opacity: .75; }
+#board .spk { font: 700 27px var(--hand); text-anchor: middle; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+#board .spk .sub { font-size: 16px; }
+#board .link { fill: none; stroke-width: 2.2; stroke-linecap: round; opacity: .4; }
+#board .link.inloop { opacity: .85; stroke-width: 3; }
+#board .fade { opacity: .18; }
+#board .ghost { opacity: .45; }
+#board .loop { opacity: .55; filter: url(#mg-crayon); }
+#board .sel, #board .hov { opacity: .35; filter: url(#mg-crayon); }
+#board .hov { opacity: .18; }
+#board .cand { fill: none; stroke: var(--ink); stroke-width: 3; stroke-dasharray: 8 7; animation: march 1s linear infinite; }
+#board .cand.on { stroke-width: 4.5; stroke-dasharray: none; }
+#board .strike { fill: none; stroke-width: 8; stroke-linecap: round; opacity: .85; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .5s .2s ease-out forwards; }
+#board .fresh { animation: pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .link.fresh { animation: fadein .5s ease-out; }
+@keyframes march { to { stroke-dashoffset: -30; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { opacity: 0; transform: scale(.4); } }
+@keyframes fadein { from { opacity: 0; } }
+
+.arena .status { line-height: 1.05; }
+#status-hint { display: block; font-size: 19px; color: #777; min-height: 1.1em; }
+.player .score .sym { font-size: 1.15em; }
+.result-sub { font-size: 21px; color: #555; margin: 0 0 8px; max-width: 16em; }
+.result-sub:empty { display: none; }
+@media (min-width: 900px) { #status-hint { font-size: 22px; } }
+#board .link.fade { opacity: .12; }

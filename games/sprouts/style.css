@@ -1,0 +1,31 @@
+#board {
+  width: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; cursor: crosshair;
+}
+.arena .board-wrap { max-width: min(600px, calc((100dvh - 250px) * 0.833)); min-width: min(100%, 300px); }
+@media (min-width: 900px) { .arena .board-wrap { max-width: min(600px, calc((100dvh - 150px) * 0.833)); } }
+#board .frame { fill: none; stroke: var(--pencil); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 7 6; }
+#board .edge { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+#board .edge.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .35s ease-in forwards; }
+#board .edge.fresh2 { animation: draw .35s ease-out .33s forwards; }
+#board .ink { fill: none; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; opacity: .75; }
+#board .ink.bad { stroke: var(--red-dark) !important; stroke-dasharray: 3 6; opacity: .6; transition: opacity .6s; }
+#board .spot { fill: var(--dot); stroke: var(--dot); stroke-width: 1.4; }
+#board .spot.dead { fill: #b9b9c0; stroke: #b9b9c0; }
+#board .spot.picked { stroke-width: 6; stroke: var(--dot); }
+#board .spot.fresh { transform-box: fill-box; transform-origin: center; animation: pop .35s ease-out .6s backwards; }
+#board .halo { fill: none; stroke-width: 2; opacity: .55; }
+#board .halo.fresh { animation: fade .3s ease-out .65s backwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { transform: scale(0); } 70% { transform: scale(1.5); } }
+@keyframes fade { from { opacity: 0; } }
+
+.toast {
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%); max-width: 92%; text-align: center;
+  font: 700 21px/1.15 var(--hand); color: var(--red-dark); background: #fff; pointer-events: none;
+  border: 2px solid var(--red-dark); border-radius: var(--sketchy); padding: 3px 12px; box-shadow: 2px 3px 0 rgba(0,0,0,.08);
+}
+.toast.show { animation: toast-in .2s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -6px); } }
+.result-sub { font-size: 21px; color: #555; margin: 0 0 10px; max-width: 18em; }
+#board .hint { font: 600 22px var(--hand); fill: #9a9aa3; text-anchor: middle; pointer-events: none; }

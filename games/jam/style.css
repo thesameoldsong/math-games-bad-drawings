@@ -1,0 +1,42 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.board-wrap { display: flex; flex-direction: column; align-items: center; }
+/* keep the board inside the phone screen above the bottom toolbar */
+#board { max-height: calc(100dvh - 300px); min-height: 220px; }
+
+#board .grid { fill: none; stroke: var(--pencil); stroke-width: 3; stroke-linecap: round; }
+#board .sep { fill: none; stroke: var(--pencil); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 6; }
+#board .ring { fill: none; stroke-width: 3; stroke-linecap: round; }
+#board .num.free .ring { stroke-width: 2.4; opacity: .8; }
+#board .num.p0 .ring, #board .num.p1 .ring { stroke-width: 4; }
+#board .num.win .ring { stroke-width: 6.5; }
+#board .num .fill { opacity: .8; }
+#board .digit { font: 700 40px var(--hand); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+#board .num.free .digit { opacity: .9; }
+#board.can-move .num.free { cursor: pointer; }
+#board .last { fill: #fff3c4; }
+#board .need { fill: none; stroke-width: 2.6; stroke-dasharray: 5 5; opacity: .85; }
+#board .ghost { opacity: .45; pointer-events: none; }
+#board .num.fresh { animation: pop .3s ease-out; }
+#board .num.win { animation: wiggle .5s .2s ease-in-out 2; }
+#board .winline { fill: none; stroke-width: 6; stroke-linecap: round; opacity: .55; }
+#board .winline.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s .15s ease-out forwards; }
+#board .chip { stroke-width: 2.6; }
+#board .chip.win { stroke-width: 4; }
+#board .chip-digit { font: 700 22px var(--hand); text-anchor: middle; dominant-baseline: central; }
+#board .hand-empty { font: 700 24px var(--hand); text-anchor: middle; dominant-baseline: central; opacity: .5; }
+#board .equation { font: 700 28px var(--hand); text-anchor: middle; dominant-baseline: central; }
+#board .equation.fresh { animation: fade .5s .2s ease-out backwards; }
+#board .legend { font: 600 17px var(--hand); text-anchor: middle; dominant-baseline: central; fill: #777; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { transform: scale(.6); } 60% { transform: scale(1.12); } }
+@keyframes wiggle { 50% { transform: rotate(-8deg) scale(1.08); } }
+@keyframes fade { from { opacity: 0; } }
+
+.result-why { font: 700 28px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
+.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+.result-text { font-size: clamp(28px, 6.5vw, 40px); }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+
+@media (min-width: 900px) {
+  #board { max-height: calc(100dvh - 220px); }
+}

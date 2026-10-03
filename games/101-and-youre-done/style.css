@@ -1,0 +1,94 @@
+/* 101 and You're Done — board styles. One SVG (viewBox 400 × 430): round pips, number line, score columns, die + buttons. */
+.arena .board-wrap { display: flex; flex-direction: column; align-items: center; }
+#board {
+  width: min(100%, calc((100dvh - 250px) * 400 / 430)); min-width: 290px; display: block;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; font-family: var(--hand);
+}
+#board text { text-anchor: middle; dominant-baseline: central; }
+#board text:not([fill]) { fill: var(--ink); }
+#board [data-act] { cursor: pointer; }
+
+#board .lbl { font: 600 19px var(--hand); fill: #777; }
+#board .tick-lbl { font: 600 15px var(--hand); fill: #888; }
+#board .tick-lbl.hundred { fill: var(--red-dark); font-weight: 700; }
+#board .bustzone { fill: #fde3e6; stroke: var(--red); stroke-width: 2; stroke-dasharray: 4 4; }
+#board .bustx { font: 700 18px var(--hand); fill: var(--red); opacity: .55; }
+#board .pin-lbl { font-weight: 700; }
+#board .pin > g { transition: transform .35s ease-out; }
+#board .pin.active > g path { stroke-width: 3.4; }
+
+#board .entry { font: 600 21px var(--hand); }
+#board .entry.tens { font-weight: 700; font-size: 23px; }
+#board .entry.over { text-decoration: line-through; }
+#board .entry.fresh { animation: pop .35s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .entry.pend { font-weight: 700; animation: blink 1s steps(2) infinite; }
+#board .slot { fill: #fff; stroke-width: 2.2; stroke-dasharray: 5 4; }
+#board .total { font: 700 32px var(--hand); }
+#board .total.bust { font-size: 26px; opacity: .8; }
+#board .winring { animation: ring .5s ease-out; }
+
+#board .die-body { fill: #fff; stroke: var(--ink); stroke-width: 2.8; }
+#board .pip { fill: var(--ink); }
+#board .die-q { font-weight: 700; fill: #aaa; }
+#board .die.faded { opacity: .45; }
+#board .die.roll { animation: roll .55s ease-out backwards; transform-box: fill-box; transform-origin: center; }
+#board .tap .die.pulse { animation: nudge 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+#board .tap:hover .die-body { fill: #f3fbfe; }
+
+#board .btn-txt { font: 700 27px var(--hand); }
+#board .btn-big { font: 700 32px var(--hand); }
+#board .btn-small { font: 600 18px var(--hand); }
+#board .btn-small.bad { fill: var(--red-dark); }
+#board .sbtn.off { opacity: .35; }
+#board .sbtn:not(.off):hover path { stroke-width: 3.6; }
+#board .sbtn:not(.off):active { transform: translateY(1px); }
+#board .wait { font: 600 23px var(--hand); }
+
+@keyframes roll { 0% { transform: translate(-30px, -40px) rotate(calc(var(--rot) * 9)); opacity: 0; } 70% { transform: rotate(var(--rot)); opacity: 1; } }
+@keyframes pop { from { transform: scale(.3); opacity: 0; } }
+@keyframes blink { 50% { opacity: .35; } }
+@keyframes nudge { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(-8deg); } 88% { transform: rotate(6deg); } }
+@keyframes ring { from { stroke-dasharray: 0 400; } to { stroke-dasharray: 400 0; } }
+
+/* player columns: first half of the table on the left, the rest on the right */
+.arena .pcol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.player .score { white-space: nowrap; }
+
+/* 3–4 players on one device: compact cards */
+.arena.many .pcol { flex-direction: row; justify-content: space-around; gap: 2px; }
+.arena.many .player { grid-template-columns: 1fr; grid-template-rows: auto; justify-items: center; text-align: center; flex: 1 1 0; min-width: 0; }
+.arena.many .player .fig-wrap { grid-row: auto; width: 34px; }
+.arena.many .player .name { text-align: center; font-size: 17px; padding: 0; }
+.arena.many .player .score { font-size: 15px; }
+.arena.many .player .bubble {
+  left: 50%; top: -4px; font-size: 16px; max-width: 120px; transform: translate(-50%, -100%) scale(.6); transform-origin: center bottom;
+}
+.arena.many .player .bubble.show { transform: translate(-50%, -100%) scale(1); }
+.arena.many .player .bubble::after { left: 50%; top: auto; bottom: -10px; transform: translateX(-50%) rotate(45deg) skew(8deg, 8deg); }
+@media (max-width: 899px) { .arena.many { grid-template-columns: var(--ca, 1fr) var(--cb, 1fr); } }
+.arena.many #board { width: min(100%, calc((100dvh - 290px) * 400 / 430)); }
+
+/* final standings stay readable: a compact result card covers only the die/buttons strip */
+.board-wrap .result { place-items: end center; background: none; pointer-events: none; }
+.board-wrap .result-card {
+  pointer-events: auto; padding: 2px 16px 6px; margin-bottom: 0;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: 14px;
+}
+.board-wrap .result-text { font-size: clamp(26px, 6.5vw, 38px); margin-bottom: 0; flex-basis: 100%; }
+.board-wrap .result-wait { font-size: 18px; line-height: 1.2; }
+.board-wrap .result-card .btn { margin: 0; }
+.result-sub { font-size: 20px; margin: 0; color: #555; line-height: 1.2; }
+/* 3–4 players: the per-round score line would wrap onto a third row and cover the totals; the cards show the stars */
+.arena.many .board-wrap .result-sub { display: none; }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+
+@media (min-width: 900px) {
+  #board, .arena.many #board { width: min(100%, calc((100dvh - 190px) * 400 / 430)); }
+  .arena.many .pcol { flex-direction: column; gap: 40px; }
+  .arena.many .player .fig-wrap { width: 70px; }
+  .arena.many .player .name { font-size: 22px; }
+  .arena.many .player .score { font-size: 19px; }
+  .arena.many .player .bubble { font-size: 19px; max-width: 170px; }
+}
+#board text.start { text-anchor: start; }
+#board text.end { text-anchor: end; }

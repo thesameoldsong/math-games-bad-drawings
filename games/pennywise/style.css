@@ -1,0 +1,68 @@
+/* board */
+#board { width: min(100%, calc((100dvh - 290px) * 360 / var(--board-h, 340))); min-width: 280px; margin: 0 auto; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board text { font-family: var(--hand); dominant-baseline: central; }
+#board .hit { fill: transparent; }
+#board .table { fill: #f1dfbf; }
+#board .table-rim { fill: none; stroke: #a67c4e; stroke-width: 2.6; stroke-linecap: round; }
+#board .tlabel { font-size: 17px; font-weight: 700; fill: #a67c4e; }
+#board .empty, #board .hint { font-size: 21px; fill: #9a8a74; text-anchor: middle; }
+#board .hint { fill: #888; }
+#board .row { fill-opacity: .16; stroke-width: 1.6; stroke-opacity: .45; }
+#board .purse.cur .row { fill-opacity: .3; stroke-width: 3; stroke-opacity: 1; }
+#board .purse.out { opacity: .45; }
+#board .initial { font-size: 19px; font-weight: 700; fill: #fff; text-anchor: middle; }
+#board .brokeT { font-size: 22px; font-weight: 700; text-anchor: middle; }
+#board .coin .rim { fill: none; stroke-width: 2.2; stroke-linecap: round; }
+#board .coin .ring { fill: none; stroke-width: 1; stroke-dasharray: 2 3; opacity: .55; }
+#board .coin .cv { font-weight: 700; text-anchor: middle; }
+#board .coin .fresh { animation: pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .cnt { font-size: 19px; font-weight: 700; fill: var(--ink); }
+#board .ghost { fill: none; stroke: var(--pencil); stroke-width: 1.6; stroke-dasharray: 3 4; }
+#board .glow { fill: none; stroke-width: 2.4; stroke-dasharray: 5 5; animation: breathe 1.4s ease-in-out infinite; }
+#board .live { cursor: pointer; }
+#board .chosen .coin { opacity: .9; }
+#board .cap { font-size: 18px; font-weight: 700; }
+#board .none { font-size: 20px; fill: #888; }
+#board .arrow { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; }
+#board .gring { fill: none; stroke-width: 2.6; }
+#board .okbtn { cursor: pointer; }
+#board .okbtn path { stroke-width: 2.4; }
+#board .okbtn text { font-size: 24px; font-weight: 700; fill: #fff; text-anchor: middle; }
+#board .okbtn:active { opacity: .75; }
+@media (hover: hover) {
+  #board .slot.live:hover .coin, #board .tray .live:hover .coin { translate: 0 -3px; }
+  #board .okbtn:hover path { stroke-width: 3.4; }
+}
+@keyframes pop { from { transform: scale(.3); opacity: 0; } }
+@keyframes breathe { 50% { opacity: .35; } }
+
+/* player cards: up to six players */
+.side { min-width: 0; }
+.side-l { grid-area: p0; }
+.side-r { grid-area: p1; }
+.player.out { opacity: .35; }
+.result-sub { font-size: 21px; margin: 0 0 10px; color: #555; line-height: 1.2; }
+.purse-note { font-size: 19px; color: #666; margin: -4px 0 6px; text-align: right; }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+
+@media (max-width: 899px) {
+  .player .score .sep { display: none; }
+  .player .score .cn { display: block; font-size: .85em; color: #777; }
+  .arena.many .player .score .cn { display: none; }
+  .arena.many { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: none; gap: 2px 4px; }
+  .arena.many .side { display: contents; }
+  .arena.many .board-wrap { grid-area: auto / 1 / auto / -1; order: 10; }
+  .arena.many .status { grid-area: auto / 1 / auto / -1; order: 11; }
+  .arena.many .player { grid-template-columns: 30px 1fr; column-gap: 2px; }
+  .arena.many .player .fig-wrap { width: 30px; }
+  .arena.many .player .name { font-size: 18px; }
+  .arena.many .player .score { font-size: 15px; white-space: nowrap; }
+  .arena.many .player .bubble { left: 26px; font-size: 16px; max-width: 30vw; }
+}
+@media (min-width: 900px) {
+  .side { display: flex; flex-direction: column; gap: 10px; align-self: center; }
+  .arena.many .player .fig-wrap { width: 62px; }
+  .arena.many .player .name { font-size: 22px; }
+  .arena.many .player .score { font-size: 18px; }
+  #board { width: min(100%, calc((100dvh - 140px) * 360 / var(--board-h, 340))); margin: 0 auto; }
+}

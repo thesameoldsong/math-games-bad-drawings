@@ -1,0 +1,264 @@
+@import url('../vendor/fonts/fonts.css');
+
+:root {
+  --blue: #1ea5cf;
+  --blue-dark: #0b6f94;
+  --red: #ec3a4a;
+  --red-dark: #b3172b;
+  --green: #3aa655;
+  --violet: #8e5cc4;
+  --ink: #2c2c33;
+  --dot: #3b3b44;
+  --pencil: #bdbdbd;
+  --paper: #fffefb;
+  --hand: 'Caveat', 'Comic Sans MS', cursive;
+  --serif: 'PT Serif', Georgia, serif;
+  --sketchy: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 18px/1.55 var(--serif);
+}
+a { color: var(--blue-dark); }
+
+.page { max-width: 1040px; margin: 0 auto; padding: 18px 20px 60px; }
+
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--hand); font-size: 24px; }
+.topbar a { text-decoration: none; color: var(--ink); }
+.topbar a:hover { color: var(--blue-dark); }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-toggle button {
+  font: 700 20px var(--hand); background: none; border: 2px solid transparent; border-radius: var(--sketchy);
+  padding: 0 8px; cursor: pointer; color: #888;
+}
+.lang-toggle button.on { color: var(--ink); border-color: var(--ink); }
+
+h1, h2, h3 { font-family: var(--hand); font-weight: 700; line-height: 1.1; }
+h1 { font-size: clamp(44px, 8vw, 72px); color: var(--blue); margin: 10px 0 0; text-align: center; }
+h1 + .underline { display: block; margin: 0 auto 6px; width: min(520px, 80%); height: 14px; }
+h2 { font-size: 40px; margin: 40px 0 8px; color: var(--ink); }
+h3 { font-size: 30px; margin: 24px 0 4px; }
+.subtitle { text-align: center; font-family: var(--hand); font-size: 26px; color: #666; margin: 0 0 12px; }
+
+.hand { font-family: var(--hand); }
+.blue { color: var(--blue); }
+.red { color: var(--red); }
+.green { color: var(--green); }
+.violet { color: var(--violet); }
+
+.btn {
+  font: 700 22px var(--hand); color: var(--ink); background: #fff; cursor: pointer;
+  border: 2.5px solid var(--ink); border-radius: var(--sketchy); padding: 2px 16px;
+  transition: transform .1s, box-shadow .1s; box-shadow: 2px 3px 0 rgba(0,0,0,.12);
+}
+.btn:hover { transform: rotate(-1deg) scale(1.03); }
+.btn:active { transform: scale(.97); box-shadow: none; }
+.btn.primary { background: var(--blue); border-color: var(--blue-dark); color: #fff; }
+.btn:disabled { opacity: .4; cursor: default; transform: none; }
+
+select, input[type=text] {
+  font: 600 21px var(--hand); color: var(--ink); background: #fff;
+  border: 2px solid var(--ink); border-radius: var(--sketchy); padding: 1px 10px;
+}
+select {
+  appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 30px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M2 2.5 Q7 8.5 12 2' stroke='%232c2c33' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 9px center / 13px 9px;
+}
+
+.prose { max-width: 680px; margin: 0 auto; }
+.prose ol, .prose ul { padding-left: 1.3em; }
+.prose li { margin: 6px 0; }
+.prose .tip { border-left: 4px solid var(--blue); padding: 2px 0 2px 14px; margin: 14px 0; }
+
+.credit {
+  margin: 48px auto 0; max-width: 680px; font-size: 16px; color: #555; text-align: center;
+  border: 2px dashed var(--pencil); border-radius: var(--sketchy); padding: 14px 20px;
+}
+
+/* speech bubble */
+.bubble {
+  position: absolute; left: 50%; top: -6px; transform: translate(-50%, -100%) scale(.6); opacity: 0;
+  font: 700 22px/1.1 var(--hand); background: #fff; border: 2.5px solid currentColor; border-radius: var(--sketchy);
+  padding: 4px 10px; white-space: nowrap; pointer-events: none; transition: opacity .2s, transform .2s;
+}
+.bubble.show { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+.bubble::after {
+  content: ''; position: absolute; left: 50%; bottom: -10px; width: 14px; height: 14px; background: #fff;
+  border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: translateX(-50%) rotate(45deg) skew(8deg, 8deg);
+}
+
+@media (max-width: 640px) {
+  body { font-size: 17px; }
+  h2 { font-size: 34px; }
+}
+
+/* ================= game page layout (mobile first) =================
+   <body class="game">
+     <header class="game-top">back · h1 · lang</header>
+     <main class="arena">
+       <div class="player p0">…</div> <div class="board-wrap">…</div> <div class="player p1">…</div>
+       <div class="status"></div>
+       <nav class="toolbar"><div class="tools tools-info">…</div><div class="tools tools-play">…</div></nav>
+     </main>
+     <dialog class="mg-dialog" id="sheet-how">…</dialog> …
+*/
+body.game { min-height: 100dvh; }
+.game .page { padding: 8px 12px calc(84px + env(safe-area-inset-bottom)); max-width: 1180px; }
+.game-top { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 6px; }
+.game-top .back { font: 700 30px/1 var(--hand); text-decoration: none; color: var(--ink); padding: 4px 6px; }
+.game-top h1 { font-size: clamp(24px, 7.4vw, 56px); margin: 0; line-height: 1; text-wrap: balance; }
+@media (max-width: 899px) { .game-top .lang-toggle button.on { display: none; } }
+
+.arena {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; align-items: center;
+  grid-template-areas: "p0 p1" "board board" "status status";
+  margin-top: 6px;
+}
+.arena .p0 { grid-area: p0; }
+.arena .p1 { grid-area: p1; }
+.arena .board-wrap { grid-area: board; position: relative; width: 100%; max-width: 600px; justify-self: center; }
+.arena .status { grid-area: status; text-align: center; font: 700 26px/1.2 var(--hand); min-height: 1.3em; }
+
+/* player card: compact row on mobile */
+.player {
+  display: grid; grid-template-columns: 58px 1fr; grid-template-rows: auto auto; align-items: end; column-gap: 4px;
+  opacity: .7; transition: opacity .3s;
+}
+.player.active { opacity: 1; }
+.player .fig-wrap { position: relative; grid-row: 1 / 3; width: 58px; }
+.mg-figure { width: 100%; display: block; overflow: visible; }
+.player .name {
+  width: 100%; min-width: 0; font-size: 23px; font-weight: 700; border-color: transparent; background: transparent; padding: 0 2px;
+}
+.player .name:hover:not(:disabled), .player .name:focus { border-color: var(--pencil); outline: none; }
+.player .name::placeholder { color: inherit; opacity: 1; }
+.player .name:disabled { -webkit-text-fill-color: currentColor; opacity: 1; }
+.player .name { align-self: end; }
+.player .score { font: 600 20px/1.1 var(--hand); color: #555; padding-left: 2px; align-self: start; }
+.player .bubble {
+  font-size: 18px; left: 52px; top: 0; transform: translateY(-15%) scale(.6); transform-origin: left center;
+  white-space: normal; width: max-content; max-width: min(46vw, 190px); z-index: 5;
+}
+.player .bubble.show { transform: translateY(-15%) scale(1); }
+/* 2-player cards: the right card only has the rest of the row for its bubble */
+.player.p1 .bubble { max-width: calc(50vw - 74px); }
+body.game { overflow-x: clip; }
+.player .bubble::after { left: -8px; bottom: auto; top: 50%; transform: translateY(-50%) rotate(135deg) skew(8deg, 8deg); }
+.mg-dialog .field[hidden] { display: none; }
+
+/* toolbar: fixed bottom bar on mobile */
+.toolbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; justify-content: space-around;
+  background: var(--paper); border-top: 2px solid var(--ink); padding: 4px 0 calc(4px + env(safe-area-inset-bottom));
+}
+.tools { display: contents; }
+.tool {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; flex: 1 1 0; min-width: 0;
+  background: none; border: 2px solid transparent; border-radius: var(--sketchy); color: var(--ink); cursor: pointer;
+  padding: 4px 0 2px; font: 600 15px/1.1 var(--hand); -webkit-tap-highlight-color: transparent;
+}
+.tool .icon { width: 28px; height: 28px; }
+.tool .lbl { white-space: nowrap; max-width: 100%; padding: 0 1px; overflow: hidden; text-overflow: clip; font-size: clamp(12px, 3.6vw, 15px); letter-spacing: -.02em; }
+.tool:hover:not(:disabled) { border-color: var(--pencil); }
+.tool:active:not(:disabled) { transform: scale(.94); }
+.tool:disabled { opacity: .3; cursor: default; }
+.tool.online-on { color: var(--blue-dark); }
+.tool.online-on::after {
+  content: ''; position: absolute; top: 4px; right: calc(50% - 20px); width: 9px; height: 9px; border-radius: 50%;
+  background: #f0a020;
+}
+.tool.online-on[data-status=connected]::after { background: #2bb24c; }
+
+/* desktop: icon columns on both sides of the board */
+@media (min-width: 900px) {
+  .game .page { padding-bottom: 40px; }
+  .game-top { grid-template-columns: 120px 1fr 120px; }
+  .game-top .back { font-size: 26px; }
+  .game-top .back::after { content: attr(data-label); font-size: 22px; margin-left: 4px; }
+  .arena {
+    grid-template-columns: 92px 150px minmax(0, 600px) 150px 92px; justify-content: center; gap: 8px 14px;
+    grid-template-areas: "info p0 board p1 play" ". . status . .";
+    margin-top: 14px;
+  }
+  .toolbar { display: contents; }
+  .tools { display: flex; flex-direction: column; gap: 10px; align-self: center; }
+  .tools-info { grid-area: info; }
+  .tools-play { grid-area: play; }
+  .tool { flex: none; width: 92px; padding: 6px 2px 4px; font-size: 19px; }
+  .tool .icon { width: 34px; height: 34px; }
+  .tool .lbl { font-size: inherit; overflow: visible; }
+  .player { grid-template-columns: 1fr; grid-template-rows: auto; justify-items: center; text-align: center; row-gap: 2px; }
+  .player .fig-wrap { grid-row: auto; width: 130px; }
+  .player .name { text-align: center; font-size: 27px; }
+  .player .score { font-size: 23px; }
+  .player.p1 .bubble { max-width: 220px; }
+  .player .bubble { font-size: 22px; left: 50%; top: -6px; transform: translate(-50%, -100%) scale(.6); transform-origin: center bottom; max-width: 220px; }
+  .player .bubble.show { transform: translate(-50%, -100%) scale(1); }
+  .player .bubble::after { left: 50%; top: auto; bottom: -10px; transform: translateX(-50%) rotate(45deg) skew(8deg, 8deg); }
+  .arena .status { font-size: 30px; }
+}
+
+/* popups: bottom sheet on mobile, card on desktop */
+.mg-dialog {
+  position: fixed; border: 3px solid var(--ink); border-radius: 22px 22px 0 0; border-bottom: none;
+  margin: auto 0 0; width: 100%; max-width: 100%; max-height: 86dvh; overflow: auto;
+  background: #fff; color: var(--ink); padding: 14px 20px calc(22px + env(safe-area-inset-bottom));
+  font: 17px/1.5 var(--serif);
+}
+.mg-dialog[open] { animation: mg-sheet-up .22s ease-out; }
+.mg-dialog::backdrop { background: rgba(40, 40, 50, .35); }
+.mg-dialog h3 { margin: 4px 40px 10px 0; font-size: 34px; color: var(--blue); }
+.mg-dialog ol, .mg-dialog ul { padding-left: 1.3em; }
+.mg-dialog li { margin: 6px 0; }
+.mg-dialog .tip { border-left: 4px solid var(--blue); padding: 2px 0 2px 12px; margin: 12px 0; }
+.mg-dialog .credit { margin: 18px 0 0; font-size: 15px; }
+.mg-dialog .actions { display: flex; justify-content: center; gap: 10px; margin-top: 14px; }
+.mg-dialog-x:focus:not(:focus-visible) { outline: none; }
+.mg-dialog-x {
+  position: absolute; right: 10px; top: 4px; font: 700 38px/1 var(--hand); background: none; border: none;
+  cursor: pointer; color: var(--ink); padding: 4px 8px;
+}
+.mg-dialog .field { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0; font: 600 24px var(--hand); }
+.mg-dialog .field select { min-width: 0; max-width: 62%; font-size: clamp(16px, 4.8vw, 21px); text-overflow: ellipsis; }
+@keyframes mg-sheet-up { from { transform: translateY(40px); opacity: 0; } }
+@media (min-width: 760px) {
+  .mg-dialog {
+    margin: auto; width: min(600px, 92vw); border-bottom: 3px solid var(--ink); border-radius: var(--sketchy);
+    box-shadow: 5px 6px 0 rgba(0, 0, 0, .12); padding: 18px 28px 24px; font-size: 18px;
+  }
+}
+
+/* online dialog */
+.mg-on-body { text-align: center; }
+.mg-on-or { margin: 12px 0 6px; color: #888; font-family: var(--hand); font-size: 20px; }
+.mg-on-join { display: flex; justify-content: center; gap: 8px; }
+.mg-on-join input { width: 7.5em; text-transform: uppercase; letter-spacing: .12em; text-align: center; }
+.mg-on-qr svg { width: min(220px, 60vw); height: auto; display: block; margin: 6px auto; }
+.mg-on-code { font: 700 46px/1.1 var(--hand); letter-spacing: .14em; color: var(--red); margin: 4px 0 8px; }
+.mg-on-status { font-size: 22px; color: #666; }
+.mg-on-ok { font-size: 30px; color: #2a9d48; margin: 6px 0; }
+.mg-on-error { color: var(--red-dark); text-align: center; font-family: var(--hand); font-size: 20px; margin: 6px 0 0; min-height: 0; }
+.mg-on-spin {
+  display: inline-block; width: 14px; height: 14px; border: 2.5px solid currentColor; border-right-color: transparent;
+  border-radius: 50%; animation: mg-spin 0.9s linear infinite; vertical-align: -1px;
+}
+@keyframes mg-spin { to { transform: rotate(360deg); } }
+
+/* end-of-game card over the board */
+.result { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 254, 251, .7); }
+.result[hidden] { display: none; }
+.result-card {
+  background: #fff; border: 3px solid var(--ink); border-radius: var(--sketchy); padding: 14px 24px; text-align: center;
+  box-shadow: 4px 5px 0 rgba(0,0,0,.1); transform: rotate(-1.5deg); animation: mg-drop .35s ease-out; max-width: 92%;
+}
+.result-wait { font-size: 22px; color: #666; margin: 0; }
+.result-text { font: 700 clamp(30px, 7vw, 44px)/1.1 var(--hand); margin-bottom: 8px; }
+@keyframes mg-drop { from { transform: translateY(-20px) rotate(-6deg); opacity: 0; } }
+
+.game .credit { font-size: 14px; margin-top: 18px; border: none; padding: 4px; }
+.mg-on-hint { font-size: 15px; color: #777; margin: 4px 0 8px; }

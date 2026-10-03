@@ -1,0 +1,37 @@
+#board {
+  width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  max-height: calc(100dvh - 270px); min-height: 240px;
+}
+@media (min-width: 900px) { #board { max-height: calc(100dvh - 190px); min-height: 380px; } }
+
+#board .num text {
+  font: 700 36px var(--hand); text-anchor: middle; dominant-baseline: central; fill: var(--ink); pointer-events: none;
+}
+#board .num.dead text { fill: #b9b9bf; }
+#board .num.mine text { fill: var(--blue-dark); }
+#board .num.tax text { fill: var(--red-dark); }
+#board .num.focus text { fill: var(--blue-dark); }
+#board .num.taxing text { fill: var(--red-dark); }
+
+#board .fillc { fill: #7fd0ea; opacity: .55; }
+#board .ring { fill: none; stroke: var(--blue); stroke-width: 3.6; stroke-linecap: round; }
+#board .ring.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: tc-draw .35s ease-out forwards; }
+#board .box { fill: none; stroke: var(--red); stroke-width: 3.4; stroke-linecap: round; }
+#board .box.fresh { opacity: 0; animation: tc-pop .3s ease-out forwards; transform-box: fill-box; transform-origin: center; }
+#board .ghost { stroke-dasharray: 5 6; opacity: .85; }
+#board .tie { fill: none; stroke: var(--red); stroke-width: 2; stroke-dasharray: 3 7; stroke-linecap: round; opacity: .55; }
+#board .hintc {
+  fill: #ffe066; fill-opacity: .35; stroke: #e0a800; stroke-width: 3; stroke-dasharray: 6 6;
+  animation: tc-pulse .9s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center;
+}
+
+@keyframes tc-draw { to { stroke-dashoffset: 0; } }
+@keyframes tc-pop { from { opacity: 0; transform: scale(1.6) rotate(8deg); } to { opacity: 1; transform: none; } }
+@keyframes tc-pulse { from { transform: scale(.92); } to { transform: scale(1.06); } }
+
+.result-score { font: 700 clamp(34px, 8vw, 46px)/1 var(--hand); margin: -4px 0 6px; }
+.result-sub { font-size: 22px; line-height: 1.15; color: #555; margin: 0 0 10px; max-width: 16em; margin-inline: auto; }
+
+.how-pic svg { display: block; width: min(100%, 420px); margin: 0 auto 4px; }
+.how-pic text { font: 700 26px var(--hand); text-anchor: middle; dominant-baseline: central; }
+.how-pic text.lbl { font-size: 19px; }

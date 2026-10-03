@@ -1,0 +1,205 @@
+// Question bank for Breaking Rank: a group of items + a statistic to rank them by (largest first).
+// Item: [ru, en, value, optional display override {ru, en}]. Values within a topic are all distinct.
+// kind 'year': value is a year (negative = BC); "largest first" then means "most recent first".
+// Figures are rounded reference values (encyclopedias, ~2023); only their order matters for the game.
+
+const Q = (id, t, s, u, items, extra = {}) => ({ id, t, s, u, items, ...extra });
+
+export const CATS = [
+  Q('continents', { ru: 'Континенты', en: 'Continents' },
+    { ru: 'по площади — от большего к меньшему', en: 'by area, largest first' },
+    { ru: 'млн км²', en: 'million km²' }, [
+      ['Азия', 'Asia', 44.6], ['Африка', 'Africa', 30.4], ['Северная Америка', 'North America', 24.7],
+      ['Южная Америка', 'South America', 17.8], ['Антарктида', 'Antarctica', 14.2], ['Европа', 'Europe', 10.2],
+      ['Австралия', 'Australia', 7.7],
+    ]),
+  Q('planets-size', { ru: 'Планеты', en: 'Planets' },
+    { ru: 'по диаметру — от большего к меньшему', en: 'by diameter, largest first' },
+    { ru: 'км', en: 'km' }, [
+      ['Юпитер', 'Jupiter', 139820], ['Сатурн', 'Saturn', 116460], ['Уран', 'Uranus', 50724],
+      ['Нептун', 'Neptune', 49244], ['Земля', 'Earth', 12742], ['Венера', 'Venus', 12104],
+      ['Марс', 'Mars', 6779], ['Меркурий', 'Mercury', 4879],
+    ]),
+  Q('planets-mass', { ru: 'Планеты', en: 'Planets' },
+    { ru: 'по массе — от тяжёлых к лёгким', en: 'by mass, heaviest first' },
+    { ru: '× масса Земли', en: '× Earth’s mass' }, [
+      ['Юпитер', 'Jupiter', 317.8], ['Сатурн', 'Saturn', 95.2], ['Нептун', 'Neptune', 17.1],
+      ['Уран', 'Uranus', 14.5], ['Земля', 'Earth', 1], ['Венера', 'Venus', 0.815],
+      ['Марс', 'Mars', 0.107], ['Меркурий', 'Mercury', 0.055],
+    ]),
+  Q('moons', { ru: 'Спутники планет', en: 'Moons' },
+    { ru: 'по диаметру — от большего к меньшему', en: 'by diameter, largest first' },
+    { ru: 'км', en: 'km' }, [
+      ['Ганимед', 'Ganymede', 5268], ['Титан', 'Titan', 5150], ['Каллисто', 'Callisto', 4821],
+      ['Ио', 'Io', 3643], ['Луна', 'the Moon', 3475], ['Европа', 'Europa', 3122], ['Тритон', 'Triton', 2707],
+    ]),
+  Q('population', { ru: 'Страны', en: 'Countries' },
+    { ru: 'по населению — от большего к меньшему', en: 'by population, largest first' },
+    { ru: 'млн чел.', en: 'million people' }, [
+      ['Индия', 'India', 1429], ['Китай', 'China', 1410], ['США', 'USA', 340], ['Индонезия', 'Indonesia', 278],
+      ['Пакистан', 'Pakistan', 240], ['Нигерия', 'Nigeria', 224], ['Бразилия', 'Brazil', 216], ['Россия', 'Russia', 144],
+    ]),
+  Q('country-area', { ru: 'Большие страны', en: 'Big countries' },
+    { ru: 'по площади — от большей к меньшей', en: 'by area, largest first' },
+    { ru: 'млн км²', en: 'million km²' }, [
+      ['Россия', 'Russia', 17.1], ['Канада', 'Canada', 9.98], ['Бразилия', 'Brazil', 8.52],
+      ['Австралия', 'Australia', 7.69], ['Индия', 'India', 3.29], ['Аргентина', 'Argentina', 2.78],
+      ['Казахстан', 'Kazakhstan', 2.72], ['Алжир', 'Algeria', 2.38],
+    ]),
+  Q('europe-area', { ru: 'Страны Европы', en: 'European countries' },
+    { ru: 'по площади — от большей к меньшей', en: 'by area, largest first' },
+    { ru: 'тыс. км²', en: 'thousand km²' }, [
+      ['Украина', 'Ukraine', 603.6], ['Франция', 'France', 551.7], ['Испания', 'Spain', 506],
+      ['Швеция', 'Sweden', 450], ['Германия', 'Germany', 357.6], ['Финляндия', 'Finland', 338.4],
+      ['Польша', 'Poland', 312.7], ['Италия', 'Italy', 301.3],
+    ]),
+  Q('rivers', { ru: 'Реки Европы', en: 'European rivers' },
+    { ru: 'по длине — от длинных к коротким', en: 'by length, longest first' },
+    { ru: 'км', en: 'km' }, [
+      ['Волга', 'Volga', 3531], ['Дунай', 'Danube', 2850], ['Днепр', 'Dnieper', 2201], ['Дон', 'Don', 1870],
+      ['Рейн', 'Rhine', 1233], ['Эльба', 'Elbe', 1094], ['Сена', 'Seine', 777], ['Темза', 'Thames', 346],
+    ]),
+  Q('mountains', { ru: 'Знаменитые вершины', en: 'Famous peaks' },
+    { ru: 'по высоте — от высоких к низким', en: 'by height, tallest first' },
+    { ru: 'м', en: 'm' }, [
+      ['Эверест', 'Everest', 8849], ['Аконкагуа', 'Aconcagua', 6961], ['Денали', 'Denali', 6190],
+      ['Килиманджаро', 'Kilimanjaro', 5895], ['Эльбрус', 'Elbrus', 5642], ['Монблан', 'Mont Blanc', 4806],
+      ['Фудзияма', 'Mount Fuji', 3776],
+    ]),
+  Q('lakes', { ru: 'Озёра', en: 'Lakes' },
+    { ru: 'по площади — от большего к меньшему', en: 'by area, largest first' },
+    { ru: 'тыс. км²', en: 'thousand km²' }, [
+      ['Каспийское море', 'Caspian Sea', 371], ['Верхнее', 'Superior', 82.1], ['Виктория', 'Victoria', 68.9],
+      ['Гурон', 'Huron', 59.6], ['Танганьика', 'Tanganyika', 32.9], ['Байкал', 'Baikal', 31.7],
+      ['Ладожское', 'Ladoga', 17.7], ['Онежское', 'Onega', 9.7],
+    ]),
+  Q('oceans', { ru: 'Океаны', en: 'Oceans' },
+    { ru: 'по площади — от большего к меньшему', en: 'by area, largest first' },
+    { ru: 'млн км²', en: 'million km²' }, [
+      ['Тихий', 'Pacific', 165.2], ['Атлантический', 'Atlantic', 106.5], ['Индийский', 'Indian', 70.6],
+      ['Южный', 'Southern', 21.96], ['Северный Ледовитый', 'Arctic', 14.06],
+    ]),
+  Q('islands', { ru: 'Острова', en: 'Islands' },
+    { ru: 'по площади — от большего к меньшему', en: 'by area, largest first' },
+    { ru: 'тыс. км²', en: 'thousand km²' }, [
+      ['Гренландия', 'Greenland', 2130], ['Новая Гвинея', 'New Guinea', 786], ['Калимантан', 'Borneo', 743],
+      ['Мадагаскар', 'Madagascar', 587], ['Баффинова Земля', 'Baffin Island', 507], ['Суматра', 'Sumatra', 473],
+      ['Хонсю', 'Honshu', 228], ['Великобритания', 'Great Britain', 209],
+    ]),
+  Q('deserts', { ru: 'Пустыни', en: 'Deserts' },
+    { ru: 'по площади — от большей к меньшей', en: 'by area, largest first' },
+    { ru: 'тыс. км²', en: 'thousand km²' }, [
+      ['Сахара', 'Sahara', 9200], ['Аравийская', 'Arabian', 2330], ['Гоби', 'Gobi', 1295],
+      ['Калахари', 'Kalahari', 900], ['Большая пустыня Виктория', 'Great Victoria', 348], ['Атакама', 'Atacama', 105],
+    ]),
+  Q('waterfalls', { ru: 'Водопады', en: 'Waterfalls' },
+    { ru: 'по высоте — от высоких к низким', en: 'by height, tallest first' },
+    { ru: 'м', en: 'm' }, [
+      ['Анхель', 'Angel Falls', 979], ['Йосемитский', 'Yosemite Falls', 739], ['Виктория', 'Victoria Falls', 108],
+      ['Игуасу', 'Iguazu Falls', 82], ['Ниагарский', 'Niagara Falls', 51],
+    ]),
+  Q('animals-mass', { ru: 'Животные', en: 'Animals' },
+    { ru: 'по весу взрослой особи — от тяжёлых к лёгким', en: 'by adult weight, heaviest first' },
+    { ru: 'кг', en: 'kg' }, [
+      ['Синий кит', 'Blue whale', 150000], ['Африканский слон', 'African elephant', 6000], ['Бегемот', 'Hippo', 1500],
+      ['Жираф', 'Giraffe', 1000], ['Белый медведь', 'Polar bear', 450], ['Тигр', 'Tiger', 220],
+      ['Человек', 'Human', 70], ['Кошка', 'House cat', 4],
+    ], { approx: true }),
+  Q('speed', { ru: 'Кто быстрее', en: 'Who’s fastest' },
+    { ru: 'по рекордной скорости — от быстрых к медленным', en: 'by top speed, fastest first' },
+    { ru: 'км/ч', en: 'km/h' }, [
+      ['Сапсан в пике', 'Peregrine falcon (dive)', 389], ['Гепард', 'Cheetah', 110], ['Лошадь', 'Horse', 88],
+      ['Страус', 'Ostrich', 70], ['Усэйн Болт', 'Usain Bolt', 44.7], ['Африканский слон', 'African elephant', 40],
+      ['Галапагосская черепаха', 'Giant tortoise', 0.3],
+    ], { approx: true }),
+  Q('skyscrapers', { ru: 'Небоскрёбы', en: 'Skyscrapers' },
+    { ru: 'по высоте — от высоких к низким', en: 'by height, tallest first' },
+    { ru: 'м', en: 'm' }, [
+      ['Бурдж-Халифа', 'Burj Khalifa', 828], ['Шанхайская башня', 'Shanghai Tower', 632],
+      ['Всемирный торговый центр 1', 'One World Trade Center', 541], ['Тайбэй 101', 'Taipei 101', 508],
+      ['Лахта-центр', 'Lakhta Center', 462], ['Башни Петронас', 'Petronas Towers', 452],
+      ['Эмпайр-стейт-билдинг', 'Empire State Building', 443],
+    ]),
+  Q('landmarks', { ru: 'Знаменитые постройки', en: 'Famous landmarks' },
+    { ru: 'по году постройки — от новых к древним', en: 'by year completed, newest first' },
+    { ru: '', en: '' }, [
+      ['Сиднейский оперный театр', 'Sydney Opera House', 1973], ['Эйфелева башня', 'Eiffel Tower', 1889],
+      ['Статуя Свободы', 'Statue of Liberty', 1886], ['Биг-Бен', 'Big Ben', 1859], ['Тадж-Махал', 'Taj Mahal', 1653],
+      ['Храм Василия Блаженного', 'St Basil’s Cathedral', 1561], ['Колизей', 'Colosseum', 80],
+      ['Пирамида Хеопса', 'Great Pyramid of Giza', -2560],
+    ], { kind: 'year' }),
+  Q('inventions', { ru: 'Изобретения', en: 'Inventions' },
+    { ru: 'по году появления — от новых к старым', en: 'by year, newest first' },
+    { ru: '', en: '' }, [
+      ['Айфон', 'iPhone', 2007], ['Первый спутник', 'First satellite', 1957], ['Самолёт братьев Райт', 'Wright brothers’ plane', 1903],
+      ['Телефон Белла', 'Bell’s telephone', 1876], ['Первая фотография', 'First photograph', 1826],
+      ['Паровоз', 'Steam locomotive', 1804], ['Печатный станок Гутенберга', 'Gutenberg’s printing press', 1440],
+    ], { kind: 'year' }),
+  Q('composers', { ru: 'Композиторы', en: 'Composers' },
+    { ru: 'по году рождения — от младших к старшим', en: 'by birth year, youngest first' },
+    { ru: '', en: '' }, [
+      ['Шостакович', 'Shostakovich', 1906], ['Рахманинов', 'Rachmaninoff', 1873], ['Чайковский', 'Tchaikovsky', 1840],
+      ['Шопен', 'Chopin', 1810], ['Бетховен', 'Beethoven', 1770], ['Моцарт', 'Mozart', 1756],
+      ['Бах', 'Bach', 1685], ['Вивальди', 'Vivaldi', 1678],
+    ], { kind: 'year' }),
+  Q('writers', { ru: 'Писатели', en: 'Writers' },
+    { ru: 'по году рождения — от младших к старшим', en: 'by birth year, youngest first' },
+    { ru: '', en: '' }, [
+      ['Хемингуэй', 'Hemingway', 1899], ['Чехов', 'Chekhov', 1860], ['Марк Твен', 'Mark Twain', 1835],
+      ['Толстой', 'Tolstoy', 1828], ['Достоевский', 'Dostoevsky', 1821], ['Диккенс', 'Dickens', 1812],
+      ['Пушкин', 'Pushkin', 1799], ['Шекспир', 'Shakespeare', 1564],
+    ], { kind: 'year' }),
+  Q('languages', { ru: 'Языки', en: 'Languages' },
+    { ru: 'по числу носителей — от большего к меньшему', en: 'by native speakers, most first' },
+    { ru: 'млн', en: 'million' }, [
+      ['Китайский (путунхуа)', 'Mandarin Chinese', 940], ['Испанский', 'Spanish', 485], ['Английский', 'English', 380],
+      ['Хинди', 'Hindi', 345], ['Португальский', 'Portuguese', 236], ['Русский', 'Russian', 148],
+      ['Японский', 'Japanese', 123], ['Немецкий', 'German', 76],
+    ], { approx: true }),
+  Q('russian-cities', { ru: 'Города России', en: 'Russian cities' },
+    { ru: 'по населению — от большего к меньшему', en: 'by population, largest first' },
+    { ru: 'тыс. чел.', en: 'thousand people' }, [
+      ['Москва', 'Moscow', 13010], ['Санкт-Петербург', 'Saint Petersburg', 5600], ['Новосибирск', 'Novosibirsk', 1634],
+      ['Екатеринбург', 'Yekaterinburg', 1544], ['Казань', 'Kazan', 1309], ['Нижний Новгород', 'Nizhny Novgorod', 1251],
+      ['Владивосток', 'Vladivostok', 603],
+    ]),
+  Q('us-states', { ru: 'Штаты США', en: 'US states' },
+    { ru: 'по площади — от большего к меньшему', en: 'by area, largest first' },
+    { ru: 'тыс. км²', en: 'thousand km²' }, [
+      ['Аляска', 'Alaska', 1723], ['Техас', 'Texas', 696], ['Калифорния', 'California', 424], ['Монтана', 'Montana', 381],
+      ['Флорида', 'Florida', 170], ['Нью-Йорк', 'New York', 141], ['Род-Айленд', 'Rhode Island', 4],
+    ]),
+  Q('metals', { ru: 'Металлы', en: 'Metals' },
+    { ru: 'по температуре плавления — от высокой к низкой', en: 'by melting point, highest first' },
+    { ru: '°C', en: '°C' }, [
+      ['Вольфрам', 'Tungsten', 3422], ['Железо', 'Iron', 1538], ['Медь', 'Copper', 1085], ['Золото', 'Gold', 1064],
+      ['Серебро', 'Silver', 962], ['Алюминий', 'Aluminium', 660], ['Свинец', 'Lead', 327], ['Олово', 'Tin', 232],
+    ]),
+  Q('balls', { ru: 'Мячи', en: 'Sports balls' },
+    { ru: 'по диаметру — от больших к маленьким', en: 'by diameter, largest first' },
+    { ru: 'см', en: 'cm' }, [
+      ['Баскетбольный', 'Basketball', 24], ['Футбольный', 'Soccer ball', 22], ['Волейбольный', 'Volleyball', 21],
+      ['Бейсбольный', 'Baseball', 7.4], ['Теннисный', 'Tennis ball', 6.7], ['Мяч для гольфа', 'Golf ball', 4.3],
+      ['Шарик для пинг-понга', 'Ping-pong ball', 4.0],
+    ]),
+  Q('constants', { ru: 'Математические константы', en: 'Math constants' },
+    { ru: 'по величине — от большей к меньшей', en: 'by value, largest first' },
+    { ru: '', en: '' }, [
+      ['π', 'π', 3.14159], ['e', 'e', 2.71828], ['√3', '√3', 1.73205], ['φ (золотое сечение)', 'φ (golden ratio)', 1.61803],
+      ['√2', '√2', 1.41421], ['ln 2', 'ln 2', 0.69315],
+    ]),
+  Q('powers', { ru: 'Числа', en: 'Numbers' },
+    { ru: 'по величине — от большего к меньшему', en: 'by value, largest first' },
+    { ru: '', en: '' }, [
+      ['2¹⁰', '2¹⁰', 1024], ['10³', '10³', 1000], ['3⁶', '3⁶', 729], ['6!', '6!', 720],
+      ['5⁴', '5⁴', 625], ['2⁹', '2⁹', 512], ['7³', '7³', 343],
+    ]),
+  Q('solids', { ru: 'Правильные многогранники', en: 'Platonic solids' },
+    { ru: 'по числу вершин — от большего к меньшему', en: 'by number of vertices, most first' },
+    { ru: '', en: '' }, [
+      ['Додекаэдр', 'Dodecahedron', 20], ['Икосаэдр', 'Icosahedron', 12], ['Куб', 'Cube', 8],
+      ['Октаэдр', 'Octahedron', 6], ['Тетраэдр', 'Tetrahedron', 4],
+    ]),
+];
+
+export const CAT = Object.fromEntries(CATS.map((c) => [c.id, c]));

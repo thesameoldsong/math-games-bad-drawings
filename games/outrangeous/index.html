@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Outrangeous · Math Games with Bad Drawings</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game">
+  <div class="page">
+    <header class="game-top">
+      <a class="back" href="../../index.html" data-i18n-title="site.home" aria-label="back">←</a>
+      <h1 data-i18n="out.title"></h1>
+      <div class="lang-toggle"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    </header>
+
+    <main class="arena or-arena n3" id="arena">
+      <div class="player p0" data-p="0">
+        <div class="fig-wrap"><div class="bubble"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p1" data-p="1">
+        <div class="fig-wrap"><div class="bubble"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p2" data-p="2">
+        <div class="fig-wrap"><div class="bubble"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p3" data-p="3" hidden>
+        <div class="fig-wrap"><div class="bubble"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p4" data-p="4" hidden>
+        <div class="fig-wrap"><div class="bubble"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="player p5" data-p="5" hidden>
+        <div class="fig-wrap"><div class="bubble"></div><div class="fig"></div></div>
+        <input type="text" class="name" maxlength="14" spellcheck="false">
+        <div class="score"></div>
+      </div>
+      <div class="board-wrap">
+        <div id="board" class="or-board">
+          <div class="qcard" id="qcard">
+            <div class="qhead"><span id="qround"></span><span id="qjudge"></span></div>
+            <div class="qbody"><div class="qtext" id="qtext"></div><div class="qart" id="qart"></div></div>
+          </div>
+          <div class="panel" id="panel"></div>
+        </div>
+        <div class="result" id="result" hidden>
+          <div class="result-card">
+            <div class="result-text" id="result-text"></div>
+            <p class="result-sub hand" id="result-sub"></p>
+            <p class="result-wait hand" id="result-wait" hidden></p>
+            <button class="btn primary" id="again" data-i18n="out.again"></button>
+          </div>
+        </div>
+      </div>
+      <div class="status" id="status"></div>
+
+      <nav class="toolbar">
+        <div class="tools tools-info">
+          <button class="tool" data-icon="how" data-label="ui.how" data-sheet="how"></button>
+          <button class="tool" data-icon="tips" data-label="ui.tips" data-sheet="tips"></button>
+          <button class="tool" data-icon="origin" data-label="ui.origin" data-sheet="origin"></button>
+        </div>
+        <div class="tools tools-play">
+          <button class="tool" data-icon="settings" data-label="ui.settings" data-sheet="settings"></button>
+          <button class="tool" data-icon="online" data-label="net.btn" id="online"></button>
+          <button class="tool" data-icon="undo" data-label="ui.undo" id="undo"></button>
+          <button class="tool" data-icon="restart" data-label="ui.restart" id="new"></button>
+        </div>
+      </nav>
+    </main>
+
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </div>
+
+  <dialog class="mg-dialog" id="sheet-how">
+    <h3 data-i18n="out.h.how"></h3>
+    <div data-i18n-html="out.how"></div>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-tips">
+    <h3 data-i18n="out.h.tips"></h3>
+    <div data-i18n-html="out.tips"></div>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-origin">
+    <h3 data-i18n="out.h.origin"></h3>
+    <div data-i18n-html="out.origin"></div>
+    <p class="credit" data-i18n-html="site.credit"></p>
+  </dialog>
+  <dialog class="mg-dialog" id="sheet-settings">
+    <h3 data-i18n="ui.settings.title"></h3>
+    <label class="field" id="players-field"><span data-i18n="out.players"></span>
+      <select id="players">
+        <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+        <option value="5">5</option><option value="6">6</option>
+      </select>
+    </label>
+    <label class="field" id="humans-field"><span data-i18n="out.humans"></span>
+      <select id="humans"></select>
+    </label>
+    <label class="field" id="level-field"><span data-i18n="out.level"></span>
+      <select id="level">
+        <option value="easy" data-i18n="out.level.easy"></option>
+        <option value="normal" data-i18n="out.level.normal"></option>
+        <option value="hard" data-i18n="out.level.hard"></option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="out.rounds"></span>
+      <select id="rounds">
+        <option value="5">5</option><option value="8">8</option><option value="10">10</option>
+        <option value="12">12</option><option value="15">15</option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="out.deck"></span>
+      <select id="deck">
+        <option value="mix" data-i18n="out.deck.mix"></option>
+        <option value="trivia" data-i18n="out.deck.trivia"></option>
+        <option value="dice" data-i18n="out.deck.dice"></option>
+      </select>
+    </label>
+    <label class="field" id="judge-field"><span data-i18n="out.judge"></span>
+      <select id="judge">
+        <option value="0" data-i18n="out.judge.none"></option>
+        <option value="1" data-i18n="out.judge.rotate"></option>
+      </select>
+    </label>
+    <label class="field"><span data-i18n="out.scoring"></span>
+      <select id="scoring">
+        <option value="width" data-i18n="out.scoring.width"></option>
+        <option value="ratio" data-i18n="out.scoring.ratio"></option>
+      </select>
+    </label>
+    <p class="hand settings-note" id="settings-note"></p>
+    <div class="actions"><button class="btn primary" data-close data-i18n="ui.close"></button></div>
+  </dialog>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

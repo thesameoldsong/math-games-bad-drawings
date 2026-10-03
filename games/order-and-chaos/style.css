@@ -1,0 +1,43 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; opacity: .75; }
+#board .grid.outer { stroke-width: 3.2; opacity: 1; }
+#board .last { fill: #fff3c4; }
+#board .sym.fresh { animation: pop .3s ease-out; }
+#board .sym.ghost { opacity: .32; pointer-events: none; }
+#board .winline { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; opacity: .85; }
+#board .winline.fresh { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s .15s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { transform: scale(.3); opacity: 0; } }
+
+.board-wrap { display: flex; flex-direction: column; align-items: center; }
+/* keep the square board inside the phone screen above the bottom toolbar */
+#board { max-width: min(100%, calc(100dvh - 330px)); min-width: 260px; }
+
+.picker { display: flex; justify-content: center; gap: 10px; margin-top: 6px; min-height: 52px; }
+.pick {
+  display: flex; align-items: center; gap: 2px; height: 50px; min-width: 64px; padding: 0 8px;
+  background: #fff; border: 2.5px solid var(--pencil); border-radius: var(--sketchy); cursor: pointer;
+  font: 700 18px/1 var(--hand); color: var(--ink); -webkit-tap-highlight-color: transparent;
+  transition: transform .1s;
+}
+.pick svg { width: 42px; height: 42px; flex: none; }
+.pick .cap { padding-right: 2px; }
+.pick.on { border-color: var(--c); box-shadow: 0 0 0 2px var(--c) inset, 2px 3px 0 rgba(0,0,0,.1); transform: rotate(-2deg) scale(1.05); }
+.pick:disabled { opacity: .3; cursor: default; }
+
+.player .score { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.player .role { font-weight: 700; font-size: .95em; padding: 0 5px; border: 2px solid currentColor; border-radius: var(--sketchy); line-height: 1.05; }
+.player .role.r0 { color: #2a8a4a; }
+.player .role.r1 { color: #b0478f; }
+.player .pts { white-space: nowrap; }
+
+.result-why { font: 700 23px/1.15 var(--hand); color: var(--ink); margin: 0 0 4px; }
+.result-next { font-size: 20px; line-height: 1.15; color: #666; margin: 0 0 10px; }
+
+.result-text { font-size: clamp(26px, 6vw, 38px); }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0; }
+
+@media (min-width: 900px) {
+  #board { max-width: min(100%, calc(100dvh - 230px)); }
+  .player .score { flex-direction: row; align-items: baseline; justify-content: center; gap: 6px; }
+}

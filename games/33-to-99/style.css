@@ -1,0 +1,109 @@
+/* 33 to 99 — board styles. The board is one SVG (viewBox 400 × 450) that redraws per phase. */
+.arena .board-wrap { display: flex; flex-direction: column; align-items: center; }
+#board {
+  width: min(100%, calc((100dvh - 250px) * 400 / 450)); min-width: 280px; display: block;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  font-family: var(--hand);
+}
+#board text { text-anchor: middle; dominant-baseline: central; }
+#board text:not([fill]) { fill: var(--ink); }
+#board [data-act] { cursor: pointer; }
+
+#board .tbox { fill: #fff; stroke: var(--ink); stroke-width: 2.6; }
+#board .lbl { font: 600 17px var(--hand); fill: #777; }
+#board .lbl.round { font-size: 20px; }
+#board .tnum { font: 700 38px var(--hand); }
+#board .timer { font-size: 32px; text-anchor: end; }
+#board .timer.low { fill: var(--red-dark); animation: blink 1s steps(2) infinite; }
+#board .big { font: 700 30px var(--hand); }
+#board .mid { font: 700 23px var(--hand); }
+#board .small { font: 600 19px var(--hand); fill: #777; }
+
+#board .die-body { fill: #fff; stroke: var(--ink); stroke-width: 2.6; }
+#board .pip { fill: var(--ink); }
+#board .die-q { font-weight: 700; fill: #aaa; }
+#board .die.roll { animation: roll .55s ease-out backwards; transform-box: fill-box; transform-origin: center; }
+#board .tile:nth-of-type(2) .die.roll { animation-delay: .06s; }
+#board .tile:nth-of-type(3) .die.roll { animation-delay: .12s; }
+#board .tile:nth-of-type(4) .die.roll { animation-delay: .18s; }
+#board .tile:nth-of-type(5) .die.roll { animation-delay: .24s; }
+#board .slip { fill: #fffbe6; stroke: var(--ink); stroke-width: 2.6; }
+#board .tile-num { font: 700 36px var(--hand); }
+#board .tile.fresh { animation: pop .3s ease-out; transform-box: fill-box; transform-origin: center; }
+#board .tile.sel { transform: translateY(-3px); }
+
+#board .op-sym { font: 700 36px var(--hand); }
+#board .op.off { opacity: .35; }
+#board .op:not(.off):hover path { stroke-width: 3.6; }
+
+#board .work { font: 600 23px var(--hand); fill: #555; }
+#board .work.pending { fill: #999; }
+#board .work.err { fill: var(--red-dark); }
+#board .bestline { font: 700 22px var(--hand); }
+#board .bestline:not([fill]) { fill: #888; }
+#board .bestline.good { fill: #2a9d48; }
+
+#board .sbtn .btn-txt { font: 700 24px var(--hand); }
+#board .sbtn.off { opacity: .35; }
+#board .sbtn:not(.off):hover path { stroke-width: 3.4; }
+#board .sbtn:not(.off):active { transform: translateY(1px); }
+
+#board .cell path { fill: #fff; stroke: var(--pencil); stroke-width: 2; }
+#board .cell .cell-num { font: 700 22px var(--hand); }
+#board .cell:hover path { fill: #eaf7fc; stroke: var(--blue); }
+#board .cell:active path { fill: var(--blue); }
+
+#board .rowbox { fill: #fff; stroke-width: 2.4; }
+#board .rname { font: 700 22px var(--hand); text-anchor: start; }
+#board .rval { font: 700 22px var(--hand); text-anchor: end; }
+#board .rpts { font: 700 26px var(--hand); text-anchor: end; }
+#board .rtotal { font: 700 24px var(--hand); text-anchor: end; }
+#board .rexpr { font: 600 18px var(--hand); fill: #666; text-anchor: start; }
+
+@keyframes roll { 0% { transform: translate(-30px, -40px) rotate(calc(var(--rot) * 9)); opacity: 0; } 70% { transform: rotate(var(--rot)); opacity: 1; } }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
+@keyframes blink { 50% { opacity: .45; } }
+
+/* player columns: even seats on the left, odd on the right */
+.arena .pcol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.player .score { white-space: nowrap; }
+
+/* 3–5 players on one device: compact cards */
+.arena.many .pcol { flex-direction: row; justify-content: space-around; gap: 2px; }
+.arena.many .player { grid-template-columns: 1fr; grid-template-rows: auto; justify-items: center; text-align: center; flex: 1 1 0; min-width: 0; }
+.arena.many .player .fig-wrap { grid-row: auto; width: 34px; }
+.arena.many .player .name { text-align: center; font-size: 16px; padding: 0; }
+.arena.many .player .score { font-size: 15px; }
+.arena.many .player .bubble {
+  left: 50%; top: -4px; font-size: 16px; max-width: 120px; transform: translate(-50%, -100%) scale(.6); transform-origin: center bottom;
+}
+.arena.many .player .bubble.show { transform: translate(-50%, -100%) scale(1); }
+.arena.many .player .bubble::after { left: 50%; top: auto; bottom: -10px; transform: translateX(-50%) rotate(45deg) skew(8deg, 8deg); }
+@media (max-width: 899px) {
+  .arena.many { grid-template-columns: var(--ca, 1fr) var(--cb, 1fr); }
+  /* the outermost cards: keep the bubble inside the screen */
+  .arena.many #pcol0 .player:first-child .bubble { left: 0; transform: translate(0, -100%) scale(.6); transform-origin: left bottom; }
+  .arena.many #pcol0 .player:first-child .bubble.show { transform: translate(0, -100%) scale(1); }
+  .arena.many #pcol0 .player:first-child .bubble::after { left: 18px; }
+  .arena.many #pcol1 .player:last-child .bubble { left: auto; right: 0; transform: translate(0, -100%) scale(.6); transform-origin: right bottom; }
+  .arena.many #pcol1 .player:last-child .bubble.show { transform: translate(0, -100%) scale(1); }
+  .arena.many #pcol1 .player:last-child .bubble::after { left: auto; right: 10px; }
+}
+.arena.many #board { width: min(100%, calc((100dvh - 290px) * 400 / 450)); }
+
+/* the final standings stay visible: the result card sits over the bottom of the board */
+.board-wrap .result { place-items: end center; background: none; pointer-events: none; }
+.board-wrap .result-card { pointer-events: auto; padding: 8px 18px 12px; margin-bottom: 2%; }
+.board-wrap .result-text { font-size: clamp(28px, 6.5vw, 40px); margin-bottom: 2px; }
+.result-sub { font-size: 21px; margin: 0 0 8px; color: #555; }
+.result-sub[hidden] { display: none; }
+.settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }
+
+@media (min-width: 900px) {
+  #board, .arena.many #board { width: min(100%, calc((100dvh - 190px) * 400 / 450)); }
+  .arena.many .pcol { flex-direction: column; gap: 10px; }
+  .arena.many .player .fig-wrap { width: 70px; }
+  .arena.many .player .name { font-size: 22px; }
+  .arena.many .player .score { font-size: 19px; }
+  .arena.many .player .bubble { font-size: 19px; max-width: 170px; }
+}

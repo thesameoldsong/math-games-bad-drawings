@@ -1,0 +1,33 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: visible; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; opacity: .8; }
+#board .shore { fill: none; stroke-width: 7; stroke-linecap: round; opacity: .85; }
+#board .shore-lbl { font: 700 19px var(--hand); text-anchor: middle; dominant-baseline: central; }
+#board .last { fill: none; stroke-width: 2.6; stroke-dasharray: 3 6; stroke-linecap: round; opacity: .75; }
+
+#board .pc { transition: transform .22s cubic-bezier(.3, 1.4, .5, 1); }
+#board .pc path, #board .pc circle { transition: fill .2s, stroke .2s; }
+#board .pc .body, #board .pc .tail { stroke-width: 2.6; stroke-linejoin: round; }
+#board .pc .fin { fill: none; stroke-width: 2; stroke-linecap: round; }
+#board .pc.none .body, #board .pc.none .tail { fill: #ecebe4; stroke: var(--dot); }
+#board .pc.none .fin { stroke: var(--dot); }
+#board .pc.none .eye { fill: var(--dot); }
+#board .pc.blue .body, #board .pc.blue .tail { fill: var(--blue); stroke: var(--blue-dark); }
+#board .pc.blue .fin { stroke: var(--blue-dark); }
+#board .pc.blue .eye { fill: #fff; }
+#board .pc.red .body, #board .pc.red .tail { fill: var(--red); stroke: var(--red-dark); }
+#board .pc.red .fin { stroke: var(--red-dark); }
+#board .pc.red .eye { fill: #fff; }
+#board .pc.fresh { animation: tp-pop .3s ease-out; }
+
+#board .ghost { opacity: .45; pointer-events: none; }
+#board .will-turn { fill: none; stroke-width: 3; stroke-dasharray: 4 6; stroke-linecap: round; pointer-events: none; animation: tp-spin 2.4s linear infinite; }
+#board .sel { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+#board .pad circle { stroke-width: 3; }
+#board .pad { animation: tp-fade .15s ease-out; cursor: pointer; }
+
+.result-score { font-size: 26px; margin: 0; color: var(--ink); }
+.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+
+@keyframes tp-pop { from { opacity: 0; scale: .3; } }
+@keyframes tp-fade { from { opacity: 0; } }
+@keyframes tp-spin { to { stroke-dashoffset: -40; } }

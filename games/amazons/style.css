@@ -1,0 +1,23 @@
+#board { width: 100%; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#board .shade { fill: #f1eee6; }
+#board .grid { fill: none; stroke: var(--dot); stroke-width: 2.2; stroke-linecap: round; }
+#board .trail { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 7; opacity: .55; pointer-events: none; }
+#board .trail.shot { stroke-dasharray: 1 6; opacity: .75; }
+#board .trail .head { stroke-dasharray: none; }
+#board .ring { fill: none; stroke-width: 3; stroke-linecap: round; }
+#board .ring.can { stroke-dasharray: 3 7; opacity: .7; }
+#board .ring.sel { stroke-width: 4.5; }
+#board .target { opacity: .85; animation: pop .22s ease-out; pointer-events: none; }
+#board .target.shoot { fill: none; stroke-width: 3.2; stroke-linecap: round; }
+#board .preview { fill: none; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 2 8; opacity: .55; pointer-events: none; }
+#board .amz.dead { opacity: .45; }
+#board .amz.fresh { animation: slide .4s cubic-bezier(.3, .1, .3, 1); }
+#board .burnt.fresh > path { animation: pop .35s ease-out; }
+#board .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame .5s ease-out, flicker 1.6s ease-in-out .5s infinite; }
+#board.busy { cursor: default; }
+.result-why { font-size: 21px; line-height: 1.2; margin: 0 0 6px; color: var(--ink); }
+.result-next { font-size: 20px; margin: 0 0 8px; color: #666; }
+@keyframes slide { from { transform: translate(var(--dx), var(--dy)); } }
+@keyframes pop { from { opacity: 0; } }
+@keyframes flame { from { transform: scale(.2); opacity: 0; } }
+@keyframes flicker { 50% { transform: scale(1.06, .92); } }
