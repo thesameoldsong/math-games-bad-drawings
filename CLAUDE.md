@@ -1,7 +1,7 @@
 # Math Games with Bad Drawings — interactive companion
 
 ## Stack (decided — don't change without asking)
-- Static site for GitHub Pages. No build step, no framework, no bundler at runtime.
+- Static site on GitHub Pages: repo thesameoldsong/math-games-bad-drawings, served from `main` root → https://thesameoldsong.github.io/math-games-bad-drawings/ (push to main = deploy). No build step, no framework, no bundler at runtime.
 - Vanilla JS, native ES modules (`<script type="module">`). Needs an HTTP server (no `file://`).
 - SVG for all boards and drawings. CSS for layout. Fonts: Caveat (hand) + PT Serif (body), self-hosted in vendor/fonts/.
 - Third-party libs are vendored as single ESM files in `vendor/` (see `vendor/README.md`). No CDNs for JS.
