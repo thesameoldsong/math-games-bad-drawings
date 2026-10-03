@@ -243,7 +243,7 @@ function moveValue(s, m) {
 function aiMove(s, level = 'normal', rnd = Math.random) {
   const all = moves(s);
   if (!all.length) return null;
-  if (s.n !== 2) return pick(all, rnd);
+  if (s.n !== 2) return aiMulti(s, all, level, rnd);
   const me = s.turn;
   const winsNow = all.filter((m) => m.t === 'tap' && liveCount(s.hands[m.p]) === 1 && tapValue(s.hands[me][m.h], s.hands[m.p][m.to], s.rules.cutoff) === 0);
 
@@ -286,6 +286,38 @@ function aiMove(s, level = 'normal', rnd = Math.random) {
     applyQuiet(c, m);
     let v = -negamax(c, 3);
     if (repeats(s, m)) v -= 4; // mild dislike of going round in circles
+    if (v > best + 1e-9) { best = v; bestMoves = [m]; }
+    else if (Math.abs(v - best) < 1e-9) bestMoves.push(m);
+  }
+  return pick(bestMoves, rnd);
+}
+
+// 3+ players: one-ply greedy. Win > eliminate someone > knock out a hand > stay out of reach.
+// ('easy' plays a random move 40% of the time.)
+function aiMulti(s, all, level, rnd) {
+  if (level === 'easy' && rnd() < 0.4) return pick(all, rnd);
+  const me = s.turn;
+  let best = -Infinity, bestMoves = [];
+  for (const m of all) {
+    const c = clone(s);
+    const info = apply(c, m);
+    let v = 0;
+    if (c.winner === me) v += 1000;
+    else if (c.winner === -1) v -= 5;
+    if (info.eliminated >= 0) v += 60;
+    else if (info.knocked) v += 20;
+    if (info.revived) v += 6;
+    // how many of my live hands could some opponent knock out on their turn
+    for (const a of c.hands[me]) {
+      if (!a) continue;
+      let hit = false;
+      for (let p = 0; p < c.n && !hit; p++) {
+        if (p === me || !alive(c, p)) continue;
+        for (const b of c.hands[p]) if (b && tapValue(b, a, c.rules.cutoff) === 0) hit = true;
+      }
+      if (hit) v -= liveCount(c.hands[me]) === 1 ? 30 : 9;
+    }
+    if (s.seen[key(c)]) v -= 3;
     if (v > best + 1e-9) { best = v; bestMoves = [m]; }
     else if (Math.abs(v - best) < 1e-9) bestMoves.push(m);
   }

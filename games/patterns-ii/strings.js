@@ -23,7 +23,7 @@ addStrings('ru', {
   'pii.level.normal': 'толково',
   'pii.level.hard': 'зорко',
   'pii.settings.note': 'Один раунд — один узор. Если рисуют игроки, партия длится, пока каждый не нарисует по узору.',
-  'pii.online.note': 'Игра по сети: двое людей, остальные места — роботы. Настройки и новую партию выбирает создатель комнаты.',
+  'pii.online.note': 'По сети каждый играет со своего устройства, до 5 человек. За свободные места играют роботы; кто подключится, когда робот уже начал свой лист, сменит его со следующего раунда. Если игрок отключится, через 30 секунд робот доиграет за него. Настройки и новую партию выбирает создатель комнаты.',
 
   // tools / actions
   'pii.tool.peek': 'спросить',
@@ -50,6 +50,7 @@ addStrings('ru', {
   'pii.card.peeks': 'открыто: {n}',
   'pii.card.done': 'лист сдан',
   'pii.card.gaveup': 'сдаётся',
+  'pii.card.off': 'не в сети…',
   'pii.card.total': 'всего {n}',
   'pii.points': ['очко', 'очка', 'очков'],
 
@@ -65,10 +66,16 @@ addStrings('ru', {
   'pii.st.done.pattern': 'Узор целиком · нажмите на игрока, чтобы увидеть его лист',
   'pii.online.wait': 'Ждём второго игрока…',
   'pii.online.waitnew': 'Дальше продолжит {name}',
+  'pii.online.lost': 'Связь с создателем комнаты пропала, ждём…',
+  'pii.online.botseat': 'Этот лист за вас уже начал робот — вы вступите со следующего раунда',
+  'pii.online.watch': 'В этой партии {n} мест, вам не хватило — смотрите со стороны',
 
   // results
   'pii.res.round': 'Раунд {i} из {n}',
   'pii.res.win': 'Побеждает {name}!',
+  'pii.res.win.you': 'Вы победили!',
+  // A device that is turned away doesn't learn the room size, so don't claim "two players" (rooms here hold up to 5).
+  'net.full': 'В комнате {code} нет свободных мест. Создайте свою комнату или введите другой код.',
   'pii.res.tie': 'Ничья: {names}',
   'pii.res.solo': 'Ваш счёт: {n}',
   'pii.res.designer': 'автор: разброс {spread}',
@@ -139,7 +146,7 @@ addStrings('en', {
   'pii.level.normal': 'sensibly',
   'pii.level.hard': 'sharp-eyed',
   'pii.settings.note': 'One round = one pattern. When players draw, the match lasts until everyone has drawn once.',
-  'pii.online.note': 'Online: two humans, any other seats are robots. The room creator picks settings and starts new games.',
+  'pii.online.note': 'Online, everyone plays on their own device, up to 5 people. Robots fill the empty seats; if you join after a robot has started your sheet, you take over from the next round. If a player drops out, a robot finishes for them after 30 seconds. The room creator picks settings and starts new games.',
 
   'pii.tool.peek': 'ask',
   'pii.tool.erase': 'erase',
@@ -163,6 +170,7 @@ addStrings('en', {
   'pii.card.peeks': 'revealed: {n}',
   'pii.card.done': 'handed in',
   'pii.card.gaveup': 'gave up',
+  'pii.card.off': 'offline…',
   'pii.card.total': 'total {n}',
   'pii.points': ['point', 'points'],
 
@@ -177,9 +185,14 @@ addStrings('en', {
   'pii.st.done.pattern': 'The whole pattern · tap a player to see their sheet',
   'pii.online.wait': 'Waiting for the other player…',
   'pii.online.waitnew': '{name} will continue',
+  'pii.online.lost': 'Lost the room creator, waiting…',
+  'pii.online.botseat': 'A robot has already started this sheet for you — you join from the next round',
+  'pii.online.watch': 'This game has {n} seats and you didn’t get one — watching',
 
   'pii.res.round': 'Round {i} of {n}',
   'pii.res.win': '{name} wins!',
+  'pii.res.win.you': 'You win!',
+  'net.full': 'Room {code} has no free seats. Create your own room or enter another code.',
   'pii.res.tie': 'A tie: {names}',
   'pii.res.solo': 'Your score: {n}',
   'pii.res.designer': 'designer: spread {spread}',

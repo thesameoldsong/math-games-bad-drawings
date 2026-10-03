@@ -125,3 +125,9 @@
 @keyframes or-shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
 @keyframes or-blink { 50% { opacity: .2; } }
 @keyframes or-grow { from { transform: scaleX(0); } }
+
+/* online: a seat whose device dropped out */
+.or-arena .player.away .fig { opacity: .45; }
+.or-arena .player.away .score { color: var(--red-dark, #b02a37); }
+/* online: your own card ("· you" may need a second line next to "· judge" in the narrow 3-column rows) */
+.or-arena:not(.n2) .player.me .score { white-space: normal; line-height: 1.05; }

@@ -88,9 +88,10 @@ function evalC(cr, v, n) {
 }
 const atomsOf = (rule) => (rule.t === 'par' ? [rule.odd, rule.even] : rule.op ? [rule.a, rule.b] : [rule.a]);
 export const needsZero = (rule) => atomsOf(rule).some((a) => NEEDS_ZERO.has(a));
+const isAtom = (id) => typeof id === 'string' && Object.hasOwn(AIDX, id);
 export const validRule = (rule) =>
-  !!rule && (rule.t === 'par' ? rule.odd in AIDX && rule.even in AIDX
-    : rule.t === 'all' && rule.a in AIDX && (!rule.op || ((rule.op === 'and' || rule.op === 'or') && rule.b in AIDX)));
+  !!rule && typeof rule === 'object' && (rule.t === 'par' ? isAtom(rule.odd) && isAtom(rule.even)
+    : rule.t === 'all' && isAtom(rule.a) && (!rule.op || ((rule.op === 'and' || rule.op === 'or') && isAtom(rule.b))));
 export function normRule(rule) {
   if (rule.t === 'par') return rule.odd === rule.even ? { t: 'all', a: rule.odd, op: null, b: null } : { t: 'par', odd: rule.odd, even: rule.even };
   if (!rule.op || rule.a === rule.b) return { t: 'all', a: rule.a, op: null, b: null };
@@ -215,7 +216,7 @@ export const isOccupied = (st, sq) => st.pos.includes(sq);
 // Squares already refused for the number about to be written.
 export const rejectedNow = (st) => st.obs.filter((o) => o.n === nextNum(st) && !o.pre?.length && !o.ok).map((o) => o.sq);
 export function canTry(st, sq) {
-  return st.phase === 'try' && sq >= 0 && sq < st.N * st.N && !isOccupied(st, sq) && !rejectedNow(st).includes(sq);
+  return st.phase === 'try' && Number.isInteger(sq) && sq >= 0 && sq < st.N * st.N && !isOccupied(st, sq) && !rejectedNow(st).includes(sq);
 }
 
 function nextGuesser(st, p) {
@@ -368,6 +369,12 @@ export function publicView(st) {
   if (st.phase !== 'roundover' && st.phase !== 'over') v.rule = null;
   return v;
 }
+// What one seat may see online: the public view, plus the secret rule for the seat that made it up.
+export function seatView(st, seat) {
+  const v = publicView(st);
+  if (st.rule && seat === st.maker) v.rule = clone(st.rule);
+  return v;
+}
 export const clone = (st) => JSON.parse(JSON.stringify(st));
 
 // ---------- computer guesser ----------
@@ -478,7 +485,7 @@ export function aiAction(view, level = 'normal', rng = Math.random) {
 }
 
 export const SAE = {
-  ATOMS, SIZES, create, startRound, apply, judge, publicView, clone, aiAction, beliefs,
+  ATOMS, SIZES, create, startRound, apply, judge, publicView, seatView, clone, aiAction, beliefs,
   evalRule, allowedSquares, needsZero, normRule, ruleKey, sameRule, validRule, randomRule, playability,
   nextNum, roundPoints, guessers, canTry, rejectedNow, isOccupied, obsPositions,
 };

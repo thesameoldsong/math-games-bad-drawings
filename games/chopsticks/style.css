@@ -74,3 +74,8 @@
   .arena[data-n="3"] .player, .arena[data-n="4"] .player { grid-template-columns: 1fr; }
   .arena[data-n="3"] #board, .arena[data-n="4"] #board { max-height: calc(100dvh - 200px); }
 }
+
+/* online: my own card, a player who lost connection */
+.player.me .score { font-weight: 700; }
+.player.away .fig { opacity: .4; filter: grayscale(1); }
+.player.away .score { color: var(--red, #ec3a4a); }

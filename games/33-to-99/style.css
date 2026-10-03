@@ -107,3 +107,13 @@
   .arena.many .player .score { font-size: 19px; }
   .arena.many .player .bubble { font-size: 19px; max-width: 170px; }
 }
+
+/* online: a guest whose device dropped out */
+.player.away { opacity: .5; }
+.player.away .score { color: var(--red-dark); }
+/* online: this device's own seat */
+.player.me .name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.player.me .fig-wrap::before {
+  content: attr(data-me); position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
+  font: 700 15px/1 var(--hand); color: #fff; background: var(--ink); border-radius: 8px; padding: 1px 6px 2px; z-index: 1;
+}

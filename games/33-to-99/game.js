@@ -29,24 +29,60 @@ let covered = false;        // hot-seat "pass the device" screen
 let deadline = 0, tickT = null, hurried = false;
 let aiTimer, lastTag = '', nextFirst = 0, pendingPick = false, seq = 0, lastSeq = -1;
 let sess = null;            // online session (shared/net.js)
-const remoteNames = ['', ''];
+const remoteNames = ['', '', '', '', ''];
+// Online, who sits in each seat: 'host' | 'on' (a guest's device) | 'away' (device dropped) |
+// 'free' (2 players: nobody yet) | 'cpu' (3+ players: a seat without a device is played by the computer).
+// The host works it out; guests get it with every state.
+let ctrl = [];
+const AWAY_MS = 20000;      // 3+ players: a dropped guest gets this long to come back before the computer steps in
+const away = new Map();     // host: seat → takeover timer
+// Game seats are kept apart from net.js seats: if the host reloads, guests may come back in another
+// order and get different net seats, but each device keeps its game seat (recognised by a per-tab id).
+const CID_KEY = 'mg-n99-cid';
+const myCid = sessionStorage.getItem(CID_KEY) || Math.random().toString(36).slice(2, 12);
+sessionStorage.setItem(CID_KEY, myCid);
+// A per-browser id as well: someone who reopens the link in a new tab of the same browser (new tab id)
+// is offered their old seat back if it is free, rather than a computer seat.
+const DID_KEY = 'mg-n99-did';
+const myDid = localStorage.getItem(DID_KEY) || Math.random().toString(36).slice(2, 12);
+localStorage.setItem(DID_KEY, myDid);
+let owner = [];             // host: game seat → id of the device that plays it
+let ownerDid = [];          // host: game seat → browser id of that device
+const gameOf = new Map();   // host: net seat → game seat (devices that said hello)
+const cidOf = new Map();    // host: net seat → device id
+const didOf = new Map();    // host: net seat → browser id
+let myG = -1;               // guest: my game seat, as the host told me
+const SPECT = 100;          // game seats from here on: watching (no free seat in this game)
 let moods = [];
 const shapes = {};
 const shapeFor = (k, make) => (shapes[k] ??= make());
 
 // ---------- who is who ----------
 const online = () => !!sess;
-const mySeat = () => sess.seat;
-const isAI = (p) => !online() && cfg.mode !== 'pvp' && p === 1;
+const mySeat = () => (sess.host ? 0 : myG >= 0 ? myG : sess.seat);
+const NET_AI = 'normal';    // online computer seats play at this level
+const isAI = (p) => (online() ? ctrl[p] === 'cpu' : cfg.mode !== 'pvp' && p === 1);
 const isRemote = (p) => online() && p !== mySeat();
 const isLocal = (p) => !isAI(p) && !isRemote(p);
 const humans = () => (online() ? 1 : cfg.mode === 'pvp' ? G.n : 1);
-const connected = () => !online() || sess.connected;
+// Can this device act? 2 players online: only with the other side present. 3+: the host always can
+// (empty seats are the computer's); a guest needs the link to the host.
+function connected() {
+  if (!online()) return true;
+  if (!sess.host) return sess.connected;
+  return G.n > 2 || liveSeats().includes(1);
+}
+const spectator = () => online() && mySeat() >= G.n;
+const aiLevel = () => (online() ? NET_AI : cfg.mode);
+// A guest's own name is kept apart from the hot-seat names: its game seat can change between rooms/reloads.
+const ownName = (p) => ((online() && !sess.host ? cfg.netName ?? cfg.names[p] : cfg.names[p]) || '');
 function name(p) {
-  if (isAI(p)) return t('n99.cpu');
+  if (isAI(p)) return online() && ctrl.filter((c) => c === 'cpu').length > 1 ? t('n99.cpu.n', { n: p + 1 }) : t('n99.cpu');
+  if (online() && p === mySeat()) return ownName(p).trim() || t('n99.you');
   const n = isRemote(p) ? remoteNames[p] : cfg.names[p];
   return (n && n.trim()) || t('n99.p' + p);
 }
+const nameAway = (p) => (online() && ctrl[p] === 'away' ? `${name(p)} (${t('n99.away')})` : name(p));
 // Order of solving on a shared device: the leader first, then around the table.
 const order = () => Array.from({ length: G.n }, (_, k) => (G.leader + k) % G.n);
 function localSolver() {
@@ -214,12 +250,17 @@ function viewWait() {
   const me = online() ? mySeat() : -1;
   let o = header(true);
   o += `<g class="dicerow">${G.dice.map((v, k) => die(72 + k * 64, 112, 50, v, 'wd' + k)).join('')}</g>`;
-  if (me >= 0 && G.done[me]) {
+  if (me >= 0 && me < G.n && G.done[me]) {
     const s = G.subs[me];
     o += txt(VW / 2, 190, s ? `${exprOf(G.dice, s)} = ${N99.fracText(N99.finalTile(G.dice, s).v)}` : t('n99.res.none'), 'mid', `fill="${COLORS[me].main}"`);
     if (s) o += txt(VW / 2, 222, plural(N99.scoreSteps(G.dice, G.target, s), 'n99.pts'), 'small');
+    // joined (or came back) after the computer had already answered for this seat
+    if (G.auto && G.auto[me]) {
+      o += txt(VW / 2, 362, t('n99.auto.you'), 'small');
+      o += txt(VW / 2, 388, t('n99.auto.next'), 'small');
+    }
   }
-  const waiting = [...Array(G.n).keys()].filter((p) => !G.done[p]).map(name).join(', ');
+  const waiting = [...Array(G.n).keys()].filter((p) => !G.done[p]).map(nameAway).join(', ');
   o += txt(VW / 2, 300, t('n99.still', { names: waiting }), 'mid', 'fill="#888"');
   return o;
 }
@@ -258,7 +299,7 @@ function viewReveal() {
     else o += txt(VW / 2, yb, t('n99.res.best', { e: N99.exprText(N99.finalTile(h.dice, h.best.steps).e, h.dice), v: h.best.value }), 'bestline');
   }
   const last = G.round + 1 >= N99.totalRounds(G);
-  o += button(VW / 2 - 85, Math.min(398, yb + 26), 170, 46, t(last ? 'n99.final' : 'n99.next') + ' →', 'next', COLORS[G.leader], true, !connected());
+  o += button(VW / 2 - 85, Math.min(398, yb + 26), 170, 46, t(last ? 'n99.final' : 'n99.next') + ' →', 'next', COLORS[G.leader], true, !connected() || spectator());
   return o;
 }
 
@@ -314,9 +355,11 @@ function buildPlayers() {
     const p = +el.dataset.p;
     el.querySelector('.bubble').style.color = COLORS[p].main;
     el.querySelector('.name').addEventListener('input', (e) => {
-      cfg.names[p] = e.target.value;
+      if (online() && !sess.host) cfg.netName = e.target.value;
+      else cfg.names[p] = e.target.value;
       saveCfg();
-      if (online()) sess.send('name', { seat: p, name: e.target.value });
+      // guests tell the host, the host tells everybody
+      if (online()) sess.host ? sendNames() : sess.send('name', { name: e.target.value });
       renderPlayers();
       if (G.phase !== 'solve' || !W) render();
     });
@@ -340,16 +383,20 @@ function renderPlayers() {
     const el = $(`.player[data-p="${p}"]`);
     const active = act.includes(p);
     el.classList.toggle('active', active);
+    const off = online() && ctrl[p] === 'away';
+    el.classList.toggle('away', off);
+    el.classList.toggle('me', online() && p === mySeat());
+    el.querySelector('.fig-wrap').dataset.me = t('n99.you');
     const m = moods[p];
     const pose = m.pose !== 'down' ? m.pose : active && G.phase !== 'reveal' && G.phase !== 'over' ? 'point' : 'down';
-    el.querySelector('.fig').innerHTML = figureSVG({ color: COLORS[p], mood: m.mood, pose, face: p < Math.ceil(G.n / 2) ? 'right' : 'left', seed: 11 + p * 31 });
+    el.querySelector('.fig').innerHTML = figureSVG({ color: COLORS[p], mood: off ? 'worried' : m.mood, pose, face: p < Math.ceil(G.n / 2) ? 'right' : 'left', seed: 11 + p * 31 });
     let sc = plural(G.totals[p], 'n99.pts');
     if (G.phase === 'solve' && G.done[p]) sc += ' ✓';
     if (G.phase === 'pick' && G.leader === p) sc += ' ★';
-    el.querySelector('.score').textContent = sc;
+    el.querySelector('.score').textContent = off ? t('n99.away') : sc;
     const inp = el.querySelector('.name');
     inp.placeholder = name(p);
-    if (document.activeElement !== inp) inp.value = isLocal(p) ? cfg.names[p] : '';
+    if (document.activeElement !== inp) inp.value = isLocal(p) ? ownName(p) : '';
     inp.style.color = COLORS[p].main;
     inp.disabled = !isLocal(p);
   }
@@ -360,14 +407,16 @@ function renderPlayers() {
 function renderStatus() {
   const st = $('#status');
   let s = '', col = INK;
-  if (online() && !sess.connected) s = t('n99.st.wait.net');
+  if (!connected()) s = t(online() && !sess.host && G.n > 2 && lastSeq >= 0 ? 'n99.st.lost' : 'n99.st.wait.net');
+  else if (spectator() && G.phase !== 'over') s = t('n99.st.spect');
   else if (G.phase === 'pick') {
     col = COLORS[G.leader].main;
-    s = isLocal(G.leader) && !pendingPick ? (humans() > 1 ? t('n99.st.pick', { name: name(G.leader) }) : t('n99.st.pick.you')) : t('n99.st.pick', { name: name(G.leader) });
+    s = online() && ctrl[G.leader] === 'away' ? t('n99.st.away', { name: name(G.leader) })
+      : isLocal(G.leader) && !pendingPick ? (humans() > 1 ? t('n99.st.pick', { name: name(G.leader) }) : t('n99.st.pick.you')) : t('n99.st.pick', { name: name(G.leader) });
   } else if (G.phase === 'solve') {
     if (W && covered) { s = t('n99.st.pass', { name: name(W.p) }); col = COLORS[W.p].main; }
     else if (W) { s = humans() > 1 ? t('n99.st.solve', { name: name(W.p), t: G.target }) : t('n99.st.solve.you', { t: G.target }); col = COLORS[W.p].main; }
-    else s = t('n99.st.wait', { names: [...Array(G.n).keys()].filter((p) => !G.done[p]).map(name).join(', ') });
+    else s = t('n99.st.wait', { names: [...Array(G.n).keys()].filter((p) => !G.done[p]).map(nameAway).join(', ') });
   } else if (G.phase === 'reveal') {
     const h = G.history.at(-1), m = Math.min(...h.pts), best = [...h.pts.keys()].filter((p) => h.pts[p] === m);
     const msg = best.length === 1 ? t('n99.st.roundwin', { name: name(best[0]) }) : t('n99.st.roundtie');
@@ -382,15 +431,18 @@ function renderControls() {
   const host = !online() || sess.host;
   $('#undo').disabled = !(W && !covered && W.hist.length);
   $('#mode').disabled = online();
-  $('#players').disabled = online();
-  $('#f-players').hidden = online() || cfg.mode !== 'pvp';
+  // online the host picks how many seats the room has (never fewer than the guests already seated)
+  $('#players').disabled = !host;
+  $('#f-players').hidden = !online() && cfg.mode !== 'pvp';
+  const top = online() && sess.host ? Math.max(...sess.seats(), ...liveSeats().filter((g) => g < SPECT)) : 0;
+  for (const o of $('#players').options) o.disabled = +o.value <= top;
   $('#timer').disabled = !host;
   $('#rounds').disabled = !host;
   $('#new').disabled = !host;
   $('#again').hidden = !host;
   $('#result-wait').hidden = host;
   if (online()) $('#result-wait').textContent = t('n99.online.waitnew', { name: name(0) });
-  $('#settings-note').textContent = online() ? t('n99.online.note') : '';
+  $('#settings-note').textContent = online() ? t('n99.online.note') + (G.n > 2 ? ' ' + t('n99.online.note.n') : '') : '';
 }
 
 // ---------- speech & moods ----------
@@ -447,7 +499,10 @@ function finish() {
     else { setMood(p, 'sad'); setTimeout(() => say(p, 'n99.say.lose'), 900); }
   }
   const tx = $('#result-text');
-  if (ws.length === 1) { tx.textContent = t('n99.win', { name: name(ws[0]) }); tx.style.color = COLORS[ws[0]].main; }
+  if (ws.length === 1) {
+    tx.textContent = online() && ws[0] === mySeat() ? t('n99.win.you') : t('n99.win', { name: name(ws[0]) });
+    tx.style.color = COLORS[ws[0]].main;
+  }
   else { tx.textContent = all ? t('n99.tie') : t('n99.tie.some', { names: ws.map(name).join(', ') }); tx.style.color = INK; }
   $('#result-sub').textContent = G.n === 2 ? `${plural(G.totals[ws[0]], 'n99.pts')} : ${plural(Math.max(...G.totals), 'n99.pts')}` : '';
   $('#result-sub').hidden = G.n !== 2;
@@ -556,13 +611,20 @@ function finishLocal() {
 // ---------- flow ----------
 function changed() {
   clearTimeout(aiTimer);
+  const host = !online() || sess.host;   // guests never run the computer players: the host does
+  if (online() && sess.host) computeCtrl();
+  if (G.phase === 'pick') G.auto = [];
   // the computer answers instantly; its answer stays hidden until the reveal
-  if (G.phase === 'solve') for (let p = 0; p < G.n; p++) if (isAI(p) && !G.done[p]) N99.submit(G, p, N99.aiSteps(G.dice, G.target, cfg.mode));
+  if (G.phase === 'solve' && host) {
+    for (let p = 0; p < G.n; p++) {
+      if (isAI(p) && !G.done[p]) { (G.auto ||= [])[p] = true; N99.submit(G, p, N99.aiSteps(G.dice, G.target, aiLevel())); }
+    }
+  }
   if (online() && sess.host) sendState();
   $('#result').hidden = G.phase !== 'over' || $('#result').hidden;
   react();
   render();
-  if (G.phase === 'pick' && isAI(G.leader)) {
+  if (G.phase === 'pick' && isAI(G.leader) && host) {
     aiTimer = setTimeout(() => { if (G.phase === 'pick' && isAI(G.leader)) { N99.setTarget(G, N99.aiTarget(), N99.rollDice()); changed(); } }, 1100);
   }
 }
@@ -578,7 +640,7 @@ function pickTarget(v) {
   changed();
 }
 function nextRound() {
-  if (G.phase !== 'reveal' || !connected()) return;
+  if (G.phase !== 'reveal' || !connected() || spectator()) return;
   if (online() && !sess.host) return sess.send('next', { id: G.id, round: G.round });
   N99.nextRound(G);
   changed();
@@ -587,7 +649,7 @@ function nextRound() {
 function newGame() {
   clearTimeout(aiTimer);
   stopTimer();
-  const n = online() ? 2 : cfg.mode === 'pvp' ? cfg.n : 2;
+  const n = online() || cfg.mode === 'pvp' ? cfg.n : 2;
   G = N99.newMatch({ n, perLeader: cfg.perLeader, first: nextFirst % n, timer: cfg.timer });
   nextFirst = (nextFirst + 1) % n;
   W = null; covered = false; pendingPick = false; lastTag = '';
@@ -599,61 +661,193 @@ const canRestart = () => !online() || sess.host;
 function restart() { if (canRestart()) newGame(); }
 
 // ---------- online ----------
-// Host is authoritative. While answers are being worked out, the guest only learns *that* the host
-// is done, never the answer itself.
-function sanitized() {
-  const g = N99.clone(G);
-  if (g.phase === 'solve') g.subs = g.subs.map((s, p) => (p === 1 ? s : null));
+// Host is authoritative: guests send what they intend (target, answer, next), the host checks it with
+// the engine, applies it and sends every seat its own view. While answers are being worked out a seat
+// only learns *that* the others are done, never their answers (each state is cut per seat).
+// host: game seats with a live device (the host's own included)
+function liveSeats() {
+  const net = sess.seats();
+  return [0, ...[...gameOf].filter(([n]) => net.includes(n)).map(([, g]) => g)];
+}
+// host: pick a game seat for a device that said hello from net seat n
+function seatFor(n, cid, did) {
+  const live = new Set(liveSeats());
+  const open = (k) => k > 0 && k < G.n && !live.has(k);
+  const mine = owner.indexOf(cid);
+  if (open(mine)) return mine;
+  const sameBrowser = did ? ownerDid.findIndex((d, k) => d === did && open(k)) : -1;
+  if (sameBrowser > 0) return sameBrowser;
+  const seats = [n, ...Array.from({ length: G.n }, (_, k) => k)];
+  // a seat nobody has had yet, then one whose device dropped out (net.js hands those out only when the room is full)
+  return seats.find((k) => open(k) && !owner[k]) ?? seats.find((k) => open(k) && !away.has(k)) ?? seats.find(open) ?? SPECT + n;
+}
+function seat(n, cid, did) {
+  const g = seatFor(n, cid, did);
+  gameOf.set(n, g);
+  if (g < SPECT) {
+    owner[g] = cid; ownerDid[g] = did;
+    clearTimeout(away.get(g)); away.delete(g);
+  }
   return g;
 }
-function sendState() { sess.send('state', { G: sanitized(), seq: ++seq, names: cfg.names[0] }); }
+// host: seat a device that said hello (now, or once the tab it replaces has dropped)
+const pendingHi = new Map(); // host: net seat → timer (waiting for its old tab to drop)
+const hiName = new Map();    // host: net seat → the name it said hello with
+function seatNow(n, quiet) {
+  clearTimeout(pendingHi.get(n)); pendingHi.delete(n);
+  if (!sess || !sess.seats().includes(n) || !cidOf.has(n)) return;
+  const g = seat(n, cidOf.get(n), didOf.get(n));
+  if (g < SPECT) remoteNames[g] = hiName.get(n) ?? '';
+  if (!quiet) changed();
+}
+const clearPending = () => { for (const tm of pendingHi.values()) clearTimeout(tm); pendingHi.clear(); hiName.clear(); };
+// host: watchers get a seat once one opens up (more players, someone left for good)
+function reseat() {
+  const net = sess.seats();
+  for (const [n, g] of gameOf) if (net.includes(n) && g >= G.n) {
+    const cid = cidOf.get(n), did = didOf.get(n), k = seatFor(n, cid, did);
+    if (k < SPECT) { gameOf.set(n, k); owner[k] = cid; ownerDid[k] = did; remoteNames[k] = hiName.get(n) ?? ''; }
+  }
+}
+function computeCtrl() {
+  reseat();
+  const live = liveSeats();
+  ctrl = Array.from({ length: G.n }, (_, p) => {
+    if (p === 0) return 'host';
+    if (live.includes(p)) return 'on';
+    if (away.has(p) || (G.n === 2 && owner[p])) return 'away';
+    return G.n === 2 ? 'free' : 'cpu';
+  });
+}
+function viewFor(k) {
+  const g = N99.clone(G);
+  if (g.phase === 'solve') g.subs = g.subs.map((s, p) => (p === k ? s : null));
+  return g;
+}
+const netNames = () => remoteNames.map((n, k) => (k === 0 ? cfg.names[0] || '' : n));
+// The host keeps the match in sessionStorage, so reloading its tab doesn't wipe the game.
+const roomKey = (s) => `mg-n99-room-${s.code}`;
+function persist() {
+  if (online() && sess.host) sessionStorage.setItem(roomKey(sess), JSON.stringify({ G, owner, ownerDid, names: remoteNames, nextFirst, seq }));
+}
+// to: one game seat (a resync), or everybody
+function sendState(to) {
+  seq++;
+  persist();
+  const names = netNames(), net = sess.seats();
+  for (const [n, g] of gameOf) {
+    if (net.includes(n) && (to === undefined || g === to)) sess.send('state', { G: viewFor(g), seq, names, ctrl, you: g }, { to: n });
+  }
+}
+const sendNames = () => { persist(); sess.send('names', { names: netNames() }); };
+const takeNames = (names) => { if (Array.isArray(names)) names.forEach((n, k) => { if (k < remoteNames.length) remoteNames[k] = String(n || '').slice(0, 14); }); };
+const refresh = () => (G.phase === 'solve' && W ? renderPlayers() : render());
+function clearAway() { for (const tm of away.values()) clearTimeout(tm); away.clear(); }
+// 3+ players: a seat whose device dropped gets a moment to come back (a reload), then the computer plays it
+function markAway(g) {
+  clearTimeout(away.get(g));
+  away.set(g, setTimeout(() => { away.delete(g); if (sess && sess.host) changed(); }, AWAY_MS));
+}
 
 function onSession(s) {
   sess = s;
   clearTimeout(aiTimer);
-  s.on('status', () => render());
+  clearAway(); clearPending(); gameOf.clear(); cidOf.clear(); didOf.clear(); owner = []; ownerDid = []; remoteNames.fill(''); ctrl = []; lastSeq = -1; myG = -1;
+  const mine = () => sess === s;
+  s.on('status', () => mine() && render());
   s.on('peer-join', () => {
-    s.send('name', { seat: s.seat, name: cfg.names[s.seat] });
-    if (s.host) sendState();
+    if (!mine()) return;
+    // guest: (re)connected to the host — say who we are; the host answers with our seat and the state
+    if (!s.host) { lastSeq = -1; s.send('hi', { cid: myCid, did: myDid, name: ownName(mySeat()) }); return render(); }
     render();
+  });
+  s.on('hi', (d, { seat: n }) => {
+    if (!mine() || !s.host || !d || typeof d.cid !== 'string') return;
+    const did = typeof d.did === 'string' ? d.did : '';
+    gameOf.delete(n); cidOf.set(n, d.cid); didOf.set(n, did); hiName.set(n, String(d.name || '').slice(0, 14));
+    // The link reopened in a new tab while the old tab's seat still looks connected (its heartbeat hasn't
+    // timed out yet): hold on a few seconds so this tab gets that seat back rather than a computer seat.
+    const live = liveSeats();
+    const twin = did ? ownerDid.findIndex((x, k) => x === did && k > 0 && k < G.n && live.includes(k) && owner[k] !== d.cid) : -1;
+    clearTimeout(pendingHi.get(n));
+    if (twin > 0) { pendingHi.set(n, setTimeout(() => mine() && seatNow(n), 10000)); return; }
+    seatNow(n);
+  });
+  s.on('peer-leave', (d) => {
+    if (!mine()) return;
+    if (!s.host) return render();
+    const g = gameOf.get(d.seat);
+    gameOf.delete(d.seat); cidOf.delete(d.seat); didOf.delete(d.seat); hiName.delete(d.seat);
+    clearTimeout(pendingHi.get(d.seat)); pendingHi.delete(d.seat);
+    if (g === undefined) return render();
+    if (G.n > 2 && g < G.n) markAway(g);
+    for (const n of [...pendingHi.keys()]) seatNow(n, true);
+    changed();
   });
   s.on('state', (d) => {
     if (s.host || !d || !d.G) return;
     if (G && d.G.id === G.id && d.seq <= lastSeq) return;
     lastSeq = d.seq;
     if (!G || d.G.id !== G.id) { lastTag = ''; $('#result').hidden = true; }
+    if (Number.isInteger(d.you)) myG = d.you;
     // keep my own answer if the host hasn't seen it yet
-    const mine = G && G.id === d.G.id && G.round === d.G.round && G.phase === 'solve' && G.done[1] && !d.G.done[1] ? G.subs[1] : undefined;
+    const me = mySeat();
+    const keep = G && G.id === d.G.id && G.round === d.G.round && G.phase === 'solve' && d.G.phase === 'solve' && G.done[me] && !d.G.done[me];
+    const steps = keep ? G.subs[me] : null;
     G = d.G;
-    if (mine !== undefined) s.send('submit', { id: G.id, round: G.round, steps: mine });
-    remoteNames[0] = d.names || '';
+    ctrl = Array.isArray(d.ctrl) ? d.ctrl : [];
+    takeNames(d.names);
+    if (keep) { G.done[me] = true; G.subs[me] = steps; s.send('submit', { id: G.id, round: G.round, steps }); }
     pendingPick = false;
     syncSettingsUI();
     react();
     render();
   });
-  s.on('name', (d) => { remoteNames[d.seat] = d.name || ''; render(); });
-  s.on('target', (d) => {
-    if (!s.host) return;
-    if (d.id !== G.id || d.round !== G.round || G.phase !== 'pick' || G.leader !== 1 || !N99.validTarget(d.t)) return sendState();
+  s.on('names', (d) => { if (!s.host && d) { takeNames(d.names); refresh(); } });
+  // host side: messages from a guest, by its game seat (ignored until it has said hello)
+  const from = (n) => gameOf.get(n) ?? -1;
+  s.on('name', (d, { seat: n }) => {
+    const g = from(n);
+    if (!s.host || !(g > 0) || g >= remoteNames.length) return;
+    remoteNames[g] = String(d?.name || '').slice(0, 14);
+    sendNames();
+    refresh();
+  });
+  s.on('target', (d, { seat: n }) => {
+    const g = from(n);
+    if (!s.host || g < 0) return;
+    if (!d || d.id !== G.id || d.round !== G.round || G.phase !== 'pick' || G.leader !== g || isAI(g) || !N99.validTarget(d.t)) return sendState(g);
     N99.setTarget(G, d.t, N99.rollDice());
     changed();
   });
-  s.on('submit', (d) => {
-    if (!s.host) return;
-    if (d.id !== G.id || d.round !== G.round || G.phase !== 'solve' || G.done[1]) return sendState();
-    N99.submit(G, 1, d.steps);
+  s.on('submit', (d, { seat: n }) => {
+    const g = from(n);
+    if (!s.host || g < 0) return;
+    if (!d || d.id !== G.id || d.round !== G.round || G.phase !== 'solve' || !(g < G.n) || G.done[g]) return sendState(g);
+    N99.submit(G, g, d.steps);
     changed();
   });
-  s.on('next', (d) => {
-    if (!s.host) return;
-    if (d.id !== G.id || d.round !== G.round || G.phase !== 'reveal') return sendState();
+  s.on('next', (d, { seat: n }) => {
+    const g = from(n);
+    if (!s.host || g < 0) return;
+    if (!d || d.id !== G.id || d.round !== G.round || G.phase !== 'reveal' || !(g < G.n)) return sendState(g);
     N99.nextRound(G);
     changed();
   });
-  s.on('resync', () => s.host && sendState());
-  if (s.host) { nextFirst = 0; newGame(); }
-  else { G = N99.newMatch({ n: 2, timer: cfg.timer, perLeader: cfg.perLeader }); G.id = 'wait'; lastTag = ''; builtN = 0; W = null; render(); }
+  s.on('resync', (d, { seat: n }) => s.host && from(n) >= 0 && sendState(from(n)));
+  if (s.host) {
+    const saved = JSON.parse(sessionStorage.getItem(roomKey(s)) || 'null');
+    if (saved && saved.G) {
+      // the host reloaded: same match; everybody who had a seat gets a moment to reconnect
+      G = saved.G; owner = saved.owner || []; ownerDid = saved.ownerDid || []; takeNames(saved.names); nextFirst = saved.nextFirst || 0; seq = saved.seq || 0;
+      if (G.n > 2) owner.forEach((c, g) => c && g > 0 && g < G.n && markAway(g));
+      if (s.maxPlayers !== G.n) s.setMaxPlayers(G.n);
+      W = null; covered = false; pendingPick = false; lastTag = ''; builtN = 0;
+      $('#result').hidden = true;
+      syncSettingsUI();
+      changed();
+    } else { nextFirst = 0; newGame(); }
+  } else { G = N99.newMatch({ n: 2, timer: cfg.timer, perLeader: cfg.perLeader }); G.id = 'wait'; lastTag = ''; builtN = 0; W = null; render(); }
 }
 
 // ---------- settings ----------
@@ -665,13 +859,18 @@ function fillSelects() {
 function syncSettingsUI() {
   const g = G && online() ? G : null;
   $('#mode').value = cfg.mode;
-  $('#players').value = cfg.n;
+  $('#players').value = g ? g.n : cfg.n;
   $('#timer').value = g ? g.timer : cfg.timer;
   $('#rounds').value = g ? g.perLeader : cfg.perLeader;
 }
 
 $('#mode').addEventListener('change', (e) => { cfg.mode = e.target.value; saveCfg(); nextFirst = 0; newGame(); });
-$('#players').addEventListener('change', (e) => { cfg.n = +e.target.value; saveCfg(); nextFirst = 0; newGame(); });
+$('#players').addEventListener('change', (e) => {
+  if (!canRestart()) return syncSettingsUI();
+  cfg.n = +e.target.value; saveCfg();
+  if (online()) sess.setMaxPlayers(cfg.n);   // the room offers as many seats as the game has players
+  nextFirst = 0; newGame();
+});
 $('#timer').addEventListener('change', (e) => {
   cfg.timer = +e.target.value; saveCfg();
   G.timer = cfg.timer;               // applies from the next answer on
@@ -709,6 +908,13 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('mg:lang', () => { fillSelects(); render(); if (G.phase === 'over') finish(); });
 
 // ---------- boot ----------
+// The room size is the host's player count. A guest only learns it from the host's welcome, so until
+// then (e.g. for the "room is full" message) it assumes the biggest table rather than its own setting.
+const N_MAX = 5;
+let creating = false;
+document.addEventListener('click', (e) => { creating = !!e.target.closest?.('#mg-online [data-act=host]'); }, true);
+const hosting = () => creating || !!JSON.parse(sessionStorage.getItem('mg-net-' + SLUG) || 'null')?.host;
+
 injectDefs();
 mountTools();
 mountSheets();
@@ -719,6 +925,9 @@ mountOnline({
   slug: SLUG,
   button: $('#online'),
   onSession,
-  onEnd: () => { sess = null; nextFirst = 0; newGame(); },
+  onEnd: () => { if (sess) sessionStorage.removeItem(roomKey(sess)); sess = null; clearAway(); clearPending(); ctrl = []; owner = []; ownerDid = []; gameOf.clear(); cidOf.clear(); didOf.clear(); myG = -1; nextFirst = 0; newGame(); },
+  maxPlayers: () => (hosting() ? cfg.n : N_MAX),
 });
+// for scripted UI checks
+window.__n99 = { get G() { return G; }, get ctrl() { return ctrl; }, get seat() { return !sess ? -1 : sess.host ? 0 : myG; }, get status() { return sess ? sess.status : ''; }, seats: () => (sess ? sess.seats() : []), name: (p) => name(p), map: () => [...gameOf], send: (type, payload) => sess && sess.send(type, payload) };
 if (!online()) showOnce('how', SLUG);

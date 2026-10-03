@@ -80,7 +80,7 @@ function setTypes(s, p, types) {
 
 const canFight = (s, p) => s.hand[p].length > 0;
 function canChallenge(s, a, b) {
-  return s.phase === 'turn' && s.turn === a && a !== b && b >= 0 && b < s.np &&
+  return s.phase === 'turn' && s.turn === a && a !== b && Number.isInteger(b) && b >= 0 && b < s.np &&
     canFight(s, a) && canFight(s, b) && !s.refused.includes(b);
 }
 // Once two players have fought, either may refuse a rematch until BOTH have fought someone else.
@@ -95,7 +95,7 @@ function canDecline(s, b, a) {
   return !(other(a) && other(b));
 }
 const canOffer = (s, a, b, give, want) =>
-  s.phase === 'turn' && s.turn === a && !s.traded && a !== b && b >= 0 && b < s.np &&
+  s.phase === 'turn' && s.turn === a && !s.traded && a !== b && Number.isInteger(b) && b >= 0 && b < s.np &&
   s.hand[a].includes(give) && s.hand[b].includes(want);
 
 function challenge(s, a, b, ca) {

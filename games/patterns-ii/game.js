@@ -35,22 +35,52 @@ let snap = null;               // previous state summary for reactions
 let botTimers = [];
 let sureGiveUp = 0;
 let sess = null, guestReady = false;
-const remoteNames = ['', ''];
+const remoteNames = ['', '', '', '', ''];
+const leaveTimers = [];
+const LEAVE_MS = 30000;        // online, 3+ seats: a robot finishes a disconnected player's sheet after this
 const moods = Array.from({ length: 5 }, () => ({ mood: 'neutral', pose: 'down' }));
+
+// Game seats vs. connection seats: net.js numbers guests by arrival, and after a host reload the guests
+// may come back in a different order. So the host maps each connection (net seat) to a game seat by the
+// guest's tab id: the same tab always gets its own sheet back.
+let you = null;                // guest: the game seat the host gave this device (-1: watching)
+let gameOf = {};               // host: net seat → game seat (-1: watching)
+let owner = [];                // host: game seat → tab id that plays it
+let ownerDev = [];             // host: game seat → device (browser) id of that tab
+const cidOf = {}, devOf = {};  // host: net seat → tab id / device id
+const myCid = () => sessionStorage.getItem('mg-client-id') || '';
+// Shared by all tabs of this browser: a player who reopens the link in a new tab gets their sheet back.
+const myDev = (() => {
+  let d = localStorage.getItem('mg-pii-dev');
+  if (!d) { d = Math.random().toString(36).slice(2, 12); localStorage.setItem('mg-pii-dev', d); }
+  return d;
+})();
 
 // ---------- who is who ----------
 const online = () => !!sess;
+const ME = () => (!online() || sess.host ? 0 : you ?? -1);
 const isHost = () => !online() || sess.host;
 const hotSeat = () => !online();
+// Online with 3+ seats: empty seats are robots, the host may play before anyone joins.
+const multi = () => online() && !!m && m.seats > 2;
 const R = () => m.round;
 const roundKey = () => `${m.mid}:${m.rid}`; // a new match restarts rid, so tag it with the match id
-const isBot = (p) => p >= m.humans;
-const isRemote = (p) => online() && !isBot(p) && p !== sess.seat;
+const isBot = (p) => (m.bot ? !!m.bot[p] : p >= m.humans);
+const isRemote = (p) => online() && !isBot(p) && p !== ME();
 const isLocalHuman = (p) => p >= 0 && !isBot(p) && !isRemote(p);
+const isMe = (p) => online() && p === ME();
+// Does a human seat have a live device? (online, 3+ seats; otherwise always "yes")
+function present(p) {
+  if (!multi() || isBot(p) || isMe(p)) return true;
+  return (sess.host ? liveSeats() : m.conn || []).includes(p);
+}
 const COLOR = (p) => (p >= 0 ? COLORS[p] : { main: INK, dark: INK, fill: '#ccc' });
 function name(p) {
   if (p < 0) return t('pii.cpu.designer');
-  if (isBot(p)) return t('pii.cpu', { n: m.seats - m.humans > 1 ? p - m.humans + 1 : '' }).trim();
+  if (isBot(p)) {
+    const bots = [...Array(m.seats).keys()].filter(isBot);
+    return t('pii.cpu', { n: bots.length > 1 ? bots.indexOf(p) + 1 : '' }).trim();
+  }
   const n = isRemote(p) ? remoteNames[p] : cfg.names[p];
   return (n && n.trim()) || t('pii.p' + p);
 }
@@ -60,11 +90,11 @@ const playing = (p) => R().phase === 'guess' && !!sheet(p) && sheet(p).status ==
 // The seat that may act on this device right now (-1: nobody).
 function actor() {
   if (!m) return -1;
-  if (online() && (!sess.connected || (!sess.host && !guestReady))) return -1;
+  if (online() && ((!sess.connected && !(sess.host && multi())) || (!sess.host && !guestReady))) return -1;
   const r = R();
   if (r.phase === 'design') return r.designer >= 0 && isLocalHuman(r.designer) ? r.designer : -1;
   if (r.phase !== 'guess') return -1;
-  if (online()) return playing(sess.seat) ? sess.seat : -1;
+  if (online()) return playing(ME()) && !isBot(ME()) ? ME() : -1;
   for (let p = 0; p < m.humans; p++) if (playing(p)) return p;
   return -1;
 }
@@ -73,7 +103,7 @@ const needsCover = () => hotSeat() && m.humans >= 2 && actor() >= 0 && uncovered
 const canEdit = () => actor() >= 0 && !needsCover();
 
 function guessOf(p, c) {
-  if (online() && !sess.host && p === sess.seat && R().phase === 'guess') return myGuess ? myGuess[c] : -1;
+  if (online() && !sess.host && p === ME() && R().phase === 'guess') return myGuess ? myGuess[c] : -1;
   return sheet(p).guess[c];
 }
 const guessCount = (p) => { let n = 0; for (let c = 0; c < CELLS; c++) if (guessOf(p, c) >= 0) n++; return n; };
@@ -142,7 +172,7 @@ function boardSVG() {
   if (mode === 'design') {
     for (let c = 0; c < CELLS; c++) s += `<g class="cell">${symbolSVG(draft[c], ...cxy(c), INK, c)}</g>`;
   } else if (mode === 'sheet' || mode === 'mysheet') {
-    const p = mode === 'sheet' ? a : sess.seat, col = COLOR(p).main, sh = sheet(p);
+    const p = mode === 'sheet' ? a : ME(), col = COLOR(p).main, sh = sheet(p);
     for (let c = 0; c < CELLS; c++) {
       if (sh.rev[c] >= 0) {
         s += cellBg(c, '#e9e5d8', 'filter="url(#mg-crayon)"') + tick(c, '#9a968a', 2.4);
@@ -184,8 +214,8 @@ function boardMode() {
   if (r.phase === 'done') return 'result';
   if (a >= 0) return 'sheet';
   if (online() && (sess.host || guestReady)) {
-    if (r.designer === sess.seat && r.pattern) return 'owner';
-    if (sheet(sess.seat)) return 'mysheet';
+    if (r.designer === ME() && r.pattern) return 'owner';
+    if (sheet(ME())) return 'mysheet';
   }
   return 'blank';
 }
@@ -203,6 +233,8 @@ function render() {
   $('#new').disabled = !isHost();
   for (const id of ['designer', 'players', 'bots', 'level']) $('#' + id).disabled = !isHost();
   syncSettingsUI();
+  saveMine();
+  persist();
 }
 
 function renderCover() {
@@ -268,6 +300,7 @@ function cardLine(p) {
     const sc = r.result.scores[p];
     return m.rounds > 1 ? `${sgn(sc)} · ${t('pii.card.total', { n: m.totals[p] })}` : plural(Math.abs(sc), 'pii.points').replace(/^\d+/, sgn(sc));
   }
+  if (!present(p)) return t('pii.card.off');
   if (p === r.designer) return t(r.phase === 'design' ? 'pii.card.drawing' : 'pii.card.author');
   const sh = sheet(p);
   if (r.phase === 'design') return t('pii.card.wait');
@@ -291,6 +324,9 @@ function renderPlayers() {
     el.classList.toggle('active', active);
     el.classList.toggle('designer', p === r.designer);
     el.classList.toggle('pickable', r.phase === 'done');
+    el.classList.toggle('off', !present(p));
+    el.classList.toggle('me', isMe(p) && (!online() || sess.host || guestReady));
+    el.querySelector('.fig-wrap').dataset.you = t('net.you');
     const mo = moods[p];
     const pose = mo.pose !== 'down' ? mo.pose : active && r.phase !== 'done' ? 'point' : 'down';
     const face = n === 2 ? (p === 0 ? 'right' : 'left') : flip ? 'left' : 'right';
@@ -310,7 +346,10 @@ function renderPlayers() {
 function renderStatus() {
   const st = $('#status'), r = R(), a = actor();
   let txt = '', col = INK;
-  if (online() && !sess.connected) txt = t('pii.online.wait');
+  const guest = online() && !sess.host && guestReady;
+  if (online() && !sess.connected && !(sess.host && multi())) txt = t(guestReady && multi() ? 'pii.online.lost' : 'pii.online.wait');
+  else if (guest && ME() < 0) txt = t('pii.online.watch', { n: m.seats });
+  else if (guest && isBot(ME()) && r.phase !== 'done') txt = t('pii.online.botseat');
   else if (needsCover()) { txt = t('pii.st.cover', { name: name(a) }); col = COLOR(a).main; }
   else if (r.phase === 'design') {
     if (a >= 0) { txt = t('pii.st.design.you'); col = COLOR(a).main; }
@@ -391,7 +430,7 @@ function onRoundDone() {
     else setMood(r.designer, 'neutral');
   }
   // default sheet to look at: mine, else the first human guesser, else the best one
-  const mine = online() ? (sheet(sess.seat) ? sess.seat : null) : gs.find((p) => !isBot(p));
+  const mine = online() ? (sheet(ME()) ? ME() : null) : gs.find((p) => !isBot(p));
   viewSeat = mine ?? gs.find((p) => res.scores[p] === best) ?? null;
   fillResult();
   const rid = m.rid;
@@ -406,7 +445,8 @@ function fillResult() {
   if (m.seats === 1) { txt.textContent = t('pii.res.solo', { n: sgn(res.scores[0]) }); txt.style.color = COLORS[0].main; }
   else if (over) {
     const lead = PII.leaders(m);
-    txt.textContent = lead.length === 1 ? t('pii.res.win', { name: name(lead[0]) }) : t('pii.res.tie', { names: lead.map(name).join(', ') });
+    txt.textContent = lead.length !== 1 ? t('pii.res.tie', { names: lead.map(name).join(', ') })
+      : isMe(lead[0]) ? t('pii.res.win.you') : t('pii.res.win', { name: name(lead[0]) });
     txt.style.color = lead.length === 1 ? COLORS[lead[0]].main : INK;
   } else { txt.textContent = t('pii.res.round', { i: m.roundNo + 1, n: m.rounds }); txt.style.color = INK; sub.hidden = true; }
   const order = [...Array(m.seats).keys()].sort((a, b) => (over && m.rounds > 1 ? m.totals[b] - m.totals[a] : res.scores[b] - res.scores[a]));
@@ -435,7 +475,7 @@ function resetLocals() {
 }
 
 function seatsFromCfg() {
-  if (online()) return { seats: Math.max(2, cfg.players), humans: 2 };
+  if (online()) return { seats: Math.max(2, cfg.players), humans: Math.max(2, cfg.players) };
   const seats = cfg.designer === 'rotate' ? Math.max(2, cfg.players) : cfg.players;
   return { seats, humans: Math.max(1, seats - Math.min(cfg.bots, seats - 1)) };
 }
@@ -444,31 +484,48 @@ function newMatch() {
   clearBots();
   const { seats, humans } = seatsFromCfg();
   const rotate = cfg.designer === 'rotate';
-  m = PII.newMatch({ seats, cpuDesigner: !rotate, first: rotate && humans < seats ? humans : 0 });
+  m = PII.newMatch({ seats, cpuDesigner: !rotate, first: rotate && humans < seats && !online() ? humans : 0 });
   m.humans = humans; m.level = cfg.level; m.v = 0; m.mid = Math.random().toString(36).slice(2, 8);
+  m.bot = Array.from({ length: seats }, (_, p) => p >= humans);
   shapes = {}; snap = null;
+  if (online() && sess.host) reseat();
   beginRound();
+}
+
+// Online, 3+ seats: at every round start, seats with a live device are human, the rest robots.
+function seatRobots() {
+  if (!multi() || !sess.host) return;
+  const here = liveSeats();
+  m.bot = Array.from({ length: m.seats }, (_, p) => p !== 0 && !here.includes(p));
+  m.humans = m.bot.filter((b) => !b).length;
 }
 
 function beginRound() {
   clearBots();
   resetLocals();
+  seatRobots();
   const r = R();
   if (r.designer < 0 || isBot(r.designer)) PII.setPattern(r, PII.generatePattern());
   else if (isLocalHuman(r.designer)) draft = Array(CELLS).fill(dtool === 0 ? 1 : 0);
   sync();
 }
 
+// Online host watching the seats fill up: robots hold off until "let's play", so friends who are
+// still joining get their seats instead of a robot's finished sheet.
+const seating = () => online() && sess.host && !!document.getElementById('mg-online')?.open;
+
 function scheduleBots() {
-  const r = R(), rid = m.rid;
-  if (r.phase !== 'guess') return;
+  const r = R(), rk = roundKey();
+  if (r.phase !== 'guess' || seating()) return;
+  let k = 0;
   for (const p of PII.guessers(r)) {
     if (!isBot(p) || !playing(p) || botTimers[p]) continue;
     botTimers[p] = setTimeout(() => {
-      if (m.rid !== rid || !playing(p)) return;
+      botTimers[p] = 0;
+      if (roundKey() !== rk || !playing(p) || !isBot(p)) return;
       PII.aiTurn(R(), p, m.level || 'normal');
       sync();
-    }, 2500 + Math.random() * 3500 + (p - m.humans) * 900);
+    }, 2500 + Math.random() * 3500 + k++ * 900);
   }
 }
 
@@ -602,46 +659,194 @@ function designDone() {
 }
 
 // ---------- online ----------
-function sendState() {
-  if (!online() || !sess.host || !sess.connected) return;
+// Host → every guest: its own redacted view (only its own reveals; the pattern only for the designer
+// or once the round is over), plus which seats are robots / have a device and everyone's names.
+function sendState(to) {
+  if (!online() || !sess.host) return;
   m.v = (m.v || 0) + 1;
-  sess.send('state', { m: PII.viewFor(m, 1) });
+  m.conn = liveSeats();
+  const names = Array.from({ length: 5 }, (_, p) => (p === 0 ? cfg.names[0] || '' : remoteNames[p] || ''));
+  for (const k of sess.seats()) {
+    const j = gameOf[k];
+    if (k < 1 || j === undefined || (to !== undefined && k !== to)) continue;
+    // A watcher gets the view of a seat nobody sits on (never -1: that is the computer designer's "seat").
+    // So does a late guest whose seat a robot is still playing: the robot's reveals are not theirs to see.
+    const own = j >= 0 && !(isBot(j) && R().phase !== 'done');
+    sess.send('state', { m: PII.viewFor(m, own ? j : 99), you: j, names }, { to: k });
+  }
+  persist();
+}
+
+// Host: the match survives a reload of the host's tab (per room code, this tab only).
+const roomKey = () => `mg-pii-room-${sess.code}`;
+function persist() {
+  if (!online() || !sess.host || !m) return;
+  try { sessionStorage.setItem(roomKey(), JSON.stringify({ m, owner, ownerDev, names: remoteNames, draft })); } catch {}
+}
+
+// Host: game seats with a live device (own seat 0 included).
+function liveSeats() {
+  const out = [0];
+  for (const k of sess.seats()) { const j = gameOf[k]; if (k > 0 && j > 0 && !out.includes(j)) out.push(j); }
+  return out.sort((a, b) => a - b);
+}
+// Host: give the device on net seat k a game seat — the one this tab played before if it's free,
+// else one this browser played in another tab that is gone now (link reopened in a new tab),
+// else its own number, else any seat nobody owns, else one whose owner is away; none left: it watches.
+function claim(k) {
+  const cid = cidOf[k], dev = devOf[k];
+  delete gameOf[k];
+  const taken = liveSeats();
+  const free = (j) => j > 0 && j < m.seats && !taken.includes(j);
+  let j = cid ? owner.indexOf(cid) : -1;
+  if (!free(j) && dev) j = ownerDev.findIndex((d, i) => d === dev && free(i));
+  if (!free(j)) {
+    const order = [k, ...Array.from({ length: m.seats }, (_, i) => i)];
+    j = order.find((i) => free(i) && !owner[i]) ?? order.find(free) ?? -1;
+  }
+  gameOf[k] = j;
+  if (j > 0) { owner[j] = cid; ownerDev[j] = dev; }
+  return j;
+}
+// Host, new match: everyone at the table is seated afresh.
+function reseat() {
+  owner = []; ownerDev = []; gameOf = {};
+  for (const k of sess.seats()) if (k > 0 && cidOf[k] !== undefined) claim(k);
+}
+
+// Guest: unsent predictions / a pattern in progress survive a reload.
+const MINE = 'mg-pii-mine';
+const mineKey = () => `${sess.code}:${m.mid}:${m.rid}:${ME()}`;
+function saveMine() {
+  if (!online() || sess.host || !guestReady) return;
+  try { sessionStorage.setItem(MINE, JSON.stringify({ k: mineKey(), g: myGuess, d: draft })); } catch {}
+}
+function loadMine() {
+  const x = JSON.parse(sessionStorage.getItem(MINE) || 'null');
+  if (!x || x.k !== mineKey()) return;
+  if (Array.isArray(x.g) && x.g.length === CELLS) myGuess = x.g;
+  if (Array.isArray(x.d) && x.d.length === CELLS && R().phase === 'design' && R().designer === ME()) draft = x.d;
+}
+
+// Host, 3+ seats: a guest arrived on game seat j (new, or back after a reload).
+function seatJoined(j) {
+  if (j < 1) return;
+  clearTimeout(leaveTimers[j]);
+  if (!multi() || j >= m.seats || !isBot(j)) return;
+  // Take the seat over from the robot now if it hasn't played yet, otherwise from the next round.
+  if (PII.untouched(R(), j)) { m.bot[j] = false; clearTimeout(botTimers[j]); botTimers[j] = 0; m.humans++; }
+}
+// Host, 3+ seats: a player dropped. Wait a little for a reload; then a robot finishes their part.
+function seatLeft(j) {
+  if (!(j > 0)) return;
+  clearTimeout(leaveTimers[j]);
+  if (!multi() || j >= m.seats || isBot(j)) return;
+  const mid = m.mid;
+  leaveTimers[j] = setTimeout(() => {
+    if (!sess || !sess.host || m.mid !== mid || liveSeats().includes(j) || isBot(j)) return;
+    const r = R();
+    if (r.phase === 'done') return;
+    if (r.designer === j) {
+      if (r.phase !== 'design') return; // the pattern is drawn: nothing left to do
+      m.bot[j] = true; PII.setPattern(r, PII.generatePattern());
+    } else if (sheet(j)?.status === 'play') m.bot[j] = true; // also while someone else is still drawing
+    else return;
+    m.humans--;
+    sync();
+  }, window.__piiLeaveMs ?? LEAVE_MS);
+}
+
+let restored = false;
+let sentName = null;
+function sendName() {
+  const p = you ?? sess.seat;
+  sentName = p;
+  sess.send('name', { name: cfg.names[p] || '', cid: myCid(), dev: myDev });
 }
 
 function onSession(s) {
-  sess = s; guestReady = false;
+  sess = s; guestReady = false; you = null; restored = false;
   clearBots();
   s.on('status', () => render());
-  s.on('peer-join', () => {
-    s.send('name', { seat: s.seat, name: cfg.names[s.seat] });
-    if (s.host) sendState();
+  s.on('peer-join', ({ seat }) => {
+    if (!s.host) { sendName(); return; }
+    delete gameOf[seat]; // seated when its hello ('name' with the tab id) arrives
+    // after a host reload the table is already set: no need to keep the seats dialog open
+    if (restored) { restored = false; document.getElementById('mg-online')?.close(); }
+    render();
   });
-  s.on('name', (d) => { if (d.seat !== s.seat) { remoteNames[d.seat] = d.name || ''; render(); if (R().phase === 'done') fillResult(); } });
+  s.on('peer-leave', ({ seat }) => {
+    if (!s.host) return render();
+    const j = gameOf[seat];
+    delete gameOf[seat];
+    seatLeft(j);
+    render();
+    sendState();
+  });
+  s.on('roster', () => { if (s.host) render(); });
+  s.on('name', (d, { seat }) => {
+    if (!s.host || seat < 1) return;
+    // Seated once per connection (net.js re-announces a seat that changed hands with a fresh peer-join):
+    // a later 'name' can't switch its sender to another sheet.
+    if (gameOf[seat] === undefined) {
+      cidOf[seat] = typeof d?.cid === 'string' ? d.cid.slice(0, 24) : '';
+      devOf[seat] = typeof d?.dev === 'string' ? d.dev.slice(0, 24) : '';
+      seatJoined(claim(seat));
+    }
+    const j = gameOf[seat];
+    if (j > 0) remoteNames[j] = String(d?.name || '').slice(0, 14);
+    render();
+    if (R().phase === 'done') fillResult();
+    sendState();
+  });
   s.on('state', (d) => {
-    if (s.host) return;
-    const same = !!m && guestReady && d.m.mid === m.mid && d.m.rid === m.rid;
+    if (s.host || !d?.m?.round) return;
+    window.__piiInbox?.push(JSON.parse(JSON.stringify(d))); // scripted UI checks: what this device was sent
+    const seatNow = Number.isInteger(d.you) ? d.you : s.seat;
+    const same = !!m && guestReady && d.m.mid === m.mid && d.m.rid === m.rid && seatNow === you;
     if (same && d.m.v <= m.v) return;
     const fresh = !same;
     const keep = myGuess, keepDraft = draft;
-    m = d.m; guestReady = true;
+    m = d.m; guestReady = true; you = seatNow;
+    (d.names || []).forEach((n, p) => { if (p !== you) remoteNames[p] = n || ''; });
     if (fresh) {
       clearBots(); resetLocals(); shapes = {}; snap = null;
+      loadMine();
     } else {
       myGuess = keep; draft = keepDraft;
-      const sh = sheet(s.seat);
-      if (sh) for (let c = 0; c < CELLS; c++) if (sh.rev[c] >= 0) { myGuess[c] = -1; pending.delete(c); }
     }
-    if (R().phase === 'design' && R().designer === s.seat && !draft) draft = Array(CELLS).fill(0);
+    const sh = sheet(you);
+    if (sh) for (let c = 0; c < CELLS; c++) if (sh.rev[c] >= 0) { myGuess[c] = -1; pending.delete(c); }
+    if (R().phase === 'design' && R().designer === you && !isBot(you) && !draft) draft = Array(CELLS).fill(0);
+    if (you >= 0 && sentName !== you) sendName(); // our name belongs to the seat we actually got
     sync();
+    if (R().phase === 'done') fillResult();
   });
-  // host side: guest's requests
-  const stale = (d) => { if (d.rid !== roundKey()) { sendState(); return true; } return false; };
-  s.on('peek', (d) => { if (!s.host || stale(d)) return; PII.peek(R(), 1, (d.cells || []).slice(0, CELLS)); sync(); });
-  s.on('submit', (d) => { if (!s.host || stale(d)) return; PII.submit(R(), 1, d.guesses); sync(); });
-  s.on('giveup', (d) => { if (!s.host || stale(d)) return; PII.giveUp(R(), 1); sync(); });
-  s.on('design', (d) => { if (!s.host || stale(d)) return; if (R().designer === 1) PII.setPattern(R(), d.pattern); sync(); });
-  s.on('resync', () => s.host && sendState());
-  if (s.host) newMatch();
+  // host side: a guest's requests (the sender's seat comes from the connection, not the message;
+  // anything malformed, stale or not this seat's business just gets that seat a fresh state)
+  const seatOf = (d, k) => {
+    const j = gameOf[k];
+    if (!d || typeof d !== 'object' || d.rid !== roundKey() || !(j > 0) || j >= m.seats || isBot(j)) { sendState(k); return -1; }
+    return j;
+  };
+  const handle = (fn) => (d, { seat }) => { if (!s.host) return; const j = seatOf(d, seat); if (j > 0) { fn(j, d); sync(); } };
+  s.on('peek', handle((j, d) => PII.peek(R(), j, Array.isArray(d.cells) ? d.cells.slice(0, CELLS) : [])));
+  s.on('submit', handle((j, d) => PII.submit(R(), j, d.guesses)));
+  s.on('giveup', handle((j) => PII.giveUp(R(), j)));
+  s.on('design', handle((j, d) => { if (R().designer === j) PII.setPattern(R(), d.pattern); }));
+  s.on('resync', (d, { seat }) => s.host && sendState(seat));
+  const saved = s.host && JSON.parse(sessionStorage.getItem(roomKey()) || 'null');
+  if (saved?.m?.round) {
+    clearBots(); resetLocals();
+    m = saved.m; owner = saved.owner || []; ownerDev = saved.ownerDev || []; gameOf = {};
+    (saved.names || []).forEach((n, p) => (remoteNames[p] = n || ''));
+    shapes = {}; snap = null; restored = true;
+    if (s.maxPlayers !== Math.max(2, m.seats)) s.setMaxPlayers(Math.max(2, m.seats));
+    if (R().phase === 'design' && R().designer === 0) draft = Array.isArray(saved.draft) && saved.draft.length === CELLS ? saved.draft : Array(CELLS).fill(0);
+    for (let j = 1; j < m.seats; j++) seatLeft(j); // nobody is back yet: robots step in if they stay away
+    sync();
+    if (R().phase === 'done') { fillResult(); $('#result').hidden = false; }
+  } else if (s.host) newMatch();
   else render();
 }
 
@@ -716,7 +921,7 @@ document.querySelectorAll('.player .name').forEach((inp) =>
     const p = +inp.closest('.player').dataset.p;
     cfg.names[p] = inp.value;
     saveCfg();
-    if (online()) sess.send('name', { seat: p, name: inp.value });
+    if (online()) sess.host ? sendState() : sendName();
     render();
   }));
 
@@ -743,6 +948,7 @@ function onSetting() {
   if (!online()) cfg.bots = Math.min(+$('#bots').value, Math.max(0, cfg.players - 1));
   cfg.level = $('#level').value;
   saveCfg();
+  if (online()) sess.setMaxPlayers(Math.max(2, cfg.players));
   newMatch();
 }
 for (const id of ['designer', 'players', 'bots', 'level']) $('#' + id).addEventListener('change', onSetting);
@@ -758,9 +964,12 @@ mountOnline({
   slug: SLUG,
   button: $('#online'),
   onSession,
-  onEnd: () => { sess = null; guestReady = false; newMatch(); },
+  onEnd: () => { sess = null; guestReady = false; you = null; gameOf = {}; owner = []; ownerDev = []; leaveTimers.forEach(clearTimeout); newMatch(); },
+  maxPlayers: () => Math.max(2, cfg.players),
 });
+// the host closed the seats dialog ("let's play"): robots may start now
+document.getElementById('mg-online').addEventListener('close', () => { if (online() && sess.host) sync(); });
 if (!online()) showOnce('how', SLUG);
 
 // test hook for scripted UI checks
-window.__pii = { get m() { return m; }, actor, PII };
+window.__pii = { get m() { return m; }, actor, PII, get seat() { return sess ? ME() : 0; }, get sess() { return sess; }, get gameOf() { return gameOf; } };

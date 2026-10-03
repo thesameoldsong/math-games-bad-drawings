@@ -1,4 +1,4 @@
-import { t, plural, applyI18n } from '../../shared/i18n.js';
+import { t, plural, applyI18n, getLang } from '../../shared/i18n.js';
 import { PALETTE, line, figureSVG, injectDefs, withSeed } from '../../shared/sketch.js';
 import { mountTools, mountSheets, showOnce } from '../../shared/ui.js';
 import { mountOnline } from '../../shared/net.js';
@@ -39,21 +39,42 @@ const saveCfg = () => localStorage.setItem(store, JSON.stringify(cfg));
 let st, history = [], over = false, timer = 0, sel = { to: -1, suit: -1 }, nextFirst = 0;
 let shapes = {}, moods = [], fresh = null, built = -1;
 let sess = null;                    // online session (shared/net.js), null when playing locally
-const remoteNames = ['', ''];
+// Online, the host decides who controls each player and every device mirrors it:
+//   ctl[p]   'human' — a device plays p; 'away' — its device dropped out (we wait a bit); 'cpu' — the host's computer plays p.
+//   owner[p] the room seat (shared/net.js) whose device plays p, -1 if none. Players are not tied to room seats:
+//            after a host reload net.js hands out seats in reconnect order, so each guest says which player it was.
+let ctl = [], owner = [], netNames = [], seatNames = {};
+let paused = false;                 // online: the host's room dialog is open → the table waits
+let started = false;                // host: "let's play" was pressed in this room (survives a reload)
+let joined = {};                    // host: room seat → {p, at} for a device that just sat at a computer's player
+let pending = false;                // guest: our move is on its way to the host
+const awayTimers = {};
+const AWAY_MS = 15000;              // a dropped player's seat goes to the computer after this
+// Guest: which player we play in this room. Kept per tab and, as a fallback for the link reopened in a
+// new tab (net.js then sees a new device), per browser.
+const meKey = () => `mg-${SLUG}-me-${sess.code}`;
+const saveMe = (p) => { sessionStorage.setItem(meKey(), String(p)); localStorage.setItem(meKey(), String(p)); };
+const loadMe = () => { const v = Number(sessionStorage.getItem(meKey()) ?? localStorage.getItem(meKey()) ?? NaN); return Number.isInteger(v) ? v : null; };
+let everLinked = false;             // guest: reached the host at least once
 
 // ---------- who is who ----------
 const online = () => !!sess;
-const mySeat = () => sess.seat;
-const humans = () => (online() ? 2 : Math.min(cfg.humans, st.n));
-const isAI = (p) => p >= humans();
-const isRemote = (p) => online() && p < 2 && p !== mySeat();
-const isLocal = (p) => !isAI(p) && !isRemote(p);
-const runsAI = () => !online() || sess.host;   // only the host drives computer seats online
+// The player this device controls online (-1: watching).
+const me = () => (sess.host ? 0 : owner.indexOf(sess.seat));
+const humans = () => (online() ? ctl.filter((c) => c && c !== 'cpu').length : Math.min(cfg.humans, st.n));
+const isAI = (p) => (online() ? ctl[p] === 'cpu' : p >= humans());
+const isLocal = (p) => (online() ? p === me() : !isAI(p));
+const isRemote = (p) => online() && !isAI(p) && p !== me();
+const spectator = () => online() && !(me() >= 0 && me() < st.n); // no free player for us (or the table shrank)
+const runsAI = () => !online() || (sess.host && !paused);   // only the host drives computer seats online
+const linked = () => !online() || sess.host || sess.connected;
 const actor = () => QGF.actor(st);
-const canAct = () => !over && actor() >= 0 && isLocal(actor()) && (!online() || sess.connected);
+const canAct = () => !over && actor() >= 0 && isLocal(actor()) && linked() && !(online() && (paused || pending));
+// Online, this device's own name is always cfg.names[0] (whatever seat it gets), not a hot-seat name.
+const nameIdx = (p) => (online() ? 0 : p);
 function name(p) {
   if (isAI(p)) return t('qgf.cpu' + p);
-  const n = isRemote(p) ? remoteNames[p] : cfg.names[p];
+  const n = online() && p !== me() ? netNames[p] : cfg.names[nameIdx(p)];
   return (n && n.trim()) || t('qgf.p' + p);
 }
 const suitLook = (s) => st.look[s];
@@ -95,7 +116,7 @@ function buildSeats() {
     <div class="seat" data-p="${p}" style="--pc:${COLORS[p].main}; --pd:${COLORS[p].dark}">
       <div class="fig-wrap"><div class="bubble" style="color:${COLORS[p].main}"></div><div class="fig"></div></div>
       <div class="seat-main">
-        <div class="seat-top"><span class="nm"></span><span class="cnt"></span><span class="nots"></span></div>
+        <div class="seat-top"><span class="nm"></span><span class="cnt"></span><span class="off"></span><span class="nots"></span></div>
         <svg class="hand" preserveAspectRatio="xMinYMid meet"></svg>
       </div>
     </div>`).join('');
@@ -128,7 +149,11 @@ function renderSeats() {
     const pose = over || m.pose !== 'down' ? m.pose : act === p ? 'point' : 'down';
     el.querySelector('.fig').innerHTML = figureSVG({ color: COLORS[p], mood: m.mood, pose, face: 'right', seed: 11 + p * 31 })
       .replace('viewBox="0 0 140 240"', st.n >= 6 ? 'viewBox="-4 10 148 172"' : 'viewBox="-4 6 148 230"');
-    el.querySelector('.nm').textContent = name(p);
+    const mine = online() && p === me(), away = online() && ctl[p] === 'away';
+    el.classList.toggle('me', mine);
+    el.classList.toggle('away', away);
+    el.querySelector('.nm').textContent = name(p) + (mine ? ` (${t('net.you')})` : '');
+    el.querySelector('.off').textContent = away ? t('qgf.off') : '';
     el.querySelector('.cnt').textContent = plural(st.hand[p], 'qgf.cards');
     // the hand: known suits, deduced suits (dashed), then mystery cards
     let out = '', i = 0;
@@ -195,7 +220,10 @@ function renderStatus() {
   const a = actor();
   let txt = '';
   if (over) txt = '';
-  else if (online() && !sess.connected) txt = t('qgf.st.wait');
+  else if (!linked()) txt = t(everLinked ? 'qgf.st.wait' : 'qgf.st.join');
+  else if (online() && paused) txt = sess.host ? t('qgf.st.paused.host') : t('qgf.st.paused', { name: name(0) });
+  else if (online() && ctl[a] === 'away') txt = t('qgf.st.away', { name: name(a) });
+  else if (spectator()) txt = t('qgf.st.watch');
   else if (isAI(a)) txt = t('qgf.st.thinking', { name: name(a) });
   else if (isRemote(a)) txt = t('qgf.st.remote', { name: name(a) });
   else if (st.phase === 'answer') txt = online() || humans() === 1 ? t('qgf.st.answer.you') : t('qgf.st.answer', { name: name(a) });
@@ -215,11 +243,22 @@ function renderTools() {
   $('#again').hidden = !host;
   $('#result-wait').hidden = host;
   if (online()) $('#result-wait').textContent = t('qgf.online.waitnew', { name: name(0) });
-  $('#settings-note').textContent = online() ? t('qgf.online.note') : '';
+  $('#settings-note').textContent = online() ? t('qgf.online.note', { s: Math.round(AWAY_MS / 1000) }) : '';
   $('#level-field').hidden = online() ? !sess.host : humans() >= st.n;
 }
 
+// The result card is redrawn with the table, so names stay right if someone takes a seat afterwards.
+function renderResult() {
+  if (!over) return;
+  const w = st.winner, txt = $('#result-text');
+  txt.textContent = st.draw ? t('qgf.draw') : t('qgf.win', { name: name(w) });
+  txt.style.color = st.draw ? 'var(--ink)' : COLORS[w].main;
+  $('#result-why').textContent = st.draw ? t('qgf.draw.why') : st.winBy === 'four' ? t('qgf.win.four', { suit: lower(suitName(st.winSuit)) }) : t('qgf.win.all');
+}
+
 function render() {
+  persist();
+  renderResult();
   renderSeats();
   renderPanel();
   renderStatus();
@@ -236,12 +275,16 @@ function fillSettings() {
     const lbl = k === 1 ? t('qgf.humans.1') : k === n ? t('qgf.humans.all', { k }) : t('qgf.humans.k', { k });
     return `<option value="${k}">${lbl}</option>`;
   }).join('');
-  hs.value = String(online() ? 2 : Math.min(cfg.humans, n));
+  hs.value = String(online() ? Math.max(1, Math.min(humans(), n)) : Math.min(cfg.humans, n));
   $('#level').value = cfg.level;
   $('#hints').value = cfg.hints;
-  const seats = online() ? [mySeat()] : Array.from({ length: Math.min(cfg.humans, n) }, (_, i) => i);
-  $('#names').innerHTML = seats.map((p) =>
-    `<input type="text" maxlength="14" spellcheck="false" data-p="${p}" style="color:${COLORS[p].main}" placeholder="${esc(t('qgf.p' + p))}" value="${esc(cfg.names[p] || '')}">`).join('');
+  const seats = online() ? [Math.max(0, me())] : Array.from({ length: Math.min(cfg.humans, n) }, (_, i) => i);
+  // don't rebuild the name fields under the user's fingers (seat updates arrive while a guest types)
+  const box = $('#names'), key = `${online()}:${seats}:${getLang()}`;
+  if (box.dataset.key === key && box.contains(document.activeElement)) return;
+  box.dataset.key = key;
+  box.innerHTML = seats.map((p) =>
+    `<input type="text" maxlength="14" spellcheck="false" data-p="${p}" style="color:${COLORS[p].main}" placeholder="${esc(t('qgf.p' + p))}" value="${esc(cfg.names[nameIdx(p)] || '')}">`).join('');
 }
 
 // ---------- reactions ----------
@@ -277,6 +320,7 @@ function newGame(n = cfg.n, first = nextFirst) {
   st = QGF.create(n, { first: first % n });
   nextFirst = (first + 1) % n;
   history = []; over = false; sel = { to: -1, suit: -1 }; fresh = null;
+  if (online() && sess.host) syncCtl();
   calm(); hush();
   $('#result').hidden = true;
   fillSettings();
@@ -293,7 +337,8 @@ function doMove(m, fromNet = false) {
   QGF.apply(st, m);
   sel = { to: -1, suit: -1 };
   fresh = null;
-  if (online() && !fromNet) sess.send('move', { m, n: n0 });
+  // the host relays every applied move (its own, the computers' and the guests') to the whole table
+  if (online() && sess.host) sess.send('move', { m, n: n0 });
   if (!answering) {
     const { from, to, suit, fresh: isNew } = st.ask;
     calm();
@@ -324,11 +369,11 @@ function doMove(m, fromNet = false) {
 
 function maybeAI() {
   clearTimeout(timer);
-  if (over || !runsAI() || (online() && !sess.connected)) return;
+  if (over || !runsAI()) return;
   const a = actor();
   if (a < 0 || !isAI(a)) return;
   const delay = st.phase === 'ask' ? 1100 : 1000;
-  timer = setTimeout(() => { if (!over && actor() === a) doMove(QGF.aiMove(st, cfg.level)); }, delay);
+  timer = setTimeout(() => { if (!over && actor() === a && isAI(a) && runsAI()) doMove(QGF.aiMove(st, cfg.level)); }, delay);
 }
 
 function finish() {
@@ -347,10 +392,6 @@ function finish() {
     }
   }, 700);
   render();
-  const txt = $('#result-text');
-  txt.textContent = st.draw ? t('qgf.draw') : t('qgf.win', { name: name(w) });
-  txt.style.color = st.draw ? 'var(--ink)' : COLORS[w].main;
-  $('#result-why').textContent = st.draw ? t('qgf.draw.why') : st.winBy === 'four' ? t('qgf.win.four', { suit: lower(suitName(st.winSuit)) }) : t('qgf.win.all');
   setTimeout(() => { if (over) $('#result').hidden = false; }, 1300);
 }
 
@@ -374,10 +415,20 @@ function restart() {
 }
 
 // ---------- input ----------
+// A guest only proposes the move; the host checks it and relays it to everyone (us included).
+function play(m) {
+  if (!QGF.isLegal(st, m)) return false;
+  if (!online() || sess.host) return doMove(m);
+  pending = true;
+  sel = { to: -1, suit: -1 };
+  sess.send('move', { m, n: st.moves });
+  render();
+  return true;
+}
 function tryAsk() {
   if (sel.to < 0 || sel.suit < 0) return render();
   const m = { t: 'ask', to: sel.to, suit: sel.suit };
-  if (!doMove(m)) { sel = { to: -1, suit: -1 }; render(); }
+  if (!play(m)) { sel = { to: -1, suit: -1 }; render(); }
 }
 $('#seats').addEventListener('click', (e) => {
   const seat = e.target.closest('.seat');
@@ -396,18 +447,22 @@ $('#panel').addEventListener('click', (e) => {
     return tryAsk();
   }
   const a = e.target.closest('[data-ans]');
-  if (a && !a.disabled && st.phase === 'answer') doMove({ t: 'answer', yes: a.dataset.ans === 'yes' });
+  if (a && !a.disabled && st.phase === 'answer') play({ t: 'answer', yes: a.dataset.ans === 'yes' });
 });
 
-$('#np').addEventListener('change', (e) => { cfg.n = +e.target.value; saveCfg(); fillSettings(); restart(); });
+$('#np').addEventListener('change', (e) => {
+  if (!canRestart()) return;
+  cfg.n = +e.target.value; saveCfg();
+  if (online()) sess.setMaxPlayers(cfg.n);
+  fillSettings(); restart();
+});
 $('#humans').addEventListener('change', (e) => { cfg.humans = +e.target.value; saveCfg(); fillSettings(); newGame(); });
 $('#level').addEventListener('change', (e) => { cfg.level = e.target.value; saveCfg(); });
 $('#hints').addEventListener('change', (e) => { cfg.hints = e.target.value; saveCfg(); render(); });
 $('#names').addEventListener('input', (e) => {
-  const p = +e.target.dataset.p;
-  cfg.names[p] = e.target.value;
+  cfg.names[nameIdx(+e.target.dataset.p)] = e.target.value;
   saveCfg();
-  if (online()) sess.send('name', { seat: p, name: e.target.value });
+  if (online()) sendMyName();
   render();
 });
 $('#new').addEventListener('click', restart);
@@ -416,36 +471,233 @@ $('#undo').addEventListener('click', undo);
 document.addEventListener('mg:lang', () => { fillSettings(); render(); if (over) finish(); });
 
 // ---------- online ----------
-// Everything in this game is public, so the host simply sends the whole state.
-function sendState() {
-  sess.send('state', { st, over, first: nextFirst, names: [cfg.names[0] || ''] });
+// Everything on this table is public (nobody holds a secret card:
+// suits only exist as shared facts), so every device gets the same state and the same move stream.
+// The host is authoritative: guests propose moves, the host validates, applies and relays them.
+// The host keeps the match in sessionStorage per room, so reloading the host's tab doesn't wipe it.
+const roomKey = (s) => `mg-${SLUG}-room-${s.code}`;
+function persist() {
+  if (online() && sess.host && st) sessionStorage.setItem(roomKey(sess), JSON.stringify({ st, over, first: nextFirst, ctl, names: netNames, started }));
 }
+const seatInfo = () => { netNames[0] = cfg.names[0] || ''; return { ctl, owner, names: netNames, paused }; };
+function sendState(to) {
+  sess.send('state', { st, over, first: nextFirst, ...seatInfo() }, to === undefined ? {} : { to });
+}
+const sendSeats = () => sess.send('seats', seatInfo());
+function sendMyName() {
+  if (sess.host) { sendSeats(); return; }
+  sess.send('name', { name: cfg.names[0] || '' });
+}
+const live = (k) => k === 0 || sess.seats().includes(k);
+
+// Host: seat room seat k at player p (taking over a computer or a dropped-out player).
+function seatAt(p, k) {
+  owner[p] = k;
+  netNames[p] = seatNames[k] || '';
+  clearTimeout(awayTimers[p]);
+}
+// Host: which player should room seat k play? `was` = the player that device says it played before.
+// A newcomer gets a computer player (never one whose owner may still come back), else watches.
+function claim(k, was) {
+  const n = st.n, mine = owner.indexOf(k);
+  if (mine > 0 && mine < n) return mine;
+  const open = (q) => Number.isInteger(q) && q > 0 && q < n && !(owner[q] >= 0 && owner[q] !== k && live(owner[q]));
+  if (open(was)) return was;
+  // a device we don't know yet is most likely a player who dropped out and reopened the link: give it that player
+  const away = [...Array(n).keys()].filter((q) => open(q) && ctl[q] === 'away');
+  if (was == null && away.length) return away[0];
+  const cpu = [...Array(n).keys()].filter((q) => open(q) && ctl[q] === 'cpu');
+  return [k, ...cpu.filter((q) => !(owner[q] >= 0)), ...cpu].find((q) => cpu.includes(q)) ?? -1;
+}
+function takeSeat(k, was) {
+  const p = claim(k, was);
+  if (p < 0) { sendSeats(); render(); return; } // watching; seats still go out so the guest knows
+  const old = ctl.slice();
+  // (remembered for a moment: if it is someone's new tab, their old tab is about to be noticed gone)
+  if (ctl[p] === 'cpu' && Number.isInteger(was) && was !== p) joined[k] = { p, was, at: Date.now() };
+  seatAt(p, k);
+  ctl[p] = 'human';
+  sendSeats();
+  seatsChanged(old);
+}
+
+// Host, new game: connected devices keep their players, dropped ones stay 'away' (their timer runs on),
+// free players go to the computer, and watching devices get any free player.
+function syncCtl() {
+  const prevOwner = owner, prevCtl = ctl;
+  owner = [0]; ctl = ['human'];
+  for (let p = 1; p < st.n; p++) {
+    const k = prevOwner[p] ?? -1;
+    if (k > 0 && live(k)) { owner[p] = k; ctl[p] = 'human'; }
+    else if (prevCtl[p] === 'away') { owner[p] = k; ctl[p] = 'away'; }
+    else { owner[p] = -1; ctl[p] = 'cpu'; }
+  }
+  for (const k of sess.seats()) {
+    if (k === 0 || owner.includes(k)) continue;
+    const p = claim(k);
+    if (p >= 0) { seatAt(p, k); ctl[p] = 'human'; }
+  }
+  for (let p = 0; p < st.n; p++) netNames[p] = p === 0 ? cfg.names[0] || '' : owner[p] > 0 ? seatNames[owner[p]] || '' : '';
+}
+// Someone sat down or got up: a short remark from that seat, then carry on.
+function seatsChanged(old) {
+  for (let p = 0; p < st.n; p++) {
+    if (!old[p] || old[p] === ctl[p] || over) continue;
+    if (ctl[p] === 'human' && old[p] === 'cpu') say(p, t('qgf.say.hi'));
+    if (ctl[p] === 'cpu') say(p, t('qgf.say.cpu'));
+  }
+  if (online() && !sess.host && me() >= 0) saveMe(me());
+  fillSettings();
+  render();
+  maybeAI();
+}
+function setCtl(p, c) {
+  if (p >= st.n || ctl[p] === c) return;
+  const old = ctl.slice();
+  ctl[p] = c;
+  sendSeats();
+  seatsChanged(old);
+}
+function awayLater(s, p, ms = AWAY_MS) {
+  clearTimeout(awayTimers[p]);
+  awayTimers[p] = setTimeout(() => {
+    if (sess !== s || ctl[p] !== 'away') return;
+    setCtl(p, 'cpu');
+    const watcher = s.seats().find((k) => k > 0 && !owner.includes(k)); // someone watching takes the seat
+    if (watcher !== undefined) takeSeat(watcher);
+  }, ms);
+}
+
 function onSession(s) {
   sess = s;
   clearTimeout(timer);
-  s.on('status', () => { render(); maybeAI(); });
-  s.on('peer-join', () => {
-    s.send('name', { seat: s.seat, name: cfg.names[s.seat] || '' });
-    if (s.host) sendState();
+  ctl = []; owner = []; netNames = []; seatNames = {}; joined = {}; pending = false; everLinked = false; started = false;
+  const netDlg = document.getElementById('mg-online');
+  paused = s.host && !!netDlg?.open;
+  s.on('status', () => { if (sess !== s) return; render(); maybeAI(); });
+  s.on('peer-join', ({ seat }) => {
+    if (sess !== s) return;
+    if (!s.host) {
+      // tell the host who we are (and which player we were, in case it reloaded and reshuffled seats)
+      everLinked = true;
+      s.send('hi', { name: cfg.names[0] || '', was: loadMe() });
+      return;
+    }
+    sendState(seat); // the table as it is; the guest's player follows once it says hi
+    const p = owner.indexOf(seat);
+    if (p > 0 && p < st.n) { seatAt(p, seat); setCtl(p, 'human'); } // same device back on its seat
+  });
+  s.on('peer-leave', ({ seat }) => {
+    if (sess !== s) return;
+    if (!s.host) { pending = false; render(); return; }
+    const p = owner.indexOf(seat);
+    if (p <= 0 || p >= st.n) return render();
+    setCtl(p, 'away');
+    awayLater(s, p);
+    // The link reopened in a new tab reaches us before the old tab is noticed gone (~7 s), so that device got a
+    // computer's player although it said it was p (same browser). Move it to p, unless it is in the middle of a move.
+    // (A device we don't know — another browser — can't be told apart from a newcomer; it keeps its seat.)
+    for (const [k, j] of Object.entries(joined)) {
+      if (Date.now() - j.at > 15000 || j.was !== p || !live(+k) || owner[j.p] !== +k || actor() === j.p) continue;
+      delete joined[k];
+      const old = ctl.slice();
+      owner[j.p] = -1; ctl[j.p] = 'cpu';
+      seatAt(p, +k); ctl[p] = 'human';
+      sendSeats();
+      seatsChanged(old);
+      break;
+    }
+  });
+  s.on('hi', (d, { seat }) => {
+    if (!s.host || sess !== s) return;
+    seatNames[seat] = String(d?.name ?? '').slice(0, 14);
+    const p = owner.indexOf(seat);
+    if (p > 0 && p < st.n) { netNames[p] = seatNames[seat]; setCtl(p, 'human'); sendSeats(); render(); return; }
+    takeSeat(seat, d?.was);
+  });
+  s.on('name', (d, { seat }) => {
+    if (!s.host || sess !== s) return;
+    seatNames[seat] = String(d?.name ?? '').slice(0, 14);
+    const p = owner.indexOf(seat);
+    if (p > 0) netNames[p] = seatNames[seat];
+    sendSeats();
+    render();
+  });
+  s.on('seats', (d) => {
+    if (s.host || sess !== s) return;
+    const old = ctl.slice();
+    ctl = d.ctl; owner = d.owner; netNames = d.names; paused = d.paused;
+    seatsChanged(old);
   });
   s.on('state', (d) => {
-    if (s.host) return;
-    st = d.st; over = false; history = []; sel = { to: -1, suit: -1 }; fresh = null;
+    if (s.host || sess !== s) return;
+    st = d.st; over = false; history = []; sel = { to: -1, suit: -1 }; fresh = null; pending = false;
     nextFirst = d.first;
-    remoteNames[0] = d.names[0];
+    ctl = d.ctl; owner = d.owner; netNames = d.names; paused = d.paused;
+    if (me() >= 0) saveMe(me());
     calm(); hush();
     $('#result').hidden = true;
     fillSettings();
     if (QGF.isOver(st)) finish(); else render();
   });
-  s.on('name', (d) => { if (d.seat === 0 || d.seat === 1) remoteNames[d.seat] = d.name || ''; render(); });
-  s.on('move', (d) => {
-    if (!st || d.n !== st.moves || !QGF.isLegal(st, d.m)) return s.host ? sendState() : s.send('resync');
+  s.on('move', (d, { seat }) => {
+    if (sess !== s) return;
+    if (s.host) {
+      // only the device playing the acting player may move, and only a legal move on the current position;
+      // rebuilt from known fields only, so nothing else a guest stuffs into it gets relayed
+      const m = d?.m?.t === 'ask' ? { t: 'ask', to: d.m.to, suit: d.m.suit } : d?.m?.t === 'answer' ? { t: 'answer', yes: d.m.yes === true } : null;
+      const p = owner.indexOf(seat);
+      if (over || paused || p < 0 || p !== actor() || ctl[p] !== 'human' || d?.n !== st.moves || !QGF.isLegal(st, m)) return sendState(seat);
+      doMove(m);
+      return;
+    }
+    pending = false;
+    if (!st || d.n !== st.moves || !QGF.isLegal(st, d.m)) return s.send('resync');
     doMove(d.m, true);
   });
-  s.on('resync', () => s.host && sendState());
-  if (s.host) newGame();
-  else { fillSettings(); render(); }
+  s.on('resync', (_, { seat }) => { if (s.host && sess === s) sendState(seat); });
+  if (s.host) {
+    // While the host watches the room fill up, the table waits; "let's play" (closing the dialog) starts it.
+    if (netDlg && !netDlg.dataset.qgf) {
+      netDlg.dataset.qgf = '1';
+      new MutationObserver(() => {
+        if (!online() || !sess.host) return;
+        const p = netDlg.open;
+        if (p === paused) return;
+        paused = p;
+        if (!p) started = true;
+        sendSeats();
+        render();
+        maybeAI();
+      }).observe(netDlg, { attributes: true, attributeFilter: ['open'] });
+    }
+    const saved = JSON.parse(sessionStorage.getItem(roomKey(s)) || 'null');
+    if (saved?.st) {
+      // Back after a reload. Guests reconnect on their own (possibly on other room seats) and say which
+      // player they were; until then their players count as dropped out.
+      st = saved.st; nextFirst = saved.first; netNames = saved.names || []; started = !!saved.started;
+      history = []; sel = { to: -1, suit: -1 }; fresh = null; over = false;
+      ctl = Array.from({ length: st.n }, (_, p) => (p === 0 ? 'human' : saved.ctl?.[p] === 'cpu' ? 'cpu' : 'away'));
+      owner = Array.from({ length: st.n }, (_, p) => (p === 0 ? 0 : -1));
+      // (finding a reloaded host takes the guests longer than a guest reload, so wait longer)
+      for (let p = 1; p < st.n; p++) if (ctl[p] === 'away') awayLater(s, p, AWAY_MS * 4);
+      calm(); hush();
+      $('#result').hidden = true;
+      fillSettings();
+      if (QGF.isOver(st)) finish(); else { render(); maybeAI(); }
+      // A match already under way just carries on: don't hold it behind the room dialog that net.js
+      // reopens while the guests find us again (the seats show who is still offline).
+      if (started) setTimeout(() => { if (sess === s && netDlg?.open) netDlg.close(); }, 0);
+    } else newGame();
+  } else { clearTimeout(timer); over = false; $('#result').hidden = true; fillSettings(); render(); }
+}
+
+function endSession() {
+  if (sess) sessionStorage.removeItem(roomKey(sess));
+  sess = null;
+  ctl = []; owner = []; netNames = []; seatNames = {}; paused = false; pending = false;
+  Object.values(awayTimers).forEach(clearTimeout);
+  newGame();
 }
 
 // ---------- boot ----------
@@ -457,7 +709,8 @@ newGame(cfg.n, 0);
 mountOnline({
   slug: SLUG,
   button: $('#online'),
+  maxPlayers: () => cfg.n,
   onSession,
-  onEnd: () => { sess = null; newGame(); },
+  onEnd: endSession,
 });
 if (!online()) showOnce('how', SLUG);

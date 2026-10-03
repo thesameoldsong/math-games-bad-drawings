@@ -25,20 +25,34 @@ const saveCfg = () => localStorage.setItem('mg-' + SLUG, JSON.stringify(cfg));
 
 let st, history, over, aiTimer, animTimer, busy = false, sel = -1, preview = null, nextFirst = 0, fx = null;
 let sess = null;                          // online session (shared/net.js), null when playing locally
-const remoteNames = ['', ''];
+const remoteNames = ['', '', '', ''];
 const moods = [0, 1, 2, 3].map(() => ({ mood: 'neutral', pose: 'down' }));
+// Online: who controls each seat (decided by the host, mirrored on guests).
+//   'h' host · 'g' a guest's device · 'c' computer (free seat, 3+ players) · 'x' guest away, waiting ·
+//   'w' two-player room: nobody joined yet.
+// Chopsticks has no hidden information and every move is atomic, so a guest who joins mid-game takes
+// over a computer seat right away (from that seat's next move). A guest who drops out keeps the seat for
+// AWAY_MS; after that the computer plays it until they come back. Two-player rooms simply wait (as before).
+let ctl = ['h', 'w', 'w', 'w'];
+const AWAY_MS = 10000;
+const goneAt = {};
+let inbox = [];                           // moves that arrived during an animation
+let pending = null;                       // the move being animated (not applied to st yet)
 
 // ---------- who is who ----------
 const online = () => !!sess;
-const mySeat = () => sess.seat;
-const isAI = (p) => !online() && cfg.mode !== 'pvp' && p === 1;
+const mySeat = () => (sess.host ? 0 : myGame ?? sess.seat);
+const multi = () => online() && st.n > 2;
+const isAI = (p) => (online() ? ctl[p] === 'c' : cfg.mode !== 'pvp' && p === 1);
 const isRemote = (p) => online() && p !== mySeat();
 const isLocal = (p) => !isAI(p) && !isRemote(p);
-const canMove = () => !over && !busy && isLocal(st.turn) && (!online() || sess.connected);
-const playersWanted = () => (online() || cfg.mode !== 'pvp' ? 2 : +cfg.players);
+const spectator = () => online() && mySeat() >= st.n;
+const linkOk = () => !online() || sess.connected || (sess.host && st.n > 2);
+const canMove = () => !over && !busy && isLocal(st.turn) && linkOk();
+const playersWanted = () => (online() ? +cfg.players : cfg.mode !== 'pvp' ? 2 : +cfg.players);
 const rulesWanted = () => ({ players: playersWanted(), cutoff: cfg.rule === 'cutoff', start: +cfg.start });
 function name(p) {
-  if (isAI(p)) return t('cs.cpu');
+  if (isAI(p)) return multi() ? t('cs.p' + p) : t('cs.cpu'); // online 3-4: "computer" goes in the card's tag line
   const n = isRemote(p) ? remoteNames[p] : cfg.names[p];
   return (n && n.trim()) || t('cs.p' + p);
 }
@@ -49,7 +63,7 @@ const W = 360;
 function layout() {
   const n = st.n, slots = [];
   if (n === 2) {
-    const bottom = online() ? mySeat() : 0, top = 1 - bottom;
+    const bottom = online() && mySeat() < 2 ? mySeat() : 0, top = 1 - bottom;
     const s = 1.12;
     // bottom player: fingers up; top player faces us (rotated), so their left hand is on our right
     slots[bottom] = { box: [6, 202, 348, 182], hands: [{ x: 95, y: 352, rot: 0, s }, { x: 265, y: 352, rot: 0, s }] };
@@ -134,6 +148,7 @@ function frame([x, y, w, h], seed) {
 // ---------- rendering ----------
 let geo;
 function render() {
+  persist();
   geo = layout();
   svg.setAttribute('viewBox', `0 0 ${W} ${geo.H}`);
   svg.classList.toggle('n2', st.n === 2);
@@ -223,7 +238,15 @@ function renderPlayers() {
     const pose = over || m.pose !== 'down' ? m.pose : !over && st.turn === p ? 'point' : 'down';
     el.querySelector('.fig').innerHTML = figureSVG({ color: COLORS[p], mood: m.mood, pose, face: p % 2 ? 'left' : 'right', seed: 11 + p * 31 });
     const liveHands = st.hands[p].filter((x) => x > 0).length;
-    el.querySelector('.score').textContent = dead ? t('cs.outplayer') : plural(liveHands, 'cs.hands');
+    const away = online() && ctl[p] === 'x';
+    el.classList.toggle('away', away && !dead);
+    el.classList.toggle('me', online() && p === mySeat());
+    const tags = [];
+    if (online() && p === mySeat()) tags.push(t('net.you'));
+    if (away && !dead) tags.push(t('cs.away'));
+    if (multi() && isAI(p) && !dead) tags.push(t('cs.cpu.tag'));
+    tags.push(dead ? t('cs.outplayer') : plural(liveHands, 'cs.hands'));
+    el.querySelector('.score').textContent = tags.join(' · ');
     const inp = el.querySelector('.name');
     inp.placeholder = name(p);
     if (document.activeElement !== inp) inp.value = isLocal(p) ? cfg.names[p] : '';
@@ -234,7 +257,11 @@ function renderPlayers() {
 
   const status = $('#status');
   if (over) status.textContent = '';
-  else if (online() && !sess.connected) status.textContent = t('cs.online.wait');
+  else if (online() && !sess.host && !sess.connected && st.n > 2) status.textContent = t('cs.online.nohost');
+  else if (!linkOk()) status.textContent = t('cs.online.wait');
+  else if (spectator()) status.textContent = t('cs.online.spectator');
+  else if (online() && ctl[st.turn] === 'x') status.textContent = t('cs.online.away', { name: name(st.turn) });
+  else if (online() && isAI(st.turn)) status.textContent = t('cs.thinking', { name: name(st.turn) });
   else if (online()) status.textContent = isLocal(st.turn) ? t('cs.turn.you') : t('cs.turn.them', { name: name(st.turn) });
   else if (isAI(st.turn)) status.textContent = t('cs.thinking', { name: name(st.turn) });
   else status.textContent = t(sel >= 0 ? 'cs.turn.target' : 'cs.turn.pick', { name: name(st.turn) });
@@ -242,12 +269,12 @@ function renderPlayers() {
 
   $('#undo').disabled = online() || busy || !history.length || (isAI(st.turn) && !over);
   $('#mode').disabled = online();
-  $('#players').disabled = online();
-  $('#players-field').hidden = online() || cfg.mode !== 'pvp';
+  $('#players').disabled = !canRestart();
+  $('#players-field').hidden = !online() && cfg.mode !== 'pvp';
   for (const id of ['#rule', '#start', '#new']) $(id).disabled = !canRestart();
   $('#again').hidden = !canRestart();
   $('#result-wait').hidden = canRestart();
-  if (online()) $('#result-wait').textContent = t('cs.online.waitnew', { name: name(1 - mySeat()) });
+  if (online()) $('#result-wait').textContent = t('cs.online.waitnew', { name: name(0) });
   $('#settings-note').textContent = online() ? t('cs.online.note') : cfg.mode !== 'pvp' ? t('cs.ai.note') : '';
 }
 
@@ -267,7 +294,8 @@ function newGame(rules = rulesWanted(), first) {
   clearTimeout(aiTimer); clearTimeout(animTimer); busy = false;
   if (first === undefined) { first = nextFirst % rules.players; nextFirst = (first + 1) % rules.players; }
   st = CS.create({ ...rules, first });
-  history = []; over = false; sel = -1; preview = null; fx = null;
+  history = []; over = false; sel = -1; preview = null; fx = null; inbox = [];
+  if (online() && sess.host) { compactSeats(); ctl = computeCtl(); }
   calmAll();
   $('#result').hidden = true;
   autoSelect();
@@ -294,7 +322,8 @@ function play(m, animate = true) {
       g.classList.add('lunge');
       g.style.transform = `translate(${((bx - ax) * 0.42).toFixed(1)}px, ${((by - ay) * 0.42).toFixed(1)}px)`;
     }
-    animTimer = setTimeout(() => { busy = false; commit(m); }, 240);
+    pending = m;
+    animTimer = setTimeout(() => { busy = false; pending = null; commit(m); }, 240);
     return;
   }
   commit(m);
@@ -336,25 +365,35 @@ function commit(m) {
     if (moods[who].mood === 'neutral') setMood(who, 'worried');
   }
   if (!CS.isOver(st) && st.rep === 2 && Math.random() < 0.6) say(st.turn, 'cs.say.repeat');
-  if (CS.isOver(st)) return finish();
+  if (CS.isOver(st)) { finish(); return drainInbox(); }
   autoSelect();
   render();
   // forget the "+n" float once it has played, so later redraws (e.g. picking a hand) don't replay it
   const shown = fx;
   setTimeout(() => { if (fx === shown) fx = null; }, 700);
-  maybeAI();
+  if (!drainInbox()) maybeAI();
 }
 
+// Online: a move that arrived while the previous one was still animating.
+function drainInbox() {
+  if (!inbox.length) return false;
+  const [d, from] = inbox.shift();
+  onMove(d, from);
+  return true;
+}
+
+// Online the computer seats are played on the host only (and broadcast like any other move).
 function maybeAI() {
-  if (over || !isAI(st.turn)) return;
+  clearTimeout(aiTimer);
+  if (over || !isAI(st.turn) || (online() && !sess.host)) return;
   aiTimer = setTimeout(() => {
-    const m = CS.aiMove(st, cfg.mode);
+    const m = CS.aiMove(st, online() ? 'normal' : cfg.mode);
     // point at the chosen hand for a moment before tapping
     if (m.t === 'tap') {
       const g = svg.querySelector(`.hand[data-p="${st.turn}"][data-h="${m.h}"]`);
       g?.classList.add('sel');
-      aiTimer = setTimeout(() => play(m), 350);
-    } else play(m);
+      aiTimer = setTimeout(() => { if (online()) broadcastMove(m); play(m); }, 350);
+    } else { if (online()) broadcastMove(m); play(m); }
   }, 600);
 }
 
@@ -376,7 +415,7 @@ function finish() {
   txt.textContent = w < 0 ? t('cs.draw') : t('cs.win', { name: name(w) });
   txt.style.color = w < 0 ? 'var(--ink)' : COLORS[w].main;
   const nf = nextFirst % st.n;
-  $('#result-sub').textContent = w < 0 ? t('cs.draw.sub') : online() ? '' : t('cs.next', { name: name(nf) });
+  $('#result-sub').textContent = w < 0 ? t('cs.draw.sub') : online() && st.n === 2 ? '' : t('cs.next', { name: name(nf) });
   setTimeout(() => { if (over) $('#result').hidden = false; }, 1000);
 }
 
@@ -392,59 +431,208 @@ function undo() {
   maybeAI();
 }
 
-// Online, only the room creator may restart or change the rules; the guest follows.
+// Online, only the room creator may restart or change the rules / player count; guests follow.
 const canRestart = () => !online() || sess.host;
 function restart() {
   if (!canRestart()) return;
   newGame();
-  if (online()) sess.send('new', { rules: st.rules, first: st.turn, nextFirst });
+  if (online()) sendState();
 }
 
 // ---------- online ----------
-function sendState() {
-  sess.send('state', { st, over, names: cfg.names, nextFirst });
+// Messages (no hidden information in this game, so every device gets the same public state):
+//   host → guests: 'state' {st, over, ctl, names, nextFirst, you} · 'move' {m, n} · 'seats' {ctl, names, you}
+//   guest → host:  'name' {name, cid} (also the hello) · 'move' {m, n} (host validates, applies, relays) · 'resync'
+// Game seats are the host's to hand out: a guest is recognised by its tab id (cid), so after a host reload,
+// when net.js may hand out connection seats in a different order, everyone still gets their own colour back.
+const allNames = () => [cfg.names[0], remoteNames[1], remoteNames[2], remoteNames[3]];
+let owner = [];                           // host: game seat → cid of the guest playing it
+let gseat = {};                           // host: connection seat → game seat
+let myGame = null;                        // guest: my game seat as told by the host
+const hello = new Set();                  // host: connection seats that (re)joined and owe us their name/cid
+const myCid = () => sessionStorage.getItem('mg-client-id') || '';
+// Per-browser id (shared by its tabs): a guest who closes the tab and opens the link again gets a new tab id,
+// but can still have their seat back if nobody is playing it.
+const myDev = () => {
+  let d = localStorage.getItem('mg-' + SLUG + '-dev');
+  if (!d) localStorage.setItem('mg-' + SLUG + '-dev', (d = Math.random().toString(36).slice(2, 12)));
+  return d;
+};
+let ownerDev = [];                        // host: game seat → browser id of its guest
+const liveSeats = () => Object.values(gseat);
+const netOf = (g) => Object.keys(gseat).find((k) => gseat[k] === g);
+// The host keeps the match in sessionStorage per room, so reloading the host tab does not wipe it.
+const roomKey = (s) => `mg-${SLUG}-room-${s.code}`;
+function persist() {
+  if (online() && sess.host && st) sessionStorage.setItem(roomKey(sess), JSON.stringify({ st, over, ctl, owner, ownerDev, names: allNames(), nextFirst }));
 }
+function sendState(to) {
+  for (const k of to === undefined ? Object.keys(gseat) : [to]) {
+    if (gseat[k] === undefined) continue;
+    sess.send('state', { st, over, ctl, names: allNames(), nextFirst, you: gseat[k] }, { to: +k });
+    // a move still animating here is not in st yet, and the guest may have missed its broadcast
+    if (busy && pending) sess.send('move', { m: pending, n: st.moves }, { to: +k });
+  }
+}
+function sendSeats() {
+  for (const k in gseat) sess.send('seats', { ctl, names: allNames(), you: gseat[k] }, { to: +k });
+}
+// Host: which game seat does the guest on connection seat k get?
+function assignSeat(k, cid, dev) {
+  delete gseat[k];
+  const n = st.n, live = liveSeats();
+  const free = (g) => g > 0 && g < n && !live.includes(g);
+  let g = owner.indexOf(cid);
+  if (g <= 0 && dev) g = ownerDev.findIndex((x, i) => x === dev && free(i));
+  if (g <= 0 || live.includes(g)) {
+    const cands = [k, ...Array.from({ length: n }, (_, i) => i)];
+    g = cands.find((x) => free(x) && !owner[x]) ?? cands.find(free) ?? k; // unowned first, then a seat whose owner left
+  }
+  owner[g] = cid; ownerDev[g] = dev;
+  gseat[k] = g;
+  delete goneAt[g];
+}
+// Host, new game with a smaller table: move guests sitting beyond it onto free seats.
+function compactSeats() {
+  for (const k in gseat) {
+    if (gseat[k] < st.n) continue;
+    const g = Array.from({ length: st.n }, (_, i) => i).find((x) => x > 0 && !liveSeats().includes(x));
+    if (g === undefined) continue;
+    owner[g] = owner[gseat[k]]; owner[gseat[k]] = undefined;
+    ownerDev[g] = ownerDev[gseat[k]]; ownerDev[gseat[k]] = undefined;
+    gseat[k] = g;
+  }
+}
+function computeCtl() {
+  const live = liveSeats();
+  return Array.from({ length: st.n }, (_, p) => {
+    if (p === 0) return 'h';
+    if (live.includes(p)) return 'g';
+    if (goneAt[p] !== undefined && (st.n === 2 || Date.now() - goneAt[p] < AWAY_MS)) return 'x';
+    return st.n === 2 ? 'w' : 'c';
+  });
+}
+// someone (re)took a seat: a little hello on every device
+function greet(was, now) {
+  now.forEach((c, p) => { if (c === 'g' && was[p] && was[p] !== 'g' && p !== mySeat() && !over) say(p, 'cs.say.hi'); });
+}
+// Host: seats changed hands. A guest takes over a computer seat at once (any moment between moves is safe).
+function updateCtl() {
+  const was = ctl, now = computeCtl();
+  if (String(was) === String(now)) return render();
+  ctl = now;
+  greet(was, now);
+  sendSeats();
+  if (!over && !busy && was[st.turn] !== now[st.turn]) { autoSelect(); maybeAI(); }
+  render();
+}
+function broadcastMove(m, except) {
+  for (const k in gseat) if (+k !== except) sess.send('move', { m, n: st.moves }, { to: +k });
+}
+// The engine's own copy of a legal move (never apply an object that came over the wire as is).
+const legalMove = (m) => (over ? null : CS.moves(st).find((x) => CS.sameMove(x, m)) || null);
+function onMove(d, k) {
+  if (busy) { inbox.push([d, k]); return; }
+  const m = d && typeof d === 'object' ? legalMove(d.m) : null;
+  if (sess.host) {
+    const from = gseat[k];
+    if (from === undefined) return;
+    if (!m || from !== st.turn || ctl[from] !== 'g' || d.n !== st.moves) return sendState(k);
+    broadcastMove(m, k);
+    play(m);
+  } else {
+    if (!m || d.n !== st.moves) return sess.send('resync');
+    play(m);
+  }
+}
+// Guest: seat info from the host.
+function applySeats(d) {
+  const was = ctl;
+  ctl = d.ctl;
+  if (d.you !== undefined && d.you !== myGame) {
+    const old = mySeat();
+    myGame = d.you;
+    if (!cfg.names[myGame] && cfg.names[old]) { cfg.names[myGame] = cfg.names[old]; sendName(); }
+  }
+  d.names.forEach((n, p) => { if (p !== mySeat()) remoteNames[p] = n || ''; });
+  return was;
+}
+const sendName = () => sess.send('name', { name: cfg.names[mySeat()] || '', cid: myCid(), dev: myDev() });
 function onSession(s) {
   sess = s;
-  clearTimeout(aiTimer); clearTimeout(animTimer); busy = false;
+  clearTimeout(aiTimer); clearTimeout(animTimer); busy = false; inbox = [];
+  for (const k in goneAt) delete goneAt[k];
+  owner = []; ownerDev = []; gseat = {}; myGame = null; hello.clear();
   s.on('status', () => render());
-  s.on('peer-join', () => {
-    s.send('name', { seat: s.seat, name: cfg.names[s.seat] });
-    if (s.host) sendState();
+  // guest: say hello (name + tab id); the host answers with the state once it knows our seat
+  s.on('peer-join', ({ seat }) => { if (s.host) hello.add(seat); else sendName(); });
+  s.on('peer-leave', ({ seat }) => {
+    if (!s.host) return render();
+    const g = gseat[seat];
+    delete gseat[seat];
+    if (g === undefined) return;
+    goneAt[g] = Date.now();
+    updateCtl();
+    setTimeout(() => { if (sess === s) updateCtl(); }, AWAY_MS + 50);
   });
   s.on('state', (d) => {
     if (s.host) return;
-    clearTimeout(animTimer); busy = false;
+    clearTimeout(animTimer); clearTimeout(aiTimer); busy = false; inbox = [];
     st = d.st; over = false; history = []; fx = null; preview = null; nextFirst = d.nextFirst;
-    syncRuleInputs(st.rules);
-    remoteNames[0] = d.names[0];
+    applySeats(d);
+    syncRuleInputs({ ...st.rules, players: st.n });
     calmAll();
     $('#result').hidden = true;
     autoSelect();
     d.over ? finish() : render();
   });
-  s.on('name', (d) => { remoteNames[d.seat] = d.name || ''; render(); });
-  s.on('move', (d) => {
-    if (busy || d.n !== st.moves || !CS.isLegal(st, d.m)) return s.host ? sendState() : s.send('resync');
-    play(d.m);
-  });
-  s.on('resync', () => s.host && sendState());
-  s.on('new', (d) => {
+  s.on('seats', (d) => {
     if (s.host) return;
-    nextFirst = d.nextFirst;
-    syncRuleInputs(d.rules);
-    newGame({ players: 2, cutoff: d.rules.cutoff, start: d.rules.start }, d.first);
+    greet(applySeats(d), ctl);
+    if (!busy) autoSelect();
+    render();
   });
-  if (s.host) { nextFirst = 0; newGame(); }
+  s.on('name', (d, { seat }) => {
+    if (!s.host || !d || typeof d !== 'object') return;
+    const fresh = hello.delete(seat) || gseat[seat] === undefined;
+    if (fresh) assignSeat(seat, String(d.cid || seat), d.dev ? String(d.dev) : '');
+    remoteNames[gseat[seat]] = String(d.name || '').slice(0, 14);
+    if (fresh) { updateCtl(); sendState(seat); }
+    sendSeats();
+    render();
+  });
+  s.on('move', (d, { seat }) => onMove(d, seat));
+  s.on('resync', (_, { seat }) => s.host && sendState(seat));
+  const saved = s.host && JSON.parse(sessionStorage.getItem(roomKey(s)) || 'null');
+  if (saved) {
+    // host reload: guests come back on their own; until then their seats count as "away", not computer
+    st = saved.st; over = saved.over; nextFirst = saved.nextFirst; history = []; fx = null; preview = null;
+    owner = saved.owner || []; ownerDev = saved.ownerDev || [];
+    saved.names.forEach((n, p) => { if (p) remoteNames[p] = n || ''; });
+    saved.ctl.forEach((c, p) => { if (c === 'g' || c === 'x') goneAt[p] = Date.now(); });
+    ctl = computeCtl();
+    s.setMaxPlayers(st.n);
+    syncRuleInputs({ ...st.rules, players: st.n });
+    calmAll();
+    $('#result').hidden = true;
+    autoSelect();
+    over ? finish() : render();
+    setTimeout(() => { if (sess === s) updateCtl(); }, AWAY_MS + 50);
+    maybeAI();
+  } else if (s.host) { nextFirst = 0; newGame(); }
   else render();
 }
 function syncRuleInputs(r) {
   $('#rule').value = r.cutoff ? 'cutoff' : 'wrap';
   $('#start').value = String(r.start);
+  $('#players').value = String(r.players);
 }
 
 function localMove(m) {
-  if (online()) sess.send('move', { m, n: st.moves });
+  if (online()) {
+    if (sess.host) broadcastMove(m);
+    else sess.send('move', { m, n: st.moves });
+  }
   play(m);
 }
 
@@ -488,7 +676,11 @@ splitsBox.addEventListener('pointermove', (evt) => {
 splitsBox.addEventListener('pointerleave', () => setPreview(null));
 
 $('#mode').addEventListener('change', (e) => { cfg.mode = e.target.value; saveCfg(); nextFirst = 0; newGame(); });
-$('#players').addEventListener('change', (e) => { cfg.players = +e.target.value; saveCfg(); nextFirst = 0; newGame(); });
+$('#players').addEventListener('change', (e) => {
+  cfg.players = +e.target.value; saveCfg(); nextFirst = 0;
+  // online: the host decides how many seats the room has (seats without a device are the computer's)
+  if (online()) { sess.setMaxPlayers(cfg.players); restart(); } else newGame();
+});
 $('#rule').addEventListener('change', (e) => { cfg.rule = e.target.value; saveCfg(); restart(); });
 $('#start').addEventListener('change', (e) => { cfg.start = +e.target.value; saveCfg(); restart(); });
 $('#new').addEventListener('click', restart);
@@ -499,7 +691,7 @@ document.querySelectorAll('.player .name').forEach((inp) =>
     const p = +inp.closest('.player').dataset.p;
     cfg.names[p] = inp.value;
     saveCfg();
-    if (online()) sess.send('name', { seat: p, name: inp.value });
+    if (online()) sess.host ? sendSeats() : sendName();
     renderPlayers();
   }));
 document.addEventListener('mg:lang', () => render());
@@ -517,7 +709,8 @@ newGame();
 mountOnline({
   slug: SLUG,
   button: $('#online'),
+  maxPlayers: () => +cfg.players,
   onSession,
-  onEnd: () => { sess = null; syncRuleInputs(rulesWanted()); nextFirst = 0; newGame(); },
+  onEnd: () => { sess = null; syncRuleInputs(rulesWanted()); $('#players').value = String(cfg.players); nextFirst = 0; newGame(); },
 });
 if (!online()) showOnce('how', SLUG);

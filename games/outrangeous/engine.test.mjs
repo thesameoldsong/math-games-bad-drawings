@@ -258,3 +258,17 @@ test('the careful and sneaky bots clearly beat a random-width guesser', () => {
     assert.ok(wins > 3 * losses && wins > 70, `${level}: ${wins} wins, ${losses} losses`);
   }
 });
+
+test('redact per seat in a 4-player game: each seat sees only its own pending range', () => {
+  const s = OUT.create({ players: 4, rounds: 3, deck: 'dice', seed: 9 });
+  OUT.guess(s, 0, 1, 2); OUT.guess(s, 2, 3, 4);
+  for (let seat = 0; seat < 4; seat++) {
+    const r = OUT.redact(s, seat);
+    r.guesses.forEach((g, p) => {
+      if (p === seat) assert.deepEqual(g, s.guesses[p]);
+      else assert.ok(g === null || g === 'locked', `seat ${seat} sees ${p}`);
+    });
+    assert.equal(r.qs[r.round].a, null);
+    assert.ok(r.qs.slice(r.round + 1).every((q) => q.id === null && q.a === null));
+  }
+});

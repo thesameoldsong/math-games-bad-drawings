@@ -116,3 +116,12 @@
   .pii-arena:not(.n2) .player.flip .score { grid-row: 2; }
   .pii-arena .status { font-size: 26px; }
 }
+
+/* online: a player whose device dropped out (3+ seats); this device's own seat gets a "you" tag */
+.pii-arena .player.off .fig { opacity: .35; }
+.pii-arena .player.off .score { font-style: italic; }
+.pii-arena .player.me .fig-wrap::after {
+  content: attr(data-you); position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%) rotate(-4deg);
+  font: 700 14px/1 var(--hand); color: #fff; background: var(--ink); padding: 1px 5px 2px; border-radius: 6px; white-space: nowrap;
+}
+@media (min-width: 900px) { .pii-arena .player.me .fig-wrap::after { font-size: 18px; bottom: 0; } }

@@ -4,7 +4,7 @@
 .qgf-arena .status { font-size: 22px; min-height: 1.3em; line-height: 1.1; padding-top: 4px; }
 
 .seats { display: flex; flex-direction: column; gap: 2px; user-select: none; -webkit-user-select: none; }
-.seat {
+div.seat {
   position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; column-gap: 6px;
   padding: 1px 8px 1px 4px; border: 2px solid transparent; border-radius: var(--sketchy); transition: background .2s, border-color .2s;
   -webkit-tap-highlight-color: transparent;
@@ -106,7 +106,7 @@
     grid-template-areas: "info board play" ". status .";
   }
   .qgf-arena .board-wrap { max-width: 640px; }
-  .seat { grid-template-columns: 64px minmax(0, 1fr); padding: 2px 12px 2px 6px; }
+  div.seat { grid-template-columns: 64px minmax(0, 1fr); padding: 2px 12px 2px 6px; }
   .seat .fig-wrap { width: 64px; }
   .seat-top .nm { font-size: 26px; }
   .seat-top .cnt { font-size: 19px; }
@@ -122,3 +122,8 @@
   .question { font-size: 26px; }
   .qgf-arena .status { font-size: 26px; }
 }
+
+/* online: our own seat, and a seat whose device dropped out */
+.seat-top .off:empty { display: none; }
+.seat-top .off { font-size: 15px; color: var(--red-dark); white-space: nowrap; border: 1.5px dashed currentColor; border-radius: 8px; padding: 0 5px; }
+.seat.away .fig, .seat.away .hand { opacity: .45; }

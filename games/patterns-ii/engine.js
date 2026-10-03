@@ -99,6 +99,16 @@ function giveUp(r, p) {
   return true;
 }
 
+// Online seat hand-over: may a seat switch between computer and human right now without anyone
+// having to take back a move? True for the designer once the pattern exists (nothing left to do),
+// and for a guesser who hasn't revealed or handed in anything yet.
+function untouched(r, p) {
+  if (r.phase === 'done' || p < 0 || p >= r.sheets.length) return false;
+  if (p === r.designer) return r.phase === 'guess';
+  const sh = r.sheets[p];
+  return !!sh && sh.status === 'play' && sh.peeks === 0;
+}
+
 const allDone = (r) => r.phase === 'guess' && guessers(r).every((p) => r.sheets[p].status !== 'play');
 
 function sheetScore(pattern, sh) {
@@ -379,6 +389,6 @@ const clone = (x) => JSON.parse(JSON.stringify(x));
 export const PII = {
   N, CELLS, SYMS, LEVELS,
   newMatch, nextRound, isMatchOver, designerOf, setPattern, validPattern, guessers, canAct,
-  peek, setGuess, submit, giveUp, allDone, sheetScore, scoreRound, finishRound, leaders, giveUpPenalty,
+  peek, setGuess, submit, giveUp, allDone, untouched, sheetScore, scoreRound, finishRound, leaders, giveUpPenalty,
   library, predict, aiPlay, aiTurn, generatePattern, viewFor, clone,
 };

@@ -15,9 +15,10 @@ const CX = [60, 180, 300], CW = 92, CH = 126, CT = 8;
 const $ = (sel) => document.querySelector(sel);
 const svg = $('#board');
 
-const cfg = Object.assign({ humans: 1, level: 'normal', names: ['', '', ''], model: {} },
+const cfg = Object.assign({ humans: 1, netSeats: 3, level: 'normal', names: ['', '', ''], model: {} },
   JSON.parse(localStorage.getItem('mg-' + SLUG) || '{}'));
 if (![1, 2, 3].includes(cfg.humans)) cfg.humans = 1;
+if (![2, 3].includes(cfg.netSeats)) cfg.netSeats = 3;
 if (!['easy', 'normal'].includes(cfg.level)) cfg.level = 'normal';
 while (cfg.names.length < 3) cfg.names.push('');
 if (!cfg.model || typeof cfg.model !== 'object') cfg.model = {};
@@ -35,11 +36,24 @@ let sess = null;
 let netModel = {};       // what the online bot learned in this room
 const remoteNames = ['', '', ''];
 const moods = [0, 1, 2].map(() => ({ mood: 'neutral', pose: 'down' }));
+// Online, up to three devices. Who plays a seat is decided at the deal (st.bots): a seat without a device
+// is the computer's for the whole round; a guest who joins mid-round plays from the next round.
+// A guest who drops mid-round keeps the seat for TAKEOVER_MS, then the computer finishes the round for them.
+const TAKEOVER_MS = 8000;
+let restored = false;     // host: the match came back from sessionStorage after a reload
+let gathering = false;   // host's 3-seat lobby: the "seats filling up" dialog is open, nobody moves yet
+let away = new Set();    // seats whose device dropped (host's truth, mirrored to guests)
+let waitSeats = new Set(); // seats with a device that is watching this round (joined mid-round)
+const taken = new Set(); // host: seats the computer took over in this round
+const takeTimers = {};
+let netMax = 3, netHere = []; // guest: room size and seats with a device, as the host reports them
+const seatCount = () => (!online() ? 3 : sess.host ? sess.maxPlayers : netMax);
 
 // ---------- who is who ----------
 const online = () => !!sess;
 const mySeat = () => sess.seat;
-const isBot = (p) => (online() ? p === 2 : cfg.humans === 1 ? p > 0 : cfg.humans === 2 ? p === 2 : false);
+const hotBot = (p) => (cfg.humans === 1 ? p > 0 : cfg.humans === 2 ? p === 2 : false);
+const isBot = (p) => (online() ? !!st?.bots?.[p] : hotBot(p));
 const isRemote = (p) => online() && !isBot(p) && p !== mySeat();
 const isLocal = (p) => !isBot(p) && !isRemote(p);
 const authority = () => !online() || sess.host;
@@ -47,18 +61,29 @@ const over = () => st.phase === 'over';
 const peekActive = () => !!peek && peek.i < peek.queue.length;
 const peeker = () => (peekActive() ? peek.queue[peek.i] : -1);
 const localCount = () => [0, 1, 2].filter(isLocal).length;
+// While the host gathers players, seats are named after the devices at the table, not the provisional deal.
+const seated = (p) => online() && gathering && (p === mySeat() || (sess.host ? sess.seats() : netHere).includes(p));
 function name(p) {
-  if (isBot(p)) return t('wlb.cpu' + (p === 1 ? 1 : 2));
-  const n = isRemote(p) ? remoteNames[p] : cfg.names[p];
+  if (isBot(p) && !seated(p)) return t('wlb.cpu' + (p === 1 ? 1 : 2));
+  if (online() && p === mySeat()) return cfg.names[p]?.trim() || t('net.you');
+  const n = online() ? remoteNames[p] : cfg.names[p];
   return (n && n.trim()) || t('wlb.p' + p);
 }
-const canAct = () => !!st && !waiting && !over() && !pending && !peekActive() && (!online() || sess.connected);
+// Host: which seats the computer plays in a fresh deal.
+const dealBots = () => [0, 1, 2].map((p) => (online() ? p > 0 && (p >= sess.maxPlayers || !sess.seats().includes(p)) : hotBot(p)));
+// Online the round runs while connected — or, on the host, when the computer plays every other seat: in a 3-seat
+// room once the host has started ("let's play"), in a 2-seat room only after it took over a guest who left
+// (a fresh 2-seat room waits for its guest, so the first round isn't played before they arrive).
+const live = () => !online() || sess.connected ||
+  (sess.host && !!st && [1, 2].every((p) => st.bots[p]) && (sess.maxPlayers > 2 || taken.size > 0));
+const canAct = () => !!st && !waiting && !over() && !pending && !peekActive() && live() && !(online() && gathering);
 const canSpeak = (p) => canAct() && isLocal(p) && WLB.canPitch(st, p, 'me');
 const canChoose = (p) => canAct() && isLocal(st.win) && WLB.canPick(st, p);
 
 // Is p's card face up on this screen?
 function faceUp(p) {
   if (waiting) return false;
+  if (online() && gathering) return false;
   if (over() || p === st.win) return true;
   // a suspect knows their own card and therefore the other suspect's too
   if (online()) return mySeat() !== st.win;
@@ -131,7 +156,7 @@ function card(p, role) {
     const label = t('wlb.card.' + role);
     s += txt(CX[p], y + CH - 18, label, { size: label.length > 6 ? 17 : 20, color: col, max: CW - 16, force: label.length > 6 });
   }
-  if (st.tell[p] === 'nervous' && !over() && !waiting) {
+  if (st.tell[p] === 'nervous' && !over() && !waiting && !(online() && gathering)) {
     // sweat drops: a bot's tell
     for (const [dx, dy] of [[CW / 2 + 4, 10], [CW / 2 + 10, 26]]) {
       s += `<path d="M${CX[p] + dx} ${y + dy} q4 7 0 9 q-4 -2 0 -9 Z" fill="#9fdcf2" stroke="${PALETTE.blue.dark}" stroke-width="1.3"/>`;
@@ -169,7 +194,7 @@ function render() {
   let s = '';
   for (const p of [0, 1, 2]) s += card(p, faceUp(p) ? st.roles[p] : null);
 
-  if (!waiting) {
+  if (!waiting && !(online() && gathering)) {
     // captions under the cards: who guesses, what each suspect said last
     for (const p of [0, 1, 2]) {
       if (p === st.win) { s += txt(CX[p], 156, t('wlb.cap.win'), { size: 20, color: COLORS[p].main, max: 112 }); continue; }
@@ -180,7 +205,7 @@ function render() {
   }
 
   if (peekActive()) s += peekLayer();
-  else if (!waiting && !over()) {
+  else if (!waiting && !over() && !gathering) {
     for (const p of WLB.suspects(st)) if (canSpeak(p)) s += chips(p);
     const w = st.win;
     if (isLocal(w) && canAct()) s += lines(w, 'wlb.hint.pick', COLORS[w].dark);
@@ -188,6 +213,8 @@ function render() {
     if (sel !== null && canChoose(sel)) s += button('confirm', 70, 318, 220, 38, t('wlb.confirm', { name: name(sel) }), { color: COLORS[w], size: 21 });
   }
   svg.innerHTML = s;
+  // public round id for tests/debugging: deal number, round, moves made
+  svg.dataset.round = waiting ? '' : `${st.deal}:${st.round}:${st.n}`;
   renderPlayers();
 }
 
@@ -213,12 +240,15 @@ function renderPlayers() {
     el.classList.toggle('active', active);
     const m = moods[p];
     el.querySelector('.fig').innerHTML = figureSVG({ color: COLORS[p], mood: m.mood, pose: m.pose, face: p === 2 ? 'left' : 'right', seed: 11 + p * 31 });
-    el.querySelector('.score').textContent = st && !waiting ? plural(st.scores[p], 'wlb.wins') : '';
+    const tag = seatTag(p);
+    el.classList.toggle('away', online() && away.has(p));
+    el.querySelector('.score').textContent = st && !waiting ? plural(st.scores[p], 'wlb.wins') + (tag ? ' · ' + tag : '') : tag;
     const inp = el.querySelector('.name');
+    const mine = online() ? p === mySeat() : isLocal(p);
     inp.placeholder = name(p);
-    if (document.activeElement !== inp) inp.value = isLocal(p) ? cfg.names[p] : '';
+    if (document.activeElement !== inp) inp.value = mine ? cfg.names[p] : '';
     inp.style.color = COLORS[p].main;
-    inp.disabled = !isLocal(p);
+    inp.disabled = !mine;
   }
   const [text, color] = statusLine();
   const status = $('#status');
@@ -227,6 +257,10 @@ function renderPlayers() {
 
   $('#undo').disabled = online() || sel === null || !canAct() || !isLocal(st.win);
   $('#humans').disabled = online();
+  $('#humans-field').hidden = online();
+  $('#seats').disabled = !canRestart();
+  $('#seats-field').hidden = !canRestart();
+  $('#seats').value = String(online() ? sess.maxPlayers : cfg.netSeats);
   $('#level').disabled = !canRestart();
   $('#level-field').hidden = !online() && cfg.humans === 3;
   $('#new').disabled = !canRestart();
@@ -236,9 +270,22 @@ function renderPlayers() {
   $('#settings-note').textContent = online() ? t('wlb.online.note') : '';
 }
 
+// Small online note under a player: lost connection / watching until the next round.
+function seatTag(p) {
+  if (!online() || !st || waiting) return '';
+  if (away.has(p)) return t('wlb.tag.away');
+  if (waitSeats.has(p)) return t('wlb.tag.next');
+  return '';
+}
+
 function statusLine() {
-  if (online() && !sess.connected) return [t('wlb.online.wait'), INK];
+  if (!live()) return [t(sess.maxPlayers > 2 ? 'wlb.online.wait.n' : 'wlb.online.wait'), INK];
+  if (online() && gathering && !waiting) return [t(sess.host ? 'wlb.online.gather.host' : 'wlb.online.gather'), INK];
   if (!st || waiting || over()) return ['', INK];
+  if (online() && mySeat() >= seatCount()) return [t('wlb.online.watch'), INK];
+  if (online() && isBot(mySeat())) return [t('wlb.online.next'), COLORS[mySeat()].main];
+  const gone = [0, 1, 2].filter((p) => away.has(p) && !isBot(p));
+  if (online() && gone.length) return [t('wlb.online.away', { name: name(gone[0]) }), COLORS[gone[0]].main];
   if (peekActive()) return [t('wlb.st.peek', { name: name(peeker()) }), COLORS[peeker()].main];
   const w = st.win, c = COLORS[w].main;
   if (isLocal(w)) return [localCount() > 1 ? t('wlb.st.guess', { name: name(w) }) : t('wlb.st.guess.you'), c];
@@ -272,6 +319,7 @@ function visuals(prev, next) {
     clearLater(); hush(); clearTimeout(resultTimer);
     $('#result').hidden = true;
     sel = null; shapes = {};
+    if (online() && gathering) { for (const p of [0, 1, 2]) setMood(p, 'neutral'); return; } // provisional deal: no reactions
     for (const p of [0, 1, 2]) {
       if (p === next.win) setMood(p, 'worried');
       else if (next.tell[p]) setMood(p, next.tell[p] === 'nervous' ? 'worried' : 'smug');
@@ -317,13 +365,16 @@ function commit(prev) {
   scheduleBots();
 }
 
-function newRound(reset) {
+// redo: deal this round again (same round number and scores) — used online before anyone has moved.
+function newRound(reset, redo = false) {
   clearTimeout(botTimer);
   const prev = st;
   const scores = reset || !st ? [0, 0, 0] : st.scores;
-  const round = reset || !st ? 1 : st.round + 1;
-  st = WLB.create({ bots: [0, 1, 2].map(isBot), level: cfg.level, scores, round });
+  const round = reset || !st ? 1 : st.round + (redo ? 0 : 1);
+  st = WLB.create({ bots: dealBots(), level: cfg.level, scores, round });
   st.deal = ++dealNo;
+  taken.clear();
+  if (online() && sess.host) waitSeats = new Set(sess.seats().filter((p) => p > 0 && p < sess.maxPlayers && st.bots[p]));
   pending = false; waiting = false;
   // Hot-seat: if a human here guesses, the human suspects here peek one by one behind a cover.
   const peekers = online() || !isLocal(st.win) ? [] : WLB.suspects(st).filter(isLocal);
@@ -332,8 +383,10 @@ function newRound(reset) {
 }
 
 // The authoritative side applies an action; actor = the seat that sent it.
-function perform(a, actor) {
+function perform(a, actor, fromNet = false) {
   if (!st || over()) return false;
+  // a guest may only act for a seat a human plays this round, and not while the host gathers players
+  if (fromNet && (isBot(actor) || gathering)) return false;
   const prev = WLB.clone(st);
   if (a.t === 'pitch') {
     if (a.p !== actor || !WLB.pitch(st, a.p, a.id)) return false;
@@ -360,7 +413,7 @@ function localAction(a, actor) {
 
 function scheduleBots() {
   clearTimeout(botTimer);
-  if (!authority() || !st || over() || peekActive() || (online() && !sess.connected)) return;
+  if (!authority() || !st || over() || peekActive() || !live() || (online() && gathering)) return;
   const quiet = WLB.suspects(st).filter((p) => isBot(p) && !st.said[p].length);
   if (quiet.length) {
     const p = quiet[0];
@@ -368,16 +421,13 @@ function scheduleBots() {
     return;
   }
   if (isBot(st.win)) {
-    if (!WLB.allSpoke(st)) return;
     const w = st.win;
-    botTimer = setTimeout(() => {
-      say(w, 'wlb.say.think', 1200);
-      botTimer = setTimeout(() => {
-        const target = WLB.aiGuess(st, online() ? netModel : cfg.model);
-        sel = target; setMood(w, 'worried', 'point'); render();
-        botTimer = setTimeout(() => perform({ t: 'pick', target }, w), 700);
-      }, 1200);
-    }, 500);
+    if (!WLB.allSpoke(st)) {
+      // The computer took over a guesser who dropped mid-round: don't wait forever for silent suspects.
+      if (!st.oneWord) botTimer = setTimeout(() => scheduleBotsGuess(w), 12000);
+      return;
+    }
+    scheduleBotsGuess(w);
     return;
   }
   // A human guesses: a bot suspect may chip in once more while they hesitate.
@@ -386,6 +436,17 @@ function scheduleBots() {
     const p = chatty[Math.floor(Math.random() * chatty.length)];
     botTimer = setTimeout(() => perform({ t: 'pitch', p, id: WLB.aiPitch(st, p) }, p), 5000 + Math.random() * 3000);
   }
+}
+
+function scheduleBotsGuess(w) {
+  botTimer = setTimeout(() => {
+    say(w, 'wlb.say.think', 1200);
+    botTimer = setTimeout(() => {
+      const target = WLB.aiGuess(st, online() ? netModel : cfg.model);
+      sel = target; setMood(w, 'worried', 'point'); render();
+      botTimer = setTimeout(() => perform({ t: 'pick', target }, w), 700);
+    }, 1200);
+  }, 500);
 }
 
 function undo() {
@@ -400,38 +461,121 @@ function restart() { if (canRestart()) newRound(true); }
 function again() { if (canRestart()) newRound(false); }
 
 // ---------- online ----------
-// Host is authoritative and deals; the guest only sees its own card (plus the public one).
-function sendState() {
-  if (!sess?.connected) return;
-  sess.send('state', { st: WLB.view(st, 1), names: cfg.names });
+// Host is authoritative and deals. Each guest gets its own view: a suspect knows both hidden cards, the
+// guesser and anyone merely watching this round (seat played by the computer) see only the public one.
+const allNames = () => [0, 1, 2].map((p) => (p === 0 ? cfg.names[0] : remoteNames[p]) || '');
+function sendState(only) {
+  if (!sess?.host || !st) return;
+  for (const k of sess.seats()) {
+    if (k === 0 || (only !== undefined && k !== only)) continue;
+    const viewer = k < 3 && !st.bots[k] ? k : -1;
+    sess.send('state', { st: WLB.view(st, viewer), names: allNames(), away: [...away], wait: [...waitSeats], gathering, max: sess.maxPlayers, here: sess.seats() }, { to: k });
+  }
+  persist();
+}
+// The host keeps the match in sessionStorage per room, so reloading the host's tab doesn't wipe it.
+const roomKey = (s) => `mg-wlb-room-${s.code}`;
+function persist() {
+  if (!sess?.host || !st) return;
+  sessionStorage.setItem(roomKey(sess), JSON.stringify({ st, names: remoteNames, netModel, gathering, max: sess.maxPlayers, taken: [...taken], wait: [...waitSeats] }));
+}
+// "let's play": deal the round for whoever is at the table now (nobody could act while gathering).
+function endGathering() {
+  if (!gathering || !sess?.host) return;
+  gathering = false;
+  if (st && st.n === 0 && !over()) newRound(false, true);
+  else { sendState(); render(); scheduleBots(); }
+}
+function armTakeover(k, ms = TAKEOVER_MS) {
+  clearTimeout(takeTimers[k]);
+  takeTimers[k] = setTimeout(() => takeOver(k), ms);
+}
+function takeOver(k) {
+  if (!sess?.host || !away.has(k) || !st || over() || st.bots[k]) return;
+  st.bots[k] = true; taken.add(k);
+  if (sel !== null && !canChoose(sel)) sel = null;
+  render(); sendState(); scheduleBots();
 }
 function onSession(s) {
   sess = s;
   clearTimeout(botTimer);
-  s.on('status', () => { render(); scheduleBots(); });
-  s.on('peer-join', () => {
-    s.send('name', { seat: s.seat, name: cfg.names[s.seat] });
-    if (s.host) sendState();
-    scheduleBots();
+  away = new Set(); waitSeats = new Set(); taken.clear();
+  Object.values(takeTimers).forEach(clearTimeout);
+  gathering = s.host && s.maxPlayers > 2;
+  restored = false;
+  s.on('status', () => {
+    // host reload mid-match: net.js keeps the 3-seat dialog open; close it once someone is back
+    if (restored && s.connected) { restored = false; document.getElementById('mg-online')?.close(); }
+    render(); scheduleBots();
+  });
+  s.on('peer-join', ({ seat }) => {
+    if (!s.host) { s.send('name', { name: cfg.names[s.seat] }); return; }
+    away.delete(seat); clearTimeout(takeTimers[seat]);
+    const fits = seat < s.maxPlayers;
+    if (!gathering && fits && st.bots[seat] && !over()) {
+      if (st.n === 0) return newRound(false, true);                       // nobody spoke yet: deal them in
+      if (taken.has(seat)) { st.bots[seat] = false; taken.delete(seat); } // back in time: play on
+      else waitSeats.add(seat);                                            // joins from the next round
+    }
+    sendState(); render(); scheduleBots();
+  });
+  s.on('peer-leave', ({ seat }) => {
+    if (!s.host) { render(); return; }
+    away.add(seat); waitSeats.delete(seat);
+    clearTimeout(takeTimers[seat]);
+    if (!gathering && !st.bots[seat] && !over()) armTakeover(seat);
+    sendState(); render();
   });
   s.on('state', (d) => {
     if (s.host) return;
     const prev = waiting ? null : st;
     waiting = false; pending = false; peek = null;
-    remoteNames[0] = d.names[0] || '';
+    d.names.forEach((n, p) => { if (p !== s.seat) remoteNames[p] = n || ''; });
+    away = new Set(d.away || []); waitSeats = new Set(d.wait || []); gathering = !!d.gathering; netMax = d.max || 3; netHere = d.here || [];
     st = d.st;
     visuals(prev, st);
     if (sel !== null && !canChoose(sel)) sel = null;
     render();
   });
-  s.on('name', (d) => { remoteNames[d.seat] = d.name || ''; render(); });
-  s.on('move', (d) => {
-    if (!s.host) return;
-    if (d.n !== st.n || d.deal !== st.deal || !perform(d.a, 1)) sendState();
+  // guest → host: my name; host → guests: everybody's names
+  s.on('name', (d, { seat }) => {
+    if (!s.host || seat < 1 || seat > 2) return;
+    remoteNames[seat] = String(d?.name || '').slice(0, 14);
+    s.send('names', allNames());
+    persist();
+    render();
   });
-  s.on('resync', () => s.host && sendState());
-  if (s.host) newRound(true);
-  else {
+  s.on('names', (names) => {
+    if (s.host) return;
+    names.forEach((n, p) => { if (p !== s.seat) remoteNames[p] = n || ''; });
+    render();
+  });
+  s.on('move', (d, { seat }) => {
+    if (!s.host || !st) return;
+    if (!d || typeof d.a !== 'object' || !d.a || d.n !== st.n || d.deal !== st.deal || !perform(d.a, seat, true)) sendState(seat);
+  });
+  s.on('resync', (_, { seat }) => s.host && sendState(seat));
+  const saved = s.host && JSON.parse(sessionStorage.getItem(roomKey(s)) || 'null');
+  if (saved?.st) {
+    // host reload: carry on with the same match; human guests get a while to come back
+    st = saved.st; dealNo = Math.max(dealNo, st.deal || 0);
+    saved.names?.forEach((n, p) => { remoteNames[p] = n || ''; });
+    netModel = saved.netModel || {};
+    gathering = !!saved.gathering;
+    (saved.taken || []).forEach((k) => taken.add(k));
+    waitSeats = new Set(saved.wait || []);
+    restored = !gathering;
+    if (saved.max && saved.max !== s.maxPlayers) { cfg.netSeats = saved.max; s.setMaxPlayers(saved.max); }
+    waiting = false; pending = false; peek = null; sel = null;
+    visuals(null, st);
+    for (const k of [1, 2]) if (!st.bots[k] && k < s.maxPlayers) { away.add(k); if (!gathering && !over()) armTakeover(k, 25000); }
+    render();
+  } else if (s.host) {
+    netModel = {};
+    newRound(true);
+    // the "seats filling up" dialog is open; the round starts when the host closes it ("let's play")
+    setTimeout(() => { if (gathering && !document.getElementById('mg-online')?.open) endGathering(); }, 0);
+  } else {
     waiting = true; peek = null; sel = null;
     clearLater(); hush(); $('#result').hidden = true;
     for (const p of [0, 1, 2]) setMood(p, 'neutral');
@@ -464,6 +608,11 @@ svg.addEventListener('click', (evt) => {
 });
 
 $('#humans').addEventListener('change', (e) => { cfg.humans = +e.target.value; saveCfg(); newRound(true); });
+$('#seats').addEventListener('change', (e) => {
+  cfg.netSeats = +e.target.value; saveCfg();
+  // online: the host resizes the room; the new size applies from a fresh game
+  if (online() && sess.host) { sess.setMaxPlayers(cfg.netSeats); newRound(true); } else render();
+});
 $('#level').addEventListener('change', (e) => { cfg.level = e.target.value; saveCfg(); if (canRestart()) newRound(true); });
 $('#new').addEventListener('click', restart);
 $('#again').addEventListener('click', again);
@@ -473,7 +622,10 @@ document.querySelectorAll('.player .name').forEach((inp) =>
     const p = +inp.closest('.player').dataset.p;
     cfg.names[p] = inp.value;
     saveCfg();
-    if (online()) sess.send('name', { seat: p, name: inp.value });
+    if (online()) {
+      if (sess.host) { sess.send('names', allNames()); persist(); }
+      else sess.send('name', { name: inp.value });
+    }
     render();
   }));
 document.addEventListener('mg:lang', () => { if (!st) return; if (!waiting && over()) resultText(st); render(); });
@@ -485,11 +637,19 @@ mountSheets();
 applyI18n();
 $('#humans').value = cfg.humans;
 $('#level').value = cfg.level;
+$('#seats').value = cfg.netSeats;
 newRound(true);
 mountOnline({
   slug: SLUG,
   button: $('#online'),
+  maxPlayers: () => cfg.netSeats,
   onSession,
-  onEnd: () => { sess = null; waiting = false; pending = false; newRound(true); },
+  onEnd: () => {
+    sess = null; waiting = false; pending = false; gathering = false;
+    away = new Set(); waitSeats = new Set(); taken.clear();
+    Object.values(takeTimers).forEach(clearTimeout);
+    newRound(true);
+  },
 });
+document.getElementById('mg-online').addEventListener('close', endGathering);
 if (!online()) showOnce('how', SLUG);

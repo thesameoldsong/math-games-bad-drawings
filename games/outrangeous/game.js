@@ -35,22 +35,40 @@ let pendingAct = false;  // guest: a guess is on its way to the host
 let panelKey = '';
 let sess = null;
 let synced = false;    // guest: the host's state has arrived (until then the local question is not the real one)
-const remoteNames = ['', ''];
+let myP = -1;          // guest: my player, as the host says (-1 = not seated yet / watching)
+// Online players. netNames: everyone's names as the host knows them. ctrl[p]: 'h' a device plays it,
+// 'c' the computer (nobody joined), 'a' its device dropped out (the computer steps in after AWAY_MS).
+const netNames = ALL.map(() => '');
+let ctrl = ALL.map(() => 'h');
+const awaySince = [];
+const AWAY_MS = 15000;
 const moods = ALL.map(() => ({ mood: 'neutral', pose: 'down' }));
 
 // ---------- who is who ----------
 const online = () => !!sess;
 const N = () => st.players;
 const PL = () => ALL.slice(0, N());
-const isAI = (p) => !online() && p >= gameHumans;
-const isRemote = (p) => online() && p !== sess.seat;
-const isLocal = (p) => !isAI(p) && !isRemote(p);
+// 3+ online: empty seats are played by the computer; 2 online: a duel, as before (wait for the other player).
+const multi = () => online() && N() > 2;
+const me = () => (!online() ? -1 : sess.host ? 0 : myP);
+const isAI = (p) => (online() ? multi() && ctrl[p] === 'c' : p >= gameHumans);
+const isAway = (p) => online() && ctrl[p] === 'a';
+const isLocal = (p) => (online() ? p === me() : !isAI(p));
 const hotSeat = () => !online() && gameHumans > 1;
-const ready = () => !online() || (sess.connected && (sess.host || synced));
+const ready = () => !online() || (sess.host ? multi() || sess.connected : sess.connected && synced);
+// a guest knows its player once the host's state has arrived
+const seated = () => online() && (sess.host || synced) && me() >= 0;
+const spectator = () => online() && ready() && (me() < 0 || me() >= N());
+// My own name. A guest keeps one online name, whatever player the host hands out.
+const myName = () => (online() && !sess.host ? cfg.netName ?? cfg.names[1] : cfg.names[0]) || '';
 function name(p) {
+  if (online()) {
+    if (isAI(p)) return t('out.bot' + p);
+    const n = p === me() ? myName() : netNames[p];
+    return (n && n.trim()) || t('out.p' + p);
+  }
   if (isAI(p)) return N() - gameHumans === 1 ? t('out.cpu') : t('out.bot' + (p - gameHumans + 1));
-  const n = isRemote(p) ? remoteNames[p] : cfg.names[p];
-  return (n && n.trim()) || t('out.p' + p);
+  return (cfg.names[p] && cfg.names[p].trim()) || t('out.p' + p);
 }
 function localGuesser() {
   if (st.phase !== 'guess' || reveal !== null || !ready() || pendingAct) return -1;
@@ -101,6 +119,11 @@ function diceArt(q, value) {
 
 // ---------- question card ----------
 function renderCard() {
+  if (online() && !sess.host && !synced) {
+    // the guest's local game is a placeholder until the host's state arrives: don't show its question
+    $('#qround').textContent = ''; $('#qjudge').textContent = ''; $('#qtext').textContent = '…'; $('#qart').hidden = true;
+    return;
+  }
   const r = reveal !== null ? reveal : st.phase === 'over' ? st.log.length - 1 : st.round;
   const id = reveal !== null || st.phase === 'over' ? st.log[r].id : st.qs[r].id;
   const q = OUT.BY_ID[id];
@@ -154,6 +177,8 @@ function coverPanel(p) {
 
 function waitPanel() {
   let s = '<div class="waitp">';
+  const dots = `<svg class="dots" viewBox="0 0 60 12">${[0, 1, 2].map((i) => `<circle cx="${15 + i * 15}" cy="6" r="4" fill="var(--pencil)" style="animation-delay:${i * 0.2}s"/>`).join('')}</svg>`;
+  if (!ready()) return s + dots + '</div>'; // online, not connected yet: the local game is only a placeholder
   const mine = PL().filter((p) => isLocal(p) && st.guesses[p] && st.guesses[p] !== 'locked');
   if (!hotSeat()) for (const p of mine) s += `<div class="wmine" style="color:${COLORS[p].main}">${t('out.mine', { r: rangeTxt(st.guesses[p]) })}</div>`;
   const j = OUT.judgeOf(st);
@@ -161,8 +186,7 @@ function waitPanel() {
   else if (j >= 0) s += `<div class="wnote">${t('out.judge.note', { name: esc(name(j)) })}</div>`;
   const w = OUT.waitingFor(st);
   if (w.length) s += `<div class="wwho">${t('out.wait', { names: w.map((p) => `<b style="color:${COLORS[p].main}">${esc(name(p))}</b>`).join(', ') })}</div>`;
-  s += `<svg class="dots" viewBox="0 0 60 12">${[0, 1, 2].map((i) => `<circle cx="${15 + i * 15}" cy="6" r="4" fill="var(--pencil)" style="animation-delay:${i * 0.2}s"/>`).join('')}</svg>`;
-  return s + '</div>';
+  return s + dots + '</div>';
 }
 
 // The reveal: each guesser's range as a crayon bar on a shared number line, the answer as a dashed line.
@@ -271,10 +295,12 @@ function render() {
   renderCard();
   renderPanel();
   renderPlayers();
+  persist();
 }
 
 function statusLine() {
-  if (online() && !ready()) return [t('out.online.wait'), 'var(--ink)'];
+  if (online() && !ready()) return [t(!sess.host && N() > 2 ? 'out.online.host' : 'out.online.wait'), 'var(--ink)'];
+  if (spectator() && st.phase === 'guess' && reveal === null) return [t('out.online.spectator', { n: N() }), 'var(--ink)'];
   if (reveal !== null) {
     const e = st.log[reveal];
     const g = Math.max(...e.gains);
@@ -286,10 +312,12 @@ function statusLine() {
   const lp = localGuesser();
   if (lp >= 0 && hotSeat() && uncovered !== lp) return [t('out.cover.status', { name: name(lp) }), COLORS[lp].main];
   if (lp >= 0) return [hotSeat() ? t('out.turn', { name: name(lp) }) : t('out.turn.you'), COLORS[lp].main];
-  if (pendingAct) return [t('out.online.sent'), 'var(--ink)'];
+  if (pendingAct) return [t(multi() ? 'out.online.sent.n' : 'out.online.sent'), 'var(--ink)'];
   const j = OUT.judgeOf(st);
   const w = OUT.waitingFor(st);
   if (j >= 0 && isLocal(j) && !hotSeat() && w.length) return [t('out.judging'), COLORS[j].main];
+  const away = w.filter(isAway);
+  if (away.length && multi()) return [t('out.online.away', { names: away.map(name).join(', ') }), COLORS[away[0]].main];
   if (w.length === 1) return [t(isAI(w[0]) ? 'out.thinking' : 'out.wait', { name: name(w[0]), names: name(w[0]) }), COLORS[w[0]].main];
   return [t('out.round', { r: st.round + 1, n: st.rounds }), 'var(--ink)'];
 }
@@ -320,10 +348,14 @@ function renderPlayers() {
     let sc = plural(st.scores[p], 'out.pts');
     if (p === judge) sc += ' · ' + t('out.judge.tag');
     else if (reveal === null && st.phase === 'guess' && st.guesses[p] !== null) sc += ' ' + t('out.locked');
+    if (seated() && p === me()) sc += ' · ' + t('net.you');
+    else if (isAway(p) && multi()) sc += ' · ' + t('out.online.off');
     el.querySelector('.score').textContent = sc;
+    el.classList.toggle('me', seated() && p === me());
+    el.classList.toggle('away', isAway(p) && multi());
     const inp = el.querySelector('.name');
     inp.placeholder = name(p);
-    if (document.activeElement !== inp) inp.value = isLocal(p) ? cfg.names[p] : '';
+    if (document.activeElement !== inp) inp.value = isLocal(p) ? myName() : '';
     inp.style.color = COLORS[p].main;
     inp.disabled = !isLocal(p);
   }
@@ -333,18 +365,18 @@ function renderPlayers() {
   status.style.color = c;
 
   $('#undo').disabled = online() || !history.length;
-  for (const id of ['players', 'humans', 'judge']) $('#' + id).disabled = online();
-  $('#level').disabled = online();
-  for (const id of ['rounds', 'deck', 'scoring']) $('#' + id).disabled = !canRestart();
+  // online: the host picks the player count, judge, bot level and the rest; guests just play
+  $('#humans').disabled = online();
+  for (const id of ['players', 'judge', 'level', 'rounds', 'deck', 'scoring']) $('#' + id).disabled = !canRestart();
   $('#new').disabled = !canRestart();
   $('#again').hidden = !canRestart();
   $('#result-wait').hidden = canRestart();
-  if (online()) $('#result-wait').textContent = t('out.online.waitnew', { name: name(1 - sess.seat) });
-  $('#players-field').hidden = online();
+  if (online()) $('#result-wait').textContent = t('out.online.waitnew', { name: name(0) });
+  $('#players-field').hidden = online() && !sess.host;
   $('#humans-field').hidden = online();
-  $('#level-field').hidden = online() || cfg.humans >= cfg.players;
-  $('#judge-field').hidden = online() || cfg.players < 3;
-  $('#settings-note').textContent = online() ? t('out.online.note') : '';
+  $('#level-field').hidden = online() ? !sess.host || cfg.players < 3 : cfg.humans >= cfg.players;
+  $('#judge-field').hidden = (online() && !sess.host) || cfg.players < 3;
+  $('#settings-note').textContent = online() ? t(sess.host ? 'out.online.note' : 'out.online.note.guest') : '';
 }
 
 function fillHumans() {
@@ -408,7 +440,8 @@ function setState(next, { snapshot = false } = {}) {
   const prev = st;
   if (snapshot && !online()) history.push(OUT.clone(prev));
   st = next;
-  pendingAct = false;
+  // guest: the sent range is done once it shows up as ours (another seat's move must not re-open the form)
+  if (st.round !== prev.round || (online() && st.guesses[me()] != null)) pendingAct = false;
   if (st.log.length > prev.log.length) {
     reveal = st.log.length - 1;
     history = []; uncovered = null;
@@ -434,10 +467,10 @@ function act(p, lo, hi) {
 
 function newGame() {
   clearTimeout(aiTimer);
-  gameHumans = online() ? 2 : Math.min(cfg.humans, cfg.players);
+  gameHumans = Math.min(cfg.humans, cfg.players);
   st = OUT.create({
-    players: online() ? 2 : cfg.players, rounds: cfg.rounds, deck: cfg.deck, scoring: cfg.scoring,
-    judge: !online() && cfg.judge, avoid: seen(),
+    players: cfg.players, rounds: cfg.rounds, deck: cfg.deck, scoring: cfg.scoring,
+    judge: cfg.judge && !(online() && !sess.host), avoid: seen(),
   });
   st.gid = Math.random().toString(36).slice(2, 10);
   if (!online() || sess.host) {
@@ -447,18 +480,33 @@ function newGame() {
   history = []; shapes = {}; reveal = null; uncovered = null; finished = false; pendingAct = false; panelKey = '';
   hush(); calm();
   $('#result').hidden = true;
+  if (online() && sess.host) reseat();
   render();
   if (online() && sess.host) sendState();
   tick();
 }
 
-// Computer guessers (never online). They don't look at anyone's range; they just "half-know" the answer.
+// Computer guessers. They don't look at anyone's range; they just "half-know" the answer.
+// Online (3+ seats) they run on the host only: for empty seats, and for seats whose device has been
+// gone for AWAY_MS. They hold off while the host's online dialog is open (the table is still filling up)
+// and don't wait for the host to dismiss a reveal, so nobody else is kept waiting.
+const aiSeat = (p) => (online()
+  ? sess.host && multi() && (ctrl[p] === 'c' || (ctrl[p] === 'a' && Date.now() - awaySince[p] >= AWAY_MS))
+  : isAI(p));
+const aiHold = () => online() && !!document.getElementById('mg-online')?.open;
 function tick() {
   clearTimeout(aiTimer);
-  if (online() || st.phase !== 'guess' || reveal !== null) return;
-  const p = OUT.waitingFor(st).find((q) => isAI(q));
-  if (p === undefined) return;
+  if (st.phase !== 'guess' || (!online() && reveal !== null) || (online() && (!sess.host || !multi() || aiHold()))) return;
+  const w = OUT.waitingFor(st);
+  const p = w.find(aiSeat);
+  if (p === undefined) {
+    // wake up when a dropped player's grace period runs out
+    const left = w.filter(isAway).map((q) => AWAY_MS - (Date.now() - awaySince[q]));
+    if (left.length) aiTimer = setTimeout(tick, Math.max(50, Math.min(...left) + 30));
+    return;
+  }
   aiTimer = setTimeout(() => {
+    if (!aiSeat(p) || !OUT.waitingFor(st).includes(p)) return tick(); // a person took the seat meanwhile
     const g = OUT.aiGuess(st, p, cfg.level);
     act(p, g.lo, g.hi);
   }, 650 + Math.random() * 900);
@@ -502,45 +550,157 @@ function restart() {
 }
 
 // ---------- online ----------
-// Host is authoritative and keeps secrets: the guest gets a copy with the host's pending range and the
-// current answer blanked out. Moves carry the round/counter; a stale move just triggers a fresh 'state'.
-function sendState() {
-  sess.send('state', { st: OUT.redact(st, 1), names: cfg.names });
+// Host is authoritative and keeps secrets. Game players (0..N-1) are not tied to net.js seat numbers (those
+// depend on who reached the host first, e.g. after the host reloads): each guest tab introduces itself
+// with its own token ('hi') and the host hands it a player — its old one if the token is known, else a
+// computer seat, else the seat of someone who dropped out; with no seat left it watches.
+// Every device gets its own copy of the state (`{to: seat}`): OUT.redact blanks the other players'
+// pending ranges, the current answer (e.g. a dice roll) and the questions still to come.
+// The token lives in localStorage, so reopening the link in a new tab of the same browser gets the old player
+// back (the older tab, if it is still open, then watches).
+const TOK_KEY = 'mg-' + SLUG + '-tok';
+const myToken = localStorage.getItem(TOK_KEY) || Math.random().toString(36).slice(2, 12);
+localStorage.setItem(TOK_KEY, myToken);
+const owner = ALL.map(() => '');  // host: token of the device that plays each player ('' = nobody yet)
+const pmap = new Map();           // host: live net seat → player (-1 = watching)
+const tokOf = new Map();          // host: live net seat → that tab's token
+const devOf = (p) => { for (const [k, q] of pmap) if (q === p) return k; return -1; };
+const clean = (v) => String(v || '').slice(0, 14);
+const roster = () => ({ names: ALL.map((p) => (p === 0 ? cfg.names[0] || '' : netNames[p])), ctrl });
+function sendState(only, extra) {
+  for (const [k, p] of pmap) {
+    if (only !== undefined && k !== only) continue;
+    sess.send('state', { st: OUT.redact(st, p), you: p, ...roster(), ...extra }, { to: k });
+  }
+}
+// Host: who controls each player right now.
+function updateCtrl() {
+  ctrl = ALL.map((p) => (p === 0 || devOf(p) >= 0 ? 'h' : owner[p] ? 'a' : 'c'));
+}
+// Host: give net seat k a player.
+function assign(k) {
+  const tok = tokOf.get(k);
+  pmap.delete(k);
+  let p = PL().find((q) => q > 0 && owner[q] === tok) ?? -1;
+  if (p < 0) {
+    const free = PL().filter((q) => q > 0 && devOf(q) < 0);
+    p = free.find((q) => !owner[q] && q === k) ?? free.find((q) => !owner[q]) ?? free[0] ?? -1;
+  }
+  const old = devOf(p);
+  if (p >= 0 && old >= 0) pmap.set(old, -1); // a stale connection of the same tab
+  pmap.set(k, p);
+  if (p >= 0) { owner[p] = tok; delete awaySince[p]; }
+}
+// Host, new game: watchers (and players cut by a smaller player count) get a seat if there is one now.
+function reseat() {
+  for (const [k, p] of [...pmap]) if (p < 0 || p >= N()) assign(k);
+  updateCtrl();
+}
+// The host keeps the match in sessionStorage per room, so reloading the host's tab doesn't wipe it.
+const roomKey = (s) => `mg-${SLUG}-room-${s.code}`;
+function persist() {
+  if (!online() || !sess.host) return;
+  sessionStorage.setItem(roomKey(sess), JSON.stringify({ st, netNames, owner }));
+}
+function restore(s) {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(roomKey(s)) || 'null'); } catch {}
+  if (!saved?.st?.gid) return false;
+  clearTimeout(aiTimer);
+  st = saved.st;
+  s.setMaxPlayers(st.players);
+  ALL.forEach((p) => { netNames[p] = clean(saved.netNames?.[p]); owner[p] = p ? String(saved.owner?.[p] || '') : ''; });
+  // the players who were here before the reload get their grace period again (they are reconnecting)
+  for (const p of ALL) if (owner[p]) awaySince[p] = Date.now();
+  updateCtrl();
+  history = []; shapes = {}; reveal = null; uncovered = null; finished = false; pendingAct = false; panelKey = '';
+  hush(); calm();
+  $('#result').hidden = true;
+  if (st.phase === 'over') finish();
+  render();
+  tick();
+  return true;
 }
 function onSession(s) {
   sess = s;
   synced = false;
+  myP = -1;
+  pmap.clear(); tokOf.clear(); owner.fill(''); netNames.fill(''); awaySince.length = 0;
+  ctrl = ALL.map(() => 'h');
   clearTimeout(aiTimer);
   s.on('status', () => render());
   s.on('peer-join', () => {
-    s.send('name', { seat: s.seat, name: cfg.names[s.seat] });
-    if (s.host) sendState();
+    if (sess !== s) return;
+    // guest: the host (re)appeared — introduce ourselves; the host answers with our player and the state
+    if (!s.host) { pendingAct = false; s.send('hi', { token: myToken, name: myName() }); }
+    else render();
+  });
+  s.on('hi', (d, { seat: k }) => {
+    if (sess !== s || !s.host) return;
+    // a live connection keeps the token it came with (a second 'hi' can't be used to grab another player)
+    if (!(tokOf.has(k) && pmap.get(k) >= 0)) tokOf.set(k, String(d?.token || 'seat' + k).slice(0, 40));
+    // a newcomer takes over a computer seat (or a dropped player's) right away, points included
+    assign(k);
+    const p = pmap.get(k);
+    if (p >= 0) netNames[p] = clean(d?.name);
+    updateCtrl();
+    render();
+    sendState();
+    tick();
+  });
+  s.on('peer-leave', ({ seat: k }) => {
+    if (sess !== s || !s.host) return;
+    const p = pmap.get(k) ?? -1;
+    pmap.delete(k); tokOf.delete(k);
+    if (p >= 0) awaySince[p] = Date.now();
+    updateCtrl();
+    render();
+    s.send('names', roster());
+    tick();
+  });
+  s.on('names', (d) => {
+    if (s.host || !d || !Array.isArray(d.names)) return;
+    d.names.forEach((v, p) => (netNames[p] = clean(v)));
+    ctrl = d.ctrl;
+    render();
   });
   s.on('state', (d) => {
-    if (s.host) return;
+    if (s.host || !d?.st) return;
     synced = true;
-    remoteNames[0] = d.names[0];
+    d.names.forEach((v, p) => (netNames[p] = clean(v)));
+    ctrl = d.ctrl;
+    const you = Number.isInteger(d.you) ? d.you : -1;
+    if (you !== myP) { myP = you; pendingAct = false; panelKey = ''; }
+    if (d.reject) pendingAct = false;
     if (d.st.gid !== st.gid || d.st.log.length < st.log.length) {
-      st = d.st; gameHumans = 2;
+      st = d.st;
       reveal = null; finished = false; pendingAct = false; uncovered = null; shapes = {}; panelKey = '';
       for (const [k, v] of [['rounds', st.rounds], ['deck', st.deck], ['scoring', st.scoring]]) { cfg[k] = v; $('#' + k).value = v; }
-      calm(); $('#result').hidden = true;
-      if (st.phase === 'over') { reveal = null; finish(); }
+      hush(); calm(); $('#result').hidden = true;
+      if (st.phase === 'over') finish();
       render();
       return;
     }
     setState(d.st);
   });
-  s.on('name', (d) => { remoteNames[d.seat] = d.name || ''; render(); });
-  s.on('move', (d) => {
+  s.on('name', (d, { seat: k }) => {
     if (!s.host) return;
-    if (d.round !== st.round || st.phase !== 'guess') return sendState();
-    const next = OUT.clone(st);
-    if (OUT.guess(next, 1, d.lo, d.hi)) setState(next); else sendState();
+    const p = pmap.get(k) ?? -1;
+    if (p < 0) return;
+    netNames[p] = clean(d?.name);
+    render();
+    s.send('names', roster());
   });
-  s.on('resync', () => s.host && sendState());
-  newGame();
-  if (!s.host) s.send('resync');
+  s.on('move', (d, { seat: k }) => {
+    if (!s.host) return;
+    const p = pmap.get(k) ?? -1;
+    if (p < 1 || p >= N() || d?.round !== st.round || st.phase !== 'guess') return sendState(k, { reject: true });
+    const next = OUT.clone(st);
+    if (OUT.guess(next, p, d.lo, d.hi)) setState(next); else sendState(k, { reject: true });
+  });
+  s.on('resync', (_, { seat: k }) => s.host && sendState(k));
+  if (s.host) { s.setMaxPlayers(cfg.players); updateCtrl(); }
+  if (!(s.host && restore(s))) newGame();
 }
 
 // ---------- input ----------
@@ -584,10 +744,15 @@ panel.addEventListener('click', (evt) => {
   }
 });
 
-$('#players').addEventListener('change', (e) => { cfg.players = +e.target.value; fillHumans(); saveCfg(); newGame(); });
+$('#players').addEventListener('change', (e) => {
+  if (!canRestart()) return;
+  cfg.players = +e.target.value; fillHumans(); saveCfg();
+  if (online()) sess.setMaxPlayers(cfg.players); // the room offers as many seats as the game has players
+  newGame();
+});
 $('#humans').addEventListener('change', (e) => { cfg.humans = +e.target.value; saveCfg(); newGame(); });
 $('#level').addEventListener('change', (e) => { cfg.level = e.target.value; saveCfg(); render(); });
-$('#judge').addEventListener('change', (e) => { cfg.judge = e.target.value === '1'; saveCfg(); newGame(); });
+$('#judge').addEventListener('change', (e) => { if (!canRestart()) return; cfg.judge = e.target.value === '1'; saveCfg(); newGame(); });
 for (const k of ['rounds', 'deck', 'scoring']) {
   $('#' + k).addEventListener('change', (e) => { cfg[k] = k === 'rounds' ? +e.target.value : e.target.value; saveCfg(); restart(); });
 }
@@ -597,9 +762,10 @@ $('#undo').addEventListener('click', undo);
 document.querySelectorAll('.player .name').forEach((inp) =>
   inp.addEventListener('input', () => {
     const p = +inp.closest('.player').dataset.p;
-    cfg.names[p] = inp.value;
+    if (online() && !sess.host) cfg.netName = inp.value; else cfg.names[p] = inp.value;
     saveCfg();
-    if (online()) sess.send('name', { seat: p, name: inp.value });
+    if (online() && !sess.host) sess.send('name', { name: inp.value });
+    else if (online()) sess.send('names', roster());
     panelKey = panelKey.startsWith('form') ? panelKey : '';
     render();
   }));
@@ -623,6 +789,9 @@ mountOnline({
   slug: SLUG,
   button: $('#online'),
   onSession,
-  onEnd: () => { sess = null; newGame(); },
+  maxPlayers: () => cfg.players,
+  onEnd: () => { if (sess?.host) sessionStorage.removeItem(roomKey(sess)); sess = null; newGame(); },
 });
+// the host's "let's play": the computer seats start guessing once the dialog is closed
+document.getElementById('mg-online').addEventListener('close', () => { if (online() && sess.host) tick(); });
 if (!online()) showOnce('how', SLUG);

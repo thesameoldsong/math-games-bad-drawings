@@ -63,3 +63,9 @@
   .pig-arena:not([data-n="2"]) .player .name { font-size: 23px; }
 }
 .result-scores span { white-space: nowrap; }
+
+/* online: "you" / "offline" next to the score */
+.player .seat-tag { font-size: .8em; color: #888; white-space: nowrap; }
+.player .seat-tag::before { content: '· '; }
+.player .seat-tag.off { color: var(--red-dark); }
+.player.away .fig { opacity: .4; }

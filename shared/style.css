@@ -263,5 +263,5 @@ body.game { overflow-x: clip; }
 .game .credit { font-size: 14px; margin-top: 18px; border: none; padding: 4px; }
 .mg-on-roster { list-style: none; padding: 0; margin: 10px auto; max-width: 260px; text-align: left; font: 600 21px/1.5 var(--hand); color: #999; }
 .mg-on-roster li.on { color: var(--ink); }
-.mg-on-roster .seat { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 2px solid currentColor; border-radius: 50%; font-size: 17px; margin-right: 6px; }
+.mg-on-roster .mg-on-seat { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 2px solid currentColor; border-radius: 50%; font-size: 17px; margin-right: 6px; }
 .mg-on-hint { font-size: 15px; color: #777; margin: 4px 0 8px; }

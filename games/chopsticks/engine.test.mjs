@@ -205,3 +205,21 @@ test('AI levels clearly beat random play, and normal beats easy', () => {
   assert.ok(run('hard', randomMove, 100) > 0.9, 'hard vs random');
   assert.ok(run('normal', (s) => CS.aiMove(s, 'easy', r), 60) > 0.8, 'normal vs easy');
 });
+
+test('3-4 players: the computer plays legal moves and beats random players', () => {
+  const r = rng(7);
+  const randomMove = (s) => { const ms = CS.moves(s); return ms[Math.floor(r() * ms.length)]; };
+  for (const n of [3, 4]) {
+    let won = 0, games = 120;
+    for (let g = 0; g < games; g++) {
+      const s = CS.create({ players: n, first: g % n });
+      while (!CS.isOver(s)) {
+        const m = s.turn === 0 ? CS.aiMove(s, 'normal', r) : randomMove(s);
+        assert.ok(CS.isLegal(s, m));
+        CS.apply(s, m);
+      }
+      if (s.winner === 0) won++;
+    }
+    assert.ok(won / games > 1.6 / n, `${n} players: computer won ${won}/${games}`);
+  }
+});

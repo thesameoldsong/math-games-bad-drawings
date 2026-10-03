@@ -13,6 +13,7 @@
 #board .pop { animation: wlb-pop .4s ease-out; transform-box: fill-box; transform-origin: center; }
 @keyframes wlb-pop { from { opacity: 0; transform: scale(.5); } }
 
+.wlb-arena .player.away .fig { opacity: .35; }
 .result-sub { font-size: 22px; color: #666; margin: 0 0 8px; }
 
 .wlb-arena {

@@ -28,6 +28,12 @@
   padding: 0 6px; transform: rotate(-2deg);
 }
 .player.maker .badge { background: currentColor; }
+.player .seat-tag { font: 600 15px/1 var(--hand); color: #888; white-space: nowrap; }
+.player .seat-tag::before { content: '· '; }
+.player .seat-tag.off { color: #d6343f; }
+/* narrow cards (3–4 players): the tag gets its own line so nothing overflows */
+.sae-arena.n3 .player .seat-tag, .sae-arena.n4 .player .seat-tag { display: block; font-size: 14px; margin-top: 2px; }
+.sae-arena.n3 .player .seat-tag::before, .sae-arena.n4 .player .seat-tag::before { content: none; }
 .player.p0 .badge { background: var(--blue); } .player.p1 .badge { background: var(--red); }
 .player.p2 .badge { background: #3aa655; } .player.p3 .badge { background: #8e5cc4; }
 

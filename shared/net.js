@@ -26,6 +26,9 @@ const cleanCode = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice
 // Stable per-tab id, so a guest who reloads is recognised and not mistaken for a third player.
 const clientId = sessionStorage.getItem('mg-client-id') || Math.random().toString(36).slice(2, 12);
 sessionStorage.setItem('mg-client-id', clientId);
+// Per-browser id: lets a player who reopens the link in a new tab reclaim their (now idle) seat.
+const deviceId = localStorage.getItem('mg-device-id') || Math.random().toString(36).slice(2, 12);
+localStorage.setItem('mg-device-id', deviceId);
 
 // Low-level session.
 // Events: 'status' (waiting|connected|lost), 'peer-join' {seat}, 'peer-leave' {seat}, 'roster', 'full',
@@ -36,7 +39,11 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
   const action = room.makeAction('msg');
   const handlers = {};
   let status = 'waiting', seat = host ? 0 : 1, hostPeer = null, hostSeen = 0, fullSince = 0, closed = false;
-  const guests = new Map(); // host side: seat → { peerId, clientId, connected, seen }
+  const guests = new Map(); // host side: seat → { peerId, clientId, deviceId, connected, seen }
+  // The host remembers who sat where, so a host reload gives every returning guest the same seat.
+  const seatsKey = `mg-net-seats-${slug}-${code}`;
+  if (host) for (const [k, g] of JSON.parse(sessionStorage.getItem(seatsKey) || '[]')) guests.set(k, { ...g, peerId: null, connected: false, seen: 0 });
+  const saveSeats = () => host && sessionStorage.setItem(seatsKey, JSON.stringify([...guests].map(([k, g]) => [k, { clientId: g.clientId, deviceId: g.deviceId }])));
 
   const emit = (type, payload, meta) => (handlers[type] || []).forEach((fn) => fn(payload, meta));
   const setStatus = (st) => { if (st !== status) { status = st; emit('status', st); } };
@@ -74,7 +81,7 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
     }
   }, HB);
 
-  room.onPeerJoin = (id) => { if (!host) sys('_hello', id, { clientId }); };
+  room.onPeerJoin = (id) => { if (!host) sys('_hello', id, { clientId, deviceId }); };
   room.onPeerLeave = (id) => {
     if (host) { const k = seatOfPeer(id); if (k >= 0) dropGuest(k); }
     else if (id === hostPeer) dropHost();
@@ -83,15 +90,18 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
     switch (msg.type) {
       case '_hello': {
         if (!host) return; // guests ignore each other
-        const cid = msg.payload?.clientId;
+        const cid = msg.payload?.clientId, dev = msg.payload?.deviceId;
         let k = [...guests].find(([, g]) => g.clientId === cid)?.[0];
+        // same browser, new tab: take back this browser's seat if nobody is using it right now
+        if (k === undefined && dev) k = [...guests].find(([, g]) => g.deviceId === dev && !g.connected)?.[0];
         if (k === undefined) {
           for (let i = 1; i < maxPlayers; i++) if (!guests.has(i)) { k = i; break; }
           // a seat whose owner left can go to someone new once every seat is taken
           if (k === undefined) k = [...guests].find(([, g]) => !g.connected)?.[0];
         }
-        if (k === undefined) return sys('_full', peerId);
-        guests.set(k, { peerId, clientId: cid, connected: true, seen: Date.now() });
+        if (k === undefined) return sys('_full', peerId, { maxPlayers });
+        guests.set(k, { peerId, clientId: cid, deviceId: dev, connected: true, seen: Date.now() });
+        saveSeats();
         sys('_welcome', peerId, { seat: k, maxPlayers });
         hostStatus();
         emit('peer-join', { seat: k });
@@ -116,6 +126,7 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
         fullSince ||= Date.now();
         if (Date.now() - fullSince < 15000) { setTimeout(() => { if (!closed && !hostPeer) sys('_hello', peerId, { clientId }); }, HB); return; }
         status = 'full';
+        maxPlayers = msg.payload?.maxPlayers ?? maxPlayers; // the room's real size, for the right message
         emit('full');
         return;
       case '_hb':
@@ -140,6 +151,7 @@ export function createSession({ slug, code, host, maxPlayers = 2 }) {
   return {
     slug, code, host,
     get seat() { return seat; },
+    clientId, deviceId,
     get maxPlayers() { return maxPlayers; },
     get status() { return status; },
     get connected() { return status === 'connected'; },
@@ -172,7 +184,9 @@ export function mountOnline({ slug, button, onSession, onEnd, maxPlayers = 2 }) 
 
   const remember = (s) => sessionStorage.setItem(storeKey(slug), JSON.stringify({ code: s.code, host: s.host }));
 
-  function start(code, host) {
+  let fresh = false; // host just created this room (vs. resuming it after a reload)
+  function start(code, host, isNew = false) {
+    fresh = isNew;
     end(true);
     if (!onlineSupported()) { renderDialog(); dlg.querySelector('.mg-on-error').textContent = t('net.insecure'); return; }
     session = createSession({ slug, code, host, maxPlayers: seatsWanted() });
@@ -180,13 +194,14 @@ export function mountOnline({ slug, button, onSession, onEnd, maxPlayers = 2 }) 
     remember(session);
     const me = session; // ignore late events from a session we already left
     // With more than two seats the host keeps the dialog open to watch the table fill up.
-    session.on('status', () => { if (session !== me) return; renderDialog(); syncButton(); if (me.connected && !(me.host && multi())) dlg.close(); });
+    session.on('status', () => { if (session !== me) return; renderDialog(); syncButton(); if (me.connected && !(me.host && multi() && fresh)) dlg.close(); });
     session.on('roster', () => { if (session === me && dlg.open) renderDialog(); });
     session.on('full', () => {
       if (session !== me) return;
+      const roomSize = me.maxPlayers; // sent by the host with '_full'
       end();
       renderDialog();
-      dlg.querySelector('.mg-on-error').textContent = t(multi() ? 'net.full.n' : 'net.full', { code });
+      dlg.querySelector('.mg-on-error').textContent = t(roomSize > 2 ? 'net.full.n' : 'net.full', { code });
       if (!dlg.open) dlg.showModal();
     });
     const url = new URL(location.href);
@@ -235,7 +250,7 @@ export function mountOnline({ slug, button, onSession, onEnd, maxPlayers = 2 }) 
         <button class="btn" data-act="copy" data-i18n="net.copy"></button>
         <ul class="mg-on-roster">${Array.from({ length: session.maxPlayers }, (_, k) => {
           const on = session.seats().includes(k);
-          return `<li class="${on ? 'on' : ''}"><span class="seat">${k + 1}</span> ${t(k === 0 ? 'net.seat.you' : on ? 'net.seat.on' : 'net.seat.free')}</li>`;
+          return `<li class="${on ? 'on' : ''}"><span class="mg-on-seat">${k + 1}</span> ${t(k === 0 ? 'net.seat.you' : on ? 'net.seat.on' : 'net.seat.free')}</li>`;
         }).join('')}</ul>
         <p class="mg-on-hint" data-i18n="net.free.hint"></p>
         <div class="actions"><button class="btn primary" data-act="close" data-i18n="net.play"></button>
@@ -264,7 +279,7 @@ export function mountOnline({ slug, button, onSession, onEnd, maxPlayers = 2 }) 
   dlg.addEventListener('click', async (e) => {
     if (e.target === dlg) return dlg.close();
     const act = e.target.closest('[data-act]')?.dataset.act;
-    if (act === 'host') start(newCode(), true);
+    if (act === 'host') start(newCode(), true, true);
     if (act === 'leave') { end(); renderDialog(); }
     if (act === 'close') dlg.close();
     if (act === 'copy') {
@@ -344,7 +359,7 @@ addStrings('ru', {
   'net.you': 'вы',
   'net.share.n': 'Остальные игроки сканируют код или открывают ссылку. Можно начинать в любой момент.',
   'net.seat.you': 'вы (создатель)',
-  'net.seat.on': 'подключился',
+  'net.seat.on': 'в игре',
   'net.seat.free': 'свободно',
   'net.free.hint': 'За свободные места играет компьютер (если в этой игре он есть).',
   'net.play': 'играем!',

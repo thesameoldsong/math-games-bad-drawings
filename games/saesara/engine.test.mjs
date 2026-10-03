@@ -297,3 +297,18 @@ test('the normal computer clearly beats a random player', () => {
   }
   assert.ok(ai >= 10 && other <= 1, `ai ${ai} : random ${other}`);
 });
+
+test('seatView hides the secret rule from everyone but its maker until the round ends', () => {
+  const r = rng(5);
+  const st = SAE.create({ N: 8, nPlayers: 3, maker: 'players', tier: 'easy' }, r);
+  assert.equal(st.phase, 'make');
+  SAE.apply(st, { type: 'make', rule: R('top') }, r);
+  assert.deepEqual(SAE.seatView(st, st.maker).rule, st.rule);
+  for (const p of SAE.guessers(st)) assert.equal(SAE.seatView(st, p).rule, null);
+  // computer-made rules (maker -1) reach no seat
+  const c = SAE.create({ N: 8, nPlayers: 3, maker: 'cpu' }, r);
+  for (let p = 0; p < 3; p++) assert.equal(SAE.seatView(c, p).rule, null);
+  for (const p of SAE.guessers(st)) SAE.apply(st, { type: 'giveup', p }, r);
+  assert.equal(st.phase, 'roundover');
+  for (let p = 0; p < 3; p++) assert.ok(SAE.seatView(st, p).rule);
+});

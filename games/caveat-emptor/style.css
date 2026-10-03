@@ -11,7 +11,7 @@
 .seat.out .fig, .seat.out .who { opacity: .38; }
 .seat .fig-wrap { position: relative; width: 34px; }
 .seat .who { min-width: 0; max-width: 100%; text-align: center; }
-.seat .nm { font: 700 17px/1.05 var(--hand); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seat .nm { font: 700 17px/1.05 var(--hand); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; margin: 0 -4px; } /* padding: room for the slanted last letter */
 .seat .sc { font: 700 16px/1.05 var(--hand); color: #555; }
 .arena[data-n="2"] .seat, .arena[data-n="3"] .seat { flex-direction: row; justify-content: center; gap: 6px; }
 .arena[data-n="2"] .seat .fig-wrap, .arena[data-n="3"] .seat .fig-wrap { width: 40px; }
@@ -101,3 +101,14 @@
 .names-h { font-size: 24px; font-weight: 600; }
 .names { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-top: 4px; }
 .names .nm-in { width: 100%; min-width: 0; font-weight: 700; }
+
+/* online: this device's own seat, seats whose device dropped */
+/* phone: hangs under the card so the seats stay level */
+.seat .who { position: relative; }
+.seat .tag { font: 600 14px/1 var(--hand); color: #777; position: absolute; left: 0; right: 0; top: 100%; white-space: nowrap; }
+.seat .tag:empty { display: none; }
+.seat.me .tag { color: inherit; font-weight: 700; }
+.seat.away .fig { filter: grayscale(.8); }
+.seat.away .tag { color: #b33; }
+.panel .seatnote { font-size: 18px; color: #777; max-width: 34em; }
+@media (min-width: 900px) { .seat .tag { font-size: 17px; position: static; } }

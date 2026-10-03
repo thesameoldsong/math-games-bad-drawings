@@ -41,6 +41,9 @@
 .side-l { grid-area: p0; }
 .side-r { grid-area: p1; }
 .player.out { opacity: .35; }
+.player .score .tag { font-size: .8em; color: #fff; background: #8a8a94; border-radius: 8px 10px 8px 9px; padding: 0 5px; }
+.player.me .score .tag { background: var(--ink); }
+.player.gone .fig { opacity: .45; filter: grayscale(1); }
 .result-sub { font-size: 21px; margin: 0 0 10px; color: #555; line-height: 1.2; }
 .purse-note { font-size: 19px; color: #666; margin: -4px 0 6px; text-align: right; }
 .settings-note { font-size: 19px; color: #666; margin: 6px 0 0; }

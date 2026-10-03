@@ -247,3 +247,39 @@ test('computer guessers clearly beat random play', () => {
   }
   assert.ok(ai / T > rnd / T + 10, `ai ${ai / T} vs random ${rnd / T}`);
 });
+
+test('online, 5 seats: every seat only sees its own reveals; the pattern only the designer', () => {
+  const m = PII.newMatch({ seats: 5, cpuDesigner: false, first: 0 });
+  PII.setPattern(m.round, stripes);
+  PII.peek(m.round, 1, [0, 1]);
+  PII.peek(m.round, 3, [7]);
+  PII.setGuess(m.round, 3, 20, 1);
+  for (let seat = 1; seat < 5; seat++) {
+    const v = JSON.parse(JSON.stringify(PII.viewFor(m, seat)));
+    assert.equal(v.round.pattern, null);
+    v.round.sheets.forEach((sh, p) => {
+      if (!sh) return;
+      assert.ok(sh.guess.every((x) => x === -1), 'nobody sees predictions before the end');
+      if (p !== seat) assert.ok(sh.rev.every((x) => x === -1), `seat ${seat} must not see seat ${p}'s reveals`);
+    });
+    assert.deepEqual(v.round.sheets.map((s) => s && s.peeks), [null, 2, 0, 1, 0], 'peek counts are public');
+  }
+  assert.equal(JSON.parse(JSON.stringify(PII.viewFor(m, 1))).round.sheets[1].rev[1], stripes[1]);
+  assert.deepEqual(PII.viewFor(m, 0).round.pattern, stripes);
+});
+
+test('seat hand-over is only allowed before a guesser has done anything', () => {
+  const m = PII.newMatch({ seats: 4, cpuDesigner: false, first: 0 }), r = m.round;
+  assert.equal(PII.untouched(r, 1), true, 'design phase: guessers are fresh');
+  assert.equal(PII.untouched(r, 0), false, 'designer still drawing');
+  PII.setPattern(r, stripes);
+  assert.equal(PII.untouched(r, 0), true, 'designer has nothing left to do');
+  PII.peek(r, 1, [3]);
+  assert.equal(PII.untouched(r, 1), false);
+  PII.giveUp(r, 2);
+  assert.equal(PII.untouched(r, 2), false);
+  assert.equal(PII.untouched(r, 3), true);
+  assert.equal(PII.untouched(r, 7), false);
+  PII.submit(r, 1); PII.submit(r, 3); PII.finishRound(m);
+  assert.equal(PII.untouched(r, 3), false, 'finished round: wait for the next one');
+});

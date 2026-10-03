@@ -74,3 +74,8 @@
   .con-arena.np4 .player .bubble { left: 26px; }
   .con-arena.np4 .player.p2 .bubble, .con-arena.np4 .player.p3 .bubble { left: auto; right: 26px; }
 }
+
+/* online: your own card is underlined; a seat whose device dropped out is greyed */
+.con-arena .player.me .name { border-bottom: 2px dotted currentColor; border-radius: 0; }
+.con-arena .player.away .fig { opacity: .35; filter: grayscale(1); }
+.con-arena .player.away .score { color: #b33; }

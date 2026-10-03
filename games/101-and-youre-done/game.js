@@ -26,22 +26,41 @@ let G;                       // engine state; online the host's copy is authorit
 let undoStack = [];          // snapshots before each local human decision
 let aiTimer, rolledNow = false, justMoved = false, pending = false, nextFirst = 0;
 let sess = null;             // online session (shared/net.js)
-const remoteNames = ['', ''];
+let guestEnded = false;
+const netNames = ['', '', '', ''];  // online: names of the other seats, as the host relays them
+let ctrl = [];               // online, per seat: 'human' | 'away' (device dropped, waiting) | 'cpu' (no device)
+const awayTimers = [];
+const AWAY_MS = 15000;       // a dropped player gets this long before the computer takes over (3+ players)
+// Game seats vs. net seats: net.js numbers guests in the order they (re)connect, which after a host reload can
+// differ from who sat where. So the host remembers which tab owns each game seat and maps every connected
+// net seat to its game seat; guests learn theirs from 'state' ('you').
+const tabId = () => sessionStorage.getItem('mg-client-id') || '';
+let owner = [];              // host: game seat → tab id of the device that plays it
+const n2g = new Map();       // host: connected net seat → game seat
+let myG = null;              // guest: my game seat, as told by the host
+const backAfterReload = new Set(); // host after a reload: seats whose devices haven't come back yet
+const CPU_LEVEL = 'normal';
 let moods = [];
 const shapes = {};
 const shapeFor = (k, make) => (shapes[k] ??= make());
 
 // ---------- who is who ----------
 const online = () => !!sess;
-const mySeat = () => sess.seat;
-const isAI = (p) => !online() && cfg.mode !== 'pvp' && p === 1;
-const isRemote = (p) => online() && p !== mySeat();
+const mySeat = () => (sess.host ? 0 : myG ?? sess.seat);
+const gOf = (k) => (k === 0 ? 0 : n2g.has(k) ? n2g.get(k) : -1);   // host: net seat → game seat (-1: not known yet)
+// 3–4 seats online: empty seats are played by the computer and the host never has to wait.
+const multi = () => online() && G.n > 2;
+const isAI = (p) => (online() ? multi() && ctrl[p] === 'cpu' : cfg.mode !== 'pvp' && p === 1);
+const isAway = (p) => multi() && ctrl[p] === 'away';
+const isRemote = (p) => online() && p !== mySeat() && !isAI(p);
 const isLocal = (p) => !isAI(p) && !isRemote(p);
-const connected = () => !online() || sess.connected;
+const spectator = () => online() && mySeat() >= G.n;
+const connected = () => !online() || (sess.host && multi()) || sess.connected;
 const humans = () => (online() ? 1 : cfg.mode === 'pvp' ? G.n : 1);
 function name(p) {
-  if (isAI(p)) return t('h101.cpu');
-  const n = isRemote(p) ? remoteNames[p] : cfg.names[p];
+  if (isAI(p) && !online()) return t('h101.cpu');
+  if (isAI(p)) return t('h101.p' + p);
+  const n = online() && p !== mySeat() ? netNames[p] : cfg.names[p];
   return (n && n.trim()) || t('h101.p' + p);
 }
 const initial = (p) => [...name(p).trim()][0]?.toUpperCase() || '?';
@@ -77,9 +96,11 @@ function render() {
   o += columns();
   o += controls();
   svg.innerHTML = o;
+  svg.dataset.match = `${G.id}:${G.round}:${G.seq}:${G.phase}`; // for test probes
   rolledNow = false;
   justMoved = false;
   renderPlayers();
+  persist();
 }
 
 function header() {
@@ -257,7 +278,7 @@ function buildPlayers() {
     el.querySelector('.name').addEventListener('input', (e) => {
       cfg.names[p] = e.target.value;
       saveCfg();
-      if (online()) sess.send('name', { seat: p, name: e.target.value });
+      if (online()) { if (sess.host) sendSeats(); else sess.send('name', { name: e.target.value, id: tabId() }); }
       render();
     });
   });
@@ -275,7 +296,10 @@ function renderPlayers() {
     const m = moods[p];
     const pose = m.pose !== 'down' ? m.pose : playing && G.turn === p ? 'point' : 'down';
     el.querySelector('.fig').innerHTML = figureSVG({ color: COLORS[p], mood: m.mood, pose, face: p < leftN ? 'right' : 'left', seed: 11 + p * 31 });
-    el.querySelector('.score').textContent = '★ ' + plural(G.wins[p], 'h101.wins');
+    const score = el.querySelector('.score');
+    score.textContent = '★ ' + plural(G.wins[p], 'h101.wins');
+    const tag = !online() ? '' : p === mySeat() ? t('net.you') : isAI(p) ? t('h101.tag.cpu') : isAway(p) ? t('h101.tag.away') : '';
+    if (tag) score.insertAdjacentHTML('beforeend', ` <span class="tag${isAway(p) ? ' away' : ''}">${esc(tag)}</span>`);
     const inp = el.querySelector('.name');
     inp.placeholder = name(p);
     if (document.activeElement !== inp) inp.value = isLocal(p) ? cfg.names[p] : '';
@@ -290,11 +314,13 @@ function renderStatus() {
   const st = $('#status');
   let s = '', col = INK;
   const p = G.turn;
-  if (online() && !sess.connected) s = t('h101.online.wait');
+  if (online() && !connected()) s = t(sess.host || G.n <= 2 ? 'h101.online.wait' : 'h101.online.lost');
+  else if (spectator() && G.phase !== 'over') s = t('h101.online.spect');
   else if (G.phase === 'roll' || G.phase === 'choose') {
     col = COLORS[p].main;
     const solo = humans() === 1 && isLocal(p);
-    if (isAI(p)) s = t('h101.st.thinking', { name: name(p) });
+    if (isAway(p)) s = t('h101.st.away', { name: name(p) });
+    else if (isAI(p)) s = t('h101.st.thinking', { name: name(p) });
     else if (isRemote(p)) s = t('h101.st.them', { name: name(p) });
     else if (G.phase === 'roll') s = solo ? t('h101.st.roll.you') : t('h101.st.roll', { name: name(p) });
     else s = t(solo ? 'h101.st.pick.you' : 'h101.st.pick', { name: name(p), d: G.die, dd: G.die * 10 });
@@ -312,8 +338,9 @@ function renderControls() {
   const host = !online() || sess.host;
   $('#undo').disabled = online() || !undoStack.length;
   $('#mode').disabled = online();
-  $('#players').disabled = online();
-  $('#f-players').hidden = online() || cfg.mode !== 'pvp';
+  $('#players').disabled = !host;
+  $('#f-players').hidden = !online() && cfg.mode !== 'pvp';
+  if (online()) $('#players').value = sess.host ? cfg.n : G.n;
   $('#rounds').disabled = !host;
   $('#new').disabled = !host;
   $('#again').hidden = !host;
@@ -459,21 +486,23 @@ function doHost(a) {
 
 function schedule() {
   clearTimeout(aiTimer);
+  if (online() && !sess.host) return;
   if (!isAI(G.turn) || (G.phase !== 'roll' && G.phase !== 'choose')) return;
   aiTimer = setTimeout(() => {
     if (!isAI(G.turn)) return;
     if (G.phase === 'roll') doHost({ k: 'roll' });
-    else if (G.phase === 'choose') doHost({ k: 'pick', x: H101.aiChoose(G, cfg.mode) });
+    else if (G.phase === 'choose') doHost({ k: 'pick', x: H101.aiChoose(G, online() ? CPU_LEVEL : cfg.mode) });
   }, G.phase === 'roll' ? 650 : 900);
 }
 
 function newGame() {
   clearTimeout(aiTimer);
-  const n = online() ? 2 : cfg.mode === 'pvp' ? cfg.n : 2;
+  const n = online() ? cfg.n : cfg.mode === 'pvp' ? cfg.n : 2;
   G = H101.create({ n, rounds: cfg.rounds, first: nextFirst % n });
   G.id = Math.random().toString(36).slice(2, 8);
   nextFirst = (nextFirst + 1) % n;
   undoStack = []; pending = false; justMoved = false;
+  if (online()) initSeats();
   builtN = 0;
   $('#result').hidden = true;
   buildPlayers(); calm();
@@ -496,23 +525,106 @@ function undo() {
 }
 
 // ---------- online ----------
-// Host is authoritative and rolls every die; the guest asks ('req') and applies the echoed 'move'.
-function sendState() { sess.send('state', { G, names: cfg.names[0] }); }
+// Host is authoritative and rolls every die; guests ask ('req') and apply the echoed 'move'.
+// Nothing in this game is hidden (every roll and total is public), so every seat gets the same state.
+// Seats: the host is 0, guests 1..n-1. With 3–4 players a seat without a device is played by the computer;
+// a guest who joins (or comes back) takes their seat over at once — between two moves is always a safe point.
+const tableNames = () => Array.from({ length: G.n }, (_, p) => (p === 0 ? cfg.names[0] : netNames[p]) || '');
+// to: a net seat, or every connected guest; each one is told its own game seat
+function sendState(to) {
+  for (const k of to === undefined ? [...n2g.keys()] : [to]) {
+    if (gOf(k) > 0) sess.send('state', { G, names: tableNames(), ctrl, you: gOf(k) }, { to: k });
+  }
+}
+// Host: a guest at net seat k with tab id `id` introduced itself — find its game seat.
+function bind(k, id) {
+  n2g.delete(k);
+  const taken = new Set(n2g.values());
+  let g = owner.findIndex((x, i) => i > 0 && x === id && !taken.has(i));
+  if (g < 0) {
+    const free = [];
+    for (let i = 1; i < Math.max(G.n, sess.maxPlayers); i++) if (!taken.has(i)) free.push(i);
+    // a newcomer prefers a seat nobody has claimed yet, so a known player's seat stays theirs
+    g = (free.includes(k) && !owner[k] ? k : free.find((i) => !owner[i])) ?? (free.includes(k) ? k : free[0] ?? k);
+  }
+  owner[g] = id;
+  n2g.set(k, g);
+  return g;
+}
+// The host keeps the match in sessionStorage per room, so reloading the host's tab doesn't wipe it.
+const roomKey = (s) => `mg-h101-room-${s.code}`;
+function persist() {
+  if (online() && sess.host && G) sessionStorage.setItem(roomKey(sess), JSON.stringify({ G, ctrl, names: netNames, nextFirst, owner }));
+}
+// Host, 3+ seats: a seat whose device dropped waits AWAY_MS, then the computer plays it until the player is back.
+function markAway(seat) {
+  const s = sess;
+  ctrl[seat] = 'away';
+  clearTimeout(awayTimers[seat]);
+  awayTimers[seat] = setTimeout(() => {
+    if (sess !== s || ctrl[seat] !== 'away') return;
+    ctrl[seat] = 'cpu';
+    sendSeats();
+    render();
+    schedule();
+  }, AWAY_MS);
+}
+function sendSeats() { sess.send('seats', { names: tableNames(), ctrl }); }
+
+// Host: who plays each seat at the start of a match.
+function initSeats() {
+  if (!sess.host) return;
+  // fewer seats than before: a guest left without a seat moves to a free one
+  for (const [k, g] of n2g) {
+    if (g < G.n) continue;
+    const used = new Set(n2g.values());
+    const i = [...Array(G.n).keys()].find((j) => j > 0 && !used.has(j));
+    if (i !== undefined) { owner[i] = owner[g]; owner[g] = undefined; n2g.set(k, i); }
+  }
+  const live = [0, ...n2g.values()];
+  awayTimers.forEach(clearTimeout);
+  backAfterReload.clear();
+  ctrl = Array.from({ length: G.n }, (_, p) => (p === 0 || G.n <= 2 || live.includes(p) ? 'human' : 'cpu'));
+}
+// Both sides: adopt a new seat table, greeting players who just took over from the computer.
+function setCtrl(next) {
+  const old = ctrl;
+  ctrl = next.slice();
+  if (!G || !online() || G.n <= 2) return;
+  for (let p = 0; p < G.n; p++) if (old[p] && old[p] !== 'human' && ctrl[p] === 'human') say(p, 'say.back');
+}
 
 function onSession(s) {
   sess = s;
   clearTimeout(aiTimer);
-  s.on('status', () => render());
-  s.on('peer-join', () => {
-    s.send('name', { seat: s.seat, name: cfg.names[s.seat] });
-    if (s.host) sendState();
+  ctrl = [];
+  owner = []; n2g.clear(); myG = null; backAfterReload.clear();
+  netNames.fill('');
+  s.on('status', () => { if (s === sess) render(); });
+  s.on('peer-join', ({ seat }) => {
+    if (s !== sess) return;
+    if (!s.host) { s.send('name', { name: cfg.names[mySeat()], id: tabId() }); return render(); }
+    n2g.delete(seat); // (re)connected: its game seat is settled when its 'name' (with the tab id) arrives
+  });
+  s.on('peer-leave', ({ seat }) => {
+    if (s !== sess) return;
+    if (!s.host) return render();
+    const g = gOf(seat);
+    n2g.delete(seat);
+    if (g < 0 || !multi() || g >= G.n || ctrl[g] !== 'human') return render();
+    markAway(g);
+    sendSeats();
     render();
   });
   s.on('state', (d) => {
     if (s.host || !d || !d.G) return;
     const fresh = !G || d.G.id !== G.id;
     G = d.G;
-    remoteNames[0] = d.names || '';
+    const was = mySeat();
+    myG = Number.isInteger(d.you) ? d.you : null;
+    if (mySeat() !== was) s.send('name', { name: cfg.names[mySeat()], id: tabId() });
+    d.names?.forEach?.((v, p) => (netNames[p] = v || ''));
+    ctrl = (d.ctrl || []).slice();
     pending = false; justMoved = false;
     $('#rounds').value = G.rounds;
     builtN = 0;
@@ -521,7 +633,31 @@ function onSession(s) {
     render();
     if (G.phase === 'over') { showResult(); $('#result').hidden = false; }
   });
-  s.on('name', (d) => { remoteNames[d.seat] = d.name || ''; render(); });
+  s.on('seats', (d) => {
+    if (s.host || !d) return;
+    d.names?.forEach?.((v, p) => (netNames[p] = v || ''));
+    if (d.ctrl) setCtrl(d.ctrl);
+    render();
+    if (G.phase === 'over') showResult();
+  });
+  // A guest introduces itself (tab id + name) right after connecting, and again when its name changes.
+  s.on('name', (d, { seat }) => {
+    if (!s.host || !d) return;
+    const fresh = !n2g.has(seat);
+    const g = fresh ? bind(seat, String(d.id || 'net' + seat)) : gOf(seat);
+    netNames[g] = String(d.name || '').slice(0, 14);
+    if (fresh) {
+      clearTimeout(awayTimers[g]);
+      if (g < G.n) { const c = ctrl.slice(); c[g] = 'human'; setCtrl(c); }
+      sendState(seat);
+      // after a host reload, close the room dialog once everyone who was playing is back (as with two players)
+      if (backAfterReload.delete(g) && !backAfterReload.size) document.getElementById('mg-online')?.close();
+    }
+    sendSeats();
+    render();
+    if (G.phase === 'over') showResult();
+    if (fresh) schedule(); // a computer about to move for this seat stands down
+  });
   s.on('move', (d) => {
     if (s.host) return;
     if (!d || d.n !== G.seq) return s.send('resync');
@@ -529,15 +665,35 @@ function onSession(s) {
     if (!apply(d.a)) return s.send('resync');
     render();
   });
-  s.on('req', (d) => {
+  s.on('req', (d, { seat }) => {
     if (!s.host || !d || !d.a) return;
-    const a = d.a;
-    const legal = d.n === G.seq && (a.k === 'next' ? G.phase === 'roundover' : (G.phase === 'roll' || G.phase === 'choose') && G.turn === 1 &&
+    const a = d.a, g = gOf(seat);
+    const mine = g > 0 && g < G.n && ctrl[g] === 'human';
+    const legal = mine && d.n === G.seq && (a.k === 'next' ? G.phase === 'roundover' : (G.phase === 'roll' || G.phase === 'choose') && G.turn === g &&
       ((a.k === 'roll' && G.phase === 'roll') || (a.k === 'pick' && G.phase === 'choose')));
-    if (!legal || !doHost(a.k === 'pick' ? { k: 'pick', x: !!a.x } : { k: a.k })) sendState();
+    if (!legal || !doHost(a.k === 'pick' ? { k: 'pick', x: !!a.x } : { k: a.k })) sendState(seat);
   });
-  s.on('resync', () => s.host && sendState());
-  if (s.host) { nextFirst = 0; newGame(); }
+  s.on('resync', (d, { seat }) => s.host && sendState(seat));
+  const saved = s.host && JSON.parse(sessionStorage.getItem(roomKey(s)) || 'null');
+  if (saved?.G) {
+    // The host reloaded: carry on with the same match. Guests come back on their own (peer-join → state).
+    G = saved.G;
+    nextFirst = saved.nextFirst || 0;
+    (saved.names || []).forEach((v, p) => (netNames[p] = v || ''));
+    owner = saved.owner || [];
+    cfg.n = G.n; cfg.rounds = G.rounds; saveCfg(); syncSettingsUI();
+    s.setMaxPlayers(G.n);
+    ctrl = Array.from({ length: G.n }, (_, p) => saved.ctrl?.[p] || 'human');
+    // nobody is connected yet right after the reload: guests' seats wait for their devices to come back
+    for (let p = 1; p < G.n; p++) if (ctrl[p] === 'human' || ctrl[p] === 'away') { backAfterReload.add(p); if (G.n > 2) markAway(p); }
+    undoStack = []; pending = false; justMoved = false;
+    builtN = 0;
+    $('#result').hidden = true;
+    buildPlayers(); calm();
+    render();
+    if (G.phase === 'over') { showResult(); $('#result').hidden = false; }
+    schedule();
+  } else if (s.host) { nextFirst = 0; newGame(); }
   else {
     G = H101.create({ n: 2, rounds: cfg.rounds });
     G.id = 'wait';
@@ -559,7 +715,12 @@ function syncSettingsUI() {
 }
 
 $('#mode').addEventListener('change', (e) => { cfg.mode = e.target.value; saveCfg(); nextFirst = 0; newGame(); });
-$('#players').addEventListener('change', (e) => { cfg.n = +e.target.value; saveCfg(); nextFirst = 0; newGame(); });
+$('#players').addEventListener('change', (e) => {
+  if (online() && !sess.host) return;
+  cfg.n = +e.target.value; saveCfg(); nextFirst = 0;
+  if (online()) sess.setMaxPlayers(cfg.n); // the room offers one seat per player
+  newGame();
+});
 $('#rounds').addEventListener('change', (e) => { cfg.rounds = +e.target.value; saveCfg(); restart(); });
 $('#new').addEventListener('click', restart);
 $('#again').addEventListener('click', restart);
@@ -596,6 +757,17 @@ mountOnline({
   slug: SLUG,
   button: $('#online'),
   onSession,
-  onEnd: () => { sess = null; nextFirst = 0; newGame(); },
+  // A guest can't know the room size: when a room turns them away, net.js picks its "full" wording from this
+  // value, so right after a guest session ends report more than two seats (the generic "no free seats" text).
+  maxPlayers: () => (guestEnded ? 4 : cfg.n),
+  onEnd: () => {
+    if (sess?.host) sessionStorage.removeItem(roomKey(sess)); // left the room on purpose
+    guestEnded = !!sess && !sess.host;
+    setTimeout(() => (guestEnded = false));
+    sess = null; ctrl = []; owner = []; n2g.clear(); myG = null; backAfterReload.clear();
+    awayTimers.forEach(clearTimeout);
+    nextFirst = 0;
+    newGame();
+  },
 });
 if (!online()) showOnce('how', SLUG);

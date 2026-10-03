@@ -298,3 +298,15 @@ test('AI only uses its own view: legal answers even when it knows nothing else',
     assert.ok(a.kind === 'pass' || (a.kind === 'offer' ? CON.canOffer(s, p, a.b, a.give, a.want) : CON.canChallenge(s, p, a.b) && s.hand[p].includes(a.card)));
   }
 });
+
+test('forged targets (strings, fractions, out of range) are rejected instead of stalling the game', () => {
+  const s = ready(3);
+  const p = s.turn, q = (p + 1) % 3, card = s.hand[p][0], want = s.hand[q][0];
+  for (const b of [String(q), q + 0.5, -1, 3, null, undefined, [q]]) {
+    assert.equal(CON.canChallenge(s, p, b), false, `challenge ${JSON.stringify(b)}`);
+    assert.equal(CON.challenge(CON.clone(s), p, b, card), false);
+    assert.equal(CON.offer(CON.clone(s), p, b, card, want), false, `offer ${JSON.stringify(b)}`);
+  }
+  assert.equal(CON.challenge(CON.clone(s), p, q, String(card)), false);
+  assert.ok(CON.challenge(CON.clone(s), p, q, card));
+});

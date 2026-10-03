@@ -92,3 +92,7 @@
 }
 #board text.start { text-anchor: start; }
 #board text.end { text-anchor: end; }
+/* online: who sits where ("you", "computer", "offline") */
+.player .score .tag { font-size: .8em; color: #888; white-space: nowrap; }
+.player .score .tag.away { color: var(--red-dark); }
+.arena.many .player .score .tag { display: block; line-height: 1; }
