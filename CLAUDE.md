@@ -36,6 +36,7 @@
 
 ## Testing tools
 - `node tools/check-page.mjs <slug>` — console errors, screenshots (390/360/1280 px, every popup) and an online handshake between two browsers; prints JSON (`ok`, screenshot paths). View PNGs with the Read tool.
+- `node tools/reconnect-check.mjs <slug> [--probe "<js>"]` — online reconnect scenarios (guest reload / new tab, host reload, extra player); `--probe` prints a state string before/after so you can confirm the match survives.
 - `tools/cdp.mjs` — `launch({width, height, mobile})` → `{nav, ev, click, tap, shot, errors, close}` for custom gameplay scripts (many can run in parallel).
 - Engine tests: `games/<slug>/engine.test.mjs` with `node:test` → `node --test games/<slug>/`.
 - Rules source: the book PDF in the repo root (`pdftotext -f <p> -l <p> -layout *.pdf -`). Read it for rules only — never copy its text or images.
