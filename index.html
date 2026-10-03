@@ -21,7 +21,8 @@
     .card:nth-child(even) { transform: rotate(.5deg); }
     .card:hover { transform: rotate(-1.5deg) scale(1.03); }
     .card .name { font: 700 27px/1.05 var(--hand); padding-right: 34px; }
-    .card .orig { font-size: 14px; color: #888; }
+    .card .players { font: 600 18px var(--hand); color: #888; margin-top: 2px; }
+    .card.ready .players { color: var(--red); }
     .card.ready { border-color: var(--blue); box-shadow: 3px 4px 0 rgba(30,165,207,.25); }
     .card.ready .name { color: var(--blue-dark); }
     .card.soon { border-style: dashed; border-color: #bbb; color: #999; pointer-events: none; }
@@ -36,7 +37,7 @@
       .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .card { min-height: 0; padding: 8px 10px 6px; }
       .card .name, .card.minor .name { font-size: 21px; padding-right: 14px; }
-      .card .orig { font-size: 12px; }
+      .card .players { font-size: 16px; }
       .card .tag { right: 6px; top: 2px; font-size: 16px; }
       .card.soon .tag { display: none; }
       h2.section-title { font-size: 30px; margin-top: 28px; }
@@ -62,11 +63,13 @@
     <p class="credit" data-i18n-html="site.credit"></p>
   </div>
   <script type="module">
-    import { t, getLang, applyI18n } from './shared/i18n.js';
+    import { t, getLang, applyI18n, plural } from './shared/i18n.js';
     import { injectDefs, figureSVG, PALETTE } from './shared/sketch.js';
     import { SECTIONS, GAMES } from './shared/games.js';
     {
       const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+      // "2 игрока", "2–6 игроков": the noun agrees with the upper bound.
+      const playersLabel = ([a, b]) => plural(b, 'site.players').replace(/^\d+/, a === b ? String(b) : `${a}–${b}`);
       function render() {
         const L = getLang();
         document.getElementById('catalog').innerHTML = SECTIONS.map((s, i) => `
@@ -76,7 +79,7 @@
             return `<a class="card ${ready ? 'ready' : 'soon'}${g.featured ? '' : ' minor'}" ${ready ? `href="games/${g.slug}/index.html"` : ''}>
               <span class="tag${ready ? ' go' : ''}">${ready ? '→' : t('site.soon')}</span>
               <div class="name">${g[L]}</div>
-              ${L !== 'en' ? `<div class="orig">${g.en}</div>` : ''}
+              <div class="players">${playersLabel(g.players)}</div>
             </a>`;
           }).join('')}</div>`).join('');
       }

@@ -51,6 +51,7 @@ addStrings('ru', {
   'site.credit':
     'Игры — из книги Бена Орлина <i>«Math Games with Bad Drawings»</i> (2022): 75¼ игр, рисунки автора и рассказ о том, почему это всё важно. Это фанатский интерактив, он не заменяет книгу — <a href="https://mathwithbaddrawings.com/" target="_blank" rel="noopener">загляните к автору</a>.',
   'site.soon': 'скоро',
+  'site.players': ['игрок', 'игрока', 'игроков'],
   'ui.how': 'правила',
   'ui.tips': 'хитрости',
   'ui.origin': 'история',
@@ -67,6 +68,7 @@ addStrings('en', {
   'site.credit':
     'Games come from Ben Orlin’s book <i>Math Games with Bad Drawings</i> (2022): 75¼ games, the author’s own drawings, and why it all matters. This is a fan-made companion, not a substitute — <a href="https://mathwithbaddrawings.com/" target="_blank" rel="noopener">visit the author</a>.',
   'site.soon': 'soon',
+  'site.players': ['player', 'players'],
   'ui.how': 'rules',
   'ui.tips': 'tricks',
   'ui.origin': 'history',
